@@ -1,0 +1,10 @@
+We're looking for a Senior Software Engineer to join our team. The ideal candidate will have experience with:
+
+- Building scalable backend systems and microservices
+- Implementing automated testing and CI/CD pipelines  
+- Working with REST APIs and database optimization
+- Leading technical teams and mentoring junior developers
+- Experience with machine learning and data processing
+- Strong problem-solving skills and ability to work in fast-paced environments
+
+The role involves architecting high-performance systems, implementing best practices for code quality, and collaborating with cross-functional teams to deliver innovative solutions.
