@@ -95,36 +95,11 @@ class VectorSearch:
         print(f"Searching for similar resume points...")
         
         # TODO: Generate embedding for job description
-        query_embedding = self.embedding_generator.generate_embedding(job_description)
-        
-        if not query_embedding:
-            print("Failed to generate query embedding")
-            return []
-        
         # TODO: Query the vector store
-        # HINT: Use collection.query() with query_embeddings parameter
-        # HINT: Set n_results to get top_k matches
-        
-        # TODO: Implement the search
-        results = self.collection.query(
-            query_embeddings=[query_embedding],
-            n_results=top_k
-        )
-        
         # TODO: Format and return results
-        # HINT: Extract documents and distances from results
-        # HINT: Convert distances to similarity scores (1 - distance)
         
-        if results and results['documents'] and results['documents'][0]:
-            documents = results['documents'][0]
-            distances = results['distances'][0]
-            
-            # Convert distances to similarity scores
-            similarities = [(doc, 1 - dist) for doc, dist in zip(documents, distances)]
-            return similarities
-        else:
-            print("No results found")
-            return []
+        # TODO: Replace with actual implementation
+        pass
     
     def get_collection_stats(self) -> Dict:
         """
