@@ -90,15 +90,14 @@ def main():
     print(f"✅ Loaded {len(resume_points)} resume points")
     print(f"✅ Loaded job description ({len(job_description)} characters)")
     
-    # TODO: Add environment validation
-    # HINT: Check if OPENAI_API_KEY is set
-    # HINT: Provide helpful error messages if missing
+    # Check environment variables
+    if not os.getenv("OPENAI_API_KEY"):
+        print("❌ Error: OPENAI_API_KEY environment variable is required")
+        print("💡 Please create a .env file with your OpenAI API key")
+        return
     
     # Initialize components
     print("\n🔧 Initializing components...")
-    
-    # TODO: Add error handling for API key issues
-    # HINT: Test embedding generation before proceeding
     
     try:
         embedding_gen = EmbeddingGenerator()

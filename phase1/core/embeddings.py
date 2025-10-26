@@ -31,8 +31,12 @@ class EmbeddingGenerator:
         Args:
             model_name: OpenAI embedding model to use
         """
-        # TODO: Add API key validation
-        self.client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        # Validate API key
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY environment variable is required")
+        
+        self.client = openai.OpenAI(api_key=api_key)
         self.model_name = model_name
         
         # HINT: Different models have different embedding dimensions
@@ -47,8 +51,13 @@ class EmbeddingGenerator:
         TODO: Implement logic to determine embedding dimensions based on model
         HINT: You can either hardcode known dimensions or make a test API call
         """
-        # TODO: Replace with actual logic
-        return 1536  # Placeholder for text-embedding-3-small
+        # Model-specific embedding dimensions
+        model_dimensions = {
+            "text-embedding-3-small": 1536,
+            "text-embedding-3-large": 3072,
+            "text-embedding-ada-002": 1536
+        }
+        return model_dimensions.get(self.model_name, 1536)
     
     def generate_embedding(self, text: str) -> List[float]:
         """

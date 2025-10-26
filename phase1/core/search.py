@@ -94,12 +94,30 @@ class VectorSearch:
         
         print(f"Searching for similar resume points...")
         
-        # TODO: Generate embedding for job description
-        # TODO: Query the vector store
-        # TODO: Format and return results
+        # Generate embedding for job description
+        query_embedding = self.embedding_generator.generate_embedding(job_description)
         
-        # TODO: Replace with actual implementation
-        pass
+        if not query_embedding:
+            print("Failed to generate query embedding")
+            return []
+        
+        # Query the vector store
+        results = self.collection.query(
+            query_embeddings=[query_embedding],
+            n_results=top_k
+        )
+        
+        # Format and return results
+        if results and results['documents'] and results['documents'][0]:
+            documents = results['documents'][0]
+            distances = results['distances'][0]
+            
+            # Convert distances to similarity scores (1 - distance)
+            similarities = [(doc, 1 - dist) for doc, dist in zip(documents, distances)]
+            return similarities
+        else:
+            print("No results found")
+            return []
     
     def get_collection_stats(self) -> Dict:
         """
@@ -132,8 +150,10 @@ class VectorSearch:
         # HINT: Use collection.delete() or recreate the collection
         
         try:
-            # Delete all items in the collection
-            self.collection.delete()
+            # Get all IDs and delete them
+            all_items = self.collection.get()
+            if all_items['ids']:
+                self.collection.delete(ids=all_items['ids'])
             print("Collection cleared")
         except Exception as e:
             print(f"Error clearing collection: {e}")
