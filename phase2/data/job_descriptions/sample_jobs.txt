@@ -1,0 +1,41 @@
+# Sample Job Descriptions for Testing
+
+## Senior Software Engineer - Microservices
+We are looking for a Senior Software Engineer to join our team. The ideal candidate will have experience with:
+- Building scalable backend systems and microservices
+- Implementing automated testing and CI/CD pipelines  
+- Working with REST APIs and database optimization
+- Leading technical teams and mentoring junior developers
+- Experience with machine learning and data processing
+- Strong problem-solving skills and ability to work in fast-paced environments
+
+The role involves architecting high-performance systems, implementing best practices for code quality, and collaborating with cross-functional teams to deliver innovative solutions.
+
+## Data Scientist - AI/ML
+We're seeking a Data Scientist with expertise in machine learning and artificial intelligence. Key requirements include:
+- Advanced degree in Computer Science, Statistics, or related field
+- Experience with Python, R, and SQL
+- Knowledge of machine learning frameworks (TensorFlow, PyTorch, scikit-learn)
+- Experience with data visualization and statistical analysis
+- Strong communication skills for presenting findings to stakeholders
+- Experience with cloud platforms (AWS, GCP, Azure)
+
+## Product Manager - AI Products
+Looking for a Product Manager to lead our AI product initiatives. The ideal candidate will have:
+- 5+ years of product management experience
+- Experience with AI/ML products and technologies
+- Strong analytical and problem-solving skills
+- Experience with user research and data-driven decision making
+- Excellent communication and leadership skills
+- Technical background preferred
+
+## DevOps Engineer - Cloud Infrastructure
+We need a DevOps Engineer to manage our cloud infrastructure. Requirements include:
+- Experience with AWS, Azure, or GCP
+- Knowledge of containerization (Docker, Kubernetes)
+- Experience with infrastructure as code (Terraform, CloudFormation)
+- Strong scripting skills (Python, Bash, PowerShell)
+- Experience with CI/CD pipelines and automation
+- Knowledge of monitoring and logging tools
+
+
