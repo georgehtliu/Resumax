@@ -1,0 +1,102 @@
+.job-matcher {
+  width: 100%;
+}
+
+.job-matcher-section {
+  margin-bottom: 24px;
+}
+
+.job-matcher-section h3 {
+  font-size: 16px;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.section-description {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 12px;
+}
+
+.status-message {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #667eea;
+  font-weight: 500;
+}
+
+.divider {
+  text-align: center;
+  color: #999;
+  font-size: 12px;
+  margin: 20px 0;
+  position: relative;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 40%;
+  height: 1px;
+  background: #e0e0e0;
+}
+
+.divider::before {
+  left: 0;
+}
+
+.divider::after {
+  right: 0;
+}
+
+.jd-textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 120px;
+}
+
+.jd-textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.jd-stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  font-size: 11px;
+  color: #999;
+}
+
+.jd-stats .warning {
+  color: #ff9800;
+  font-weight: 500;
+}
+
+.jd-stats .ok {
+  color: #4caf50;
+  font-weight: 500;
+}
+
+.job-matcher-actions {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.btn-large {
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+}
+
+

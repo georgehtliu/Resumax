@@ -1,0 +1,21 @@
+/* Content Script Styles */
+
+.resume-optimizer-btn {
+  transition: all 0.3s ease;
+}
+
+.resume-optimizer-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+.resume-optimizer-btn:active {
+  transform: translateY(0);
+}
+
+/* Avoid interfering with page styles */
+.resume-optimizer-btn * {
+  box-sizing: border-box;
+}
+
+

@@ -698,53 +698,76 @@ GET    /api/v1/job-descriptions/{id}  # Get specific JD
 
 ---
 
-## 🗓️ Development Roadmap
+## 🗓️ Development Roadmap (UPDATED: Extension-First Approach)
 
-### Phase 1-3: Backend Foundation ✅ (Done/In Progress)
+### Phase 1-3: Backend Foundation ✅ (Done - Standalone)
 - [x] Phase 1: Embeddings & Vector Search
 - [x] Phase 2: RAG Pipeline
-- [ ] Phase 3: Unified Optimizer
-- [ ] Phase 3.5: Hybrid Retrieval (Keyword + Vector Search)
-- [ ] Phase 3.6: Cost optimization (dev vs prod)
+- [x] Phase 3: Unified Optimizer
+- [x] Phase 3.5: Hybrid Retrieval (Keyword + Vector Search)
+- [x] Phase 3.6: Cost optimization (dev vs prod)
 
-### Phase 4: Backend Enhancements (2-3 weeks)
+**Note:** Backend is complete but **not connected** to extension yet. Extension will work standalone first.
+
+---
+
+### **NEW APPROACH: Extension-First Development**
+
+### Phase 6: Chrome Extension Foundation (Current Focus - 2-3 weeks)
+**Goal:** Build standalone extension with local storage, no backend connection yet.
+
+- [ ] Extension manifest setup (Chrome Extensions API, Debugger API permissions)
+- [ ] React app structure for popup UI
+- [ ] Chrome storage integration (local storage for resume data)
+- [ ] Content script for job description extraction
+- [ ] Playwright integration for advanced scraping
+- [ ] Background service worker
+- [ ] Basic UI components (Experience editor, bullet points)
+
+### Phase 7: Extension Core Features (3-4 weeks)
+**Goal:** Full extension functionality with local-only operations.
+
+- [ ] Experience editor with unlimited bullets
+- [ ] Job description detection/extraction (LinkedIn, Indeed, manual)
+- [ ] Local optimization UI (mock data for now)
+- [ ] Customization panel
+- [ ] Resume preview (HTML/LaTeX preview)
+- [ ] Export functionality (local only)
+
+### Phase 8: Backend Integration (2-3 weeks)
+**Goal:** Connect extension to existing backend API.
+
+- [ ] API communication layer in extension
+- [ ] Authentication flow (JWT tokens)
+- [ ] Resume sync with backend
+- [ ] Real optimization API calls
+- [ ] Error handling and retry logic
+- [ ] Offline fallback
+
+### Phase 9: Backend Enhancements (2-3 weeks)
+**Goal:** Enhance backend for production use.
+
 - [ ] Database schema implementation
 - [ ] Resume management endpoints
 - [ ] Unlimited bullets storage
 - [ ] Optimization history tracking
 - [ ] Job description storage
 
-### Phase 5: LaTeX Integration (1-2 weeks)
+### Phase 10: LaTeX Integration (1-2 weeks)
 - [ ] Jake's template integration
 - [ ] LaTeX generation service
 - [ ] One-page constraint enforcement
 - [ ] PDF compilation
 - [ ] Preview endpoint
 
-### Phase 6: Chrome Extension Foundation (2-3 weeks)
-- [ ] Extension manifest setup
-- [ ] React app structure
-- [ ] Chrome storage integration
-- [ ] API communication layer
-- [ ] Basic UI components
-
-### Phase 7: Extension Features (3-4 weeks)
-- [ ] Experience editor
-- [ ] Unlimited bullets interface
-- [ ] Job description detection/extraction
-- [ ] Optimization UI
-- [ ] Customization panel
-- [ ] LaTeX preview
-
-### Phase 8: Polish & Production (2-3 weeks)
+### Phase 11: Polish & Production (2-3 weeks)
 - [ ] Error handling
 - [ ] Loading states
-- [ ] Offline support
 - [ ] Performance optimization
 - [ ] Testing
 - [ ] Documentation
 
-**Total Timeline: ~12-16 weeks**
+**Updated Timeline: Extension MVP in 5-7 weeks, Full integration in 10-14 weeks**
 
 ---
 
