@@ -18,3 +18,5 @@ echo "4. Select this directory (chrome-extension/)"
 echo ""
 echo "Note: Update manifest.json 'default_popup' to 'popup-build/index.html' after first build"
 
+
+

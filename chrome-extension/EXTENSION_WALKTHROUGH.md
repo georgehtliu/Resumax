@@ -454,3 +454,5 @@ chrome.tabs.sendMessage(tabId, message);
 
 This walkthrough covers the entire extension architecture! 🎉
 
+
+

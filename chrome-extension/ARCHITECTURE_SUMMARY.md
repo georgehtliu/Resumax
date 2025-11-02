@@ -180,3 +180,5 @@ Backend is ready but **not connected** to extension yet. Extension works standal
 
 **You're all set!** Start with `QUICK_START.md` to get running. 🚀
 
+
+

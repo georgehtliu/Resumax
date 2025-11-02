@@ -103,3 +103,5 @@ cd chrome-extension/assets/icons
 
 The extension is now set up and ready for development. See `README.md` for more detailed documentation.
 
+
+
