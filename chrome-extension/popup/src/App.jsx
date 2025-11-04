@@ -31,8 +31,11 @@ function App() {
   // Load resume data on mount and initialize mock data if needed
   useEffect(() => {
     async function init() {
+      console.log('🔄 Starting initialization...');
       await initializeMockData();
+      // Always load after initialization check
       await loadResumeData();
+      console.log('✅ Initialization complete');
     }
     init();
   }, []);
@@ -42,40 +45,92 @@ function App() {
    */
   async function initializeMockData() {
     try {
+      console.log('📋 Checking for existing data...');
       const existingResume = await storageService.getResume();
       const savedResumes = await storageService.getSavedResumes();
       
-      // Only initialize if no data exists
-      if (existingResume.totalBullets === 0 && savedResumes.length === 0) {
-        // Initialize master resume with mock data
+      console.log('Existing resume:', {
+        experiences: existingResume.experiences?.length || 0,
+        education: existingResume.education?.length || 0,
+        projects: existingResume.projects?.length || 0,
+        customSections: existingResume.customSections?.length || 0,
+        totalBullets: existingResume.totalBullets
+      });
+      console.log('Saved resumes count:', savedResumes.length);
+      
+      // Check if there's actual data (not just totalBullets, but actual bullets)
+      const hasMasterData = 
+        (existingResume.experiences && existingResume.experiences.length > 0) ||
+        (existingResume.education && existingResume.education.length > 0) ||
+        (existingResume.projects && existingResume.projects.length > 0) ||
+        (existingResume.customSections && existingResume.customSections.length > 0);
+      
+      console.log('Has master data?', hasMasterData);
+      
+      // FOR TESTING: Force initialization if localStorage has a flag
+      const forceInit = localStorage.getItem('forceInitMockData') === 'true';
+      if (forceInit) {
+        console.log('🔧 FORCE INITIALIZATION MODE - Clearing existing data...');
+        localStorage.removeItem('forceInitMockData');
+      }
+      
+      // Only initialize if no data exists OR force init is enabled
+      if ((!hasMasterData && savedResumes.length === 0) || forceInit) {
+        if (forceInit) {
+          // Clear existing data first
+          await storageService.clearResume();
+          // Clear saved resumes too
+          const existingSaved = await storageService.getSavedResumes();
+          for (const resume of existingSaved) {
+            await storageService.deleteSavedResume(resume.id);
+          }
+        }
+        console.log('🚀 Initializing mock data...');
+        // Initialize master resume with comprehensive realistic mock data
         const mockMasterResume = {
           experiences: [
             {
               id: 'exp-1',
               company: 'Google',
-              role: 'Software Engineer',
-              startDate: '2022',
+              role: 'Software Engineer II',
+              startDate: 'Jun 2022',
               endDate: 'Present',
               bullets: [
-                { id: 'bullet-1', text: 'Developed and maintained microservices handling 10M+ daily requests using Python and Kubernetes' },
-                { id: 'bullet-2', text: 'Optimized database queries reducing API response time by 40% and improving user experience' },
-                { id: 'bullet-3', text: 'Led a team of 3 engineers to ship a new feature that increased user engagement by 25%' },
-                { id: 'bullet-4', text: 'Implemented CI/CD pipelines using Jenkins and Docker, reducing deployment time by 60%' },
-                { id: 'bullet-5', text: 'Designed and built RESTful APIs serving 5M+ requests per day with 99.9% uptime' },
-                { id: 'bullet-6', text: 'Collaborated with product managers and designers to define technical requirements for new features' }
+                { id: 'bullet-1', text: 'Developed and maintained microservices handling 10M+ daily requests using Python, Go, and Kubernetes, ensuring 99.9% uptime' },
+                { id: 'bullet-2', text: 'Optimized database queries and caching strategies, reducing API response time by 40% and saving $50K annually in infrastructure costs' },
+                { id: 'bullet-3', text: 'Led a team of 3 engineers to ship a new recommendation feature that increased user engagement by 25% and generated $2M in additional revenue' },
+                { id: 'bullet-4', text: 'Implemented comprehensive CI/CD pipelines using Jenkins, Docker, and Kubernetes, reducing deployment time by 60% and enabling daily releases' },
+                { id: 'bullet-5', text: 'Designed and built RESTful and gRPC APIs serving 5M+ requests per day with sub-100ms latency, improving mobile app performance by 30%' },
+                { id: 'bullet-6', text: 'Collaborated with product managers and designers to define technical requirements, architecture, and success metrics for new features' },
+                { id: 'bullet-7', text: 'Mentored 2 junior engineers through code reviews, pair programming, and technical design discussions, improving team velocity by 20%' },
+                { id: 'bullet-8', text: 'Built real-time analytics dashboard using React and WebSockets, enabling product team to monitor user behavior and make data-driven decisions' }
               ]
             },
             {
               id: 'exp-2',
               company: 'Meta',
               role: 'Software Engineering Intern',
-              startDate: '2021',
-              endDate: '2021',
+              startDate: 'Jun 2021',
+              endDate: 'Aug 2021',
               bullets: [
-                { id: 'bullet-7', text: 'Built React components for Facebook Marketplace improving user interface and accessibility' },
-                { id: 'bullet-8', text: 'Implemented real-time notifications using WebSocket connections reducing latency by 30%' },
-                { id: 'bullet-9', text: 'Worked on GraphQL API endpoints optimizing data fetching and reducing server load' },
-                { id: 'bullet-10', text: 'Participated in code reviews and contributed to team best practices documentation' }
+                { id: 'bullet-9', text: 'Built React components for Facebook Marketplace improving user interface accessibility and mobile responsiveness, increasing conversion rate by 15%' },
+                { id: 'bullet-10', text: 'Implemented real-time notification system using WebSocket connections and Redis, reducing latency by 30% and improving user engagement' },
+                { id: 'bullet-11', text: 'Optimized GraphQL API endpoints and data fetching strategies, reducing server load by 25% and improving page load times' },
+                { id: 'bullet-12', text: 'Participated in code reviews and contributed to team best practices documentation, improving code quality and onboarding efficiency' },
+                { id: 'bullet-13', text: 'Developed A/B testing framework for feature rollouts, enabling data-driven product decisions and reducing risk of regressions' }
+              ]
+            },
+            {
+              id: 'exp-3',
+              company: 'Amazon Web Services',
+              role: 'Software Development Engineer Intern',
+              startDate: 'Jun 2020',
+              endDate: 'Aug 2020',
+              bullets: [
+                { id: 'bullet-14', text: 'Developed internal tools using Java and Spring Boot to automate deployment processes, reducing manual work by 40 hours per week' },
+                { id: 'bullet-15', text: 'Built monitoring and alerting system for AWS services using CloudWatch and Lambda, improving incident detection time by 50%' },
+                { id: 'bullet-16', text: 'Optimized database queries and implemented caching layer using DynamoDB and ElastiCache, reducing query latency by 35%' },
+                { id: 'bullet-17', text: 'Collaborated with senior engineers on distributed systems design, learning best practices for scalability and reliability' }
               ]
             }
           ],
@@ -85,41 +140,71 @@ function App() {
               school: 'Stanford University',
               degree: 'B.S.',
               field: 'Computer Science',
-              startDate: '2018',
-              endDate: '2022',
+              startDate: 'Sep 2018',
+              endDate: 'Jun 2022',
               bullets: [
-                { id: 'bullet-11', text: 'GPA: 3.9/4.0, Magna Cum Laude' },
-                { id: 'bullet-12', text: 'Relevant Coursework: Algorithms, Data Structures, Machine Learning, Distributed Systems' },
-                { id: 'bullet-13', text: 'Dean\'s List: Fall 2019, Spring 2020, Fall 2020, Spring 2021' }
+                { id: 'bullet-18', text: 'GPA: 3.9/4.0, Magna Cum Laude, Dean\'s List all semesters' },
+                { id: 'bullet-19', text: 'Relevant Coursework: Algorithms & Data Structures, Machine Learning, Distributed Systems, Database Systems, Computer Networks' },
+                { id: 'bullet-20', text: 'Teaching Assistant for CS161 (Design and Analysis of Algorithms) - graded assignments and held office hours for 50+ students' },
+                { id: 'bullet-21', text: 'Research Assistant in Machine Learning Lab - worked on deep learning models for computer vision applications' }
               ]
             }
           ],
           projects: [
             {
               id: 'proj-1',
-              name: 'E-commerce Platform',
-              description: 'Full-stack e-commerce platform with payment integration',
-              technologies: 'React, Node.js, PostgreSQL, Stripe API',
-              startDate: '2020',
-              endDate: '2021',
+              name: 'Distributed Task Scheduler',
+              description: 'High-performance distributed task scheduling system with fault tolerance',
+              technologies: 'Go, Kubernetes, Redis, PostgreSQL, gRPC',
+              startDate: 'Jan 2022',
+              endDate: 'May 2022',
               bullets: [
-                { id: 'bullet-14', text: 'Built scalable web application supporting 1000+ concurrent users with real-time inventory updates' },
-                { id: 'bullet-15', text: 'Integrated Stripe payment processing handling $50K+ in transactions' },
-                { id: 'bullet-16', text: 'Implemented user authentication and authorization using JWT tokens' },
-                { id: 'bullet-17', text: 'Deployed on AWS using EC2 and RDS with automated backup and monitoring' }
+                { id: 'bullet-22', text: 'Built scalable task scheduler handling 100K+ concurrent tasks using Go and Kubernetes, achieving 99.95% reliability' },
+                { id: 'bullet-23', text: 'Implemented distributed consensus algorithm using Raft protocol for leader election and task coordination across nodes' },
+                { id: 'bullet-24', text: 'Designed fault-tolerant architecture with automatic failover and task replication, ensuring zero data loss during node failures' },
+                { id: 'bullet-25', text: 'Created monitoring dashboard using Prometheus and Grafana, enabling real-time visibility into system performance and health' }
               ]
             },
             {
               id: 'proj-2',
-              name: 'Machine Learning Recommender System',
-              description: 'Content-based recommendation engine for streaming platform',
-              technologies: 'Python, TensorFlow, Scikit-learn, Flask',
-              startDate: '2021',
-              endDate: '2021',
+              name: 'E-commerce Platform',
+              description: 'Full-stack e-commerce platform with payment integration and inventory management',
+              technologies: 'React, Node.js, Express, PostgreSQL, Stripe API, AWS',
+              startDate: 'Sep 2020',
+              endDate: 'Dec 2021',
               bullets: [
-                { id: 'bullet-18', text: 'Trained neural network model achieving 85% accuracy in content recommendations' },
-                { id: 'bullet-19', text: 'Processed and cleaned dataset of 1M+ user interactions using pandas and numpy' },
-                { id: 'bullet-20', text: 'Created REST API serving recommendations with average response time of 50ms' }
+                { id: 'bullet-26', text: 'Built scalable web application supporting 1000+ concurrent users with real-time inventory updates and order processing' },
+                { id: 'bullet-27', text: 'Integrated Stripe payment processing handling $50K+ in transactions with PCI compliance and fraud detection' },
+                { id: 'bullet-28', text: 'Implemented JWT-based authentication and authorization with role-based access control for admin and customer roles' },
+                { id: 'bullet-29', text: 'Deployed on AWS using EC2, RDS, S3, and CloudFront with automated backup, monitoring, and auto-scaling capabilities' },
+                { id: 'bullet-30', text: 'Optimized database schema and queries, reducing page load time by 45% and improving user experience metrics' }
+              ]
+            },
+            {
+              id: 'proj-3',
+              name: 'Machine Learning Recommender System',
+              description: 'Content-based recommendation engine for video streaming platform',
+              technologies: 'Python, TensorFlow, Scikit-learn, Flask, Redis',
+              startDate: 'Jan 2021',
+              endDate: 'May 2021',
+              bullets: [
+                { id: 'bullet-31', text: 'Trained neural network model achieving 85% accuracy in content recommendations using collaborative and content-based filtering' },
+                { id: 'bullet-32', text: 'Processed and cleaned dataset of 1M+ user interactions using pandas and numpy, implementing feature engineering pipeline' },
+                { id: 'bullet-33', text: 'Created REST API serving recommendations with average response time of 50ms, handling 10K+ requests per minute' },
+                { id: 'bullet-34', text: 'Implemented caching layer using Redis to reduce model inference time by 70% and improve user experience' }
+              ]
+            },
+            {
+              id: 'proj-4',
+              name: 'Real-time Chat Application',
+              description: 'WebSocket-based chat application with end-to-end encryption',
+              technologies: 'React, Node.js, Socket.io, MongoDB, Redis, Docker',
+              startDate: 'Jun 2020',
+              endDate: 'Aug 2020',
+              bullets: [
+                { id: 'bullet-35', text: 'Developed real-time messaging application supporting 500+ concurrent users with WebSocket connections and message persistence' },
+                { id: 'bullet-36', text: 'Implemented end-to-end encryption using Web Crypto API, ensuring user privacy and data security' },
+                { id: 'bullet-37', text: 'Built scalable backend using Node.js and MongoDB with Redis caching, achieving sub-100ms message delivery latency' }
               ]
             }
           ],
@@ -129,10 +214,13 @@ function App() {
               title: 'Technical Skills',
               subtitle: '',
               bullets: [
-                { id: 'bullet-21', text: 'Languages: Python, JavaScript, Java, C++, TypeScript, Go' },
-                { id: 'bullet-22', text: 'Frameworks: React, Node.js, Express, Django, Spring Boot' },
-                { id: 'bullet-23', text: 'Tools: Git, Docker, Kubernetes, AWS, Jenkins, PostgreSQL, MongoDB' },
-                { id: 'bullet-24', text: 'Concepts: Microservices, REST APIs, GraphQL, Machine Learning, System Design' }
+                { id: 'bullet-38', text: 'Languages: Python, JavaScript, TypeScript, Go, Java, C++, SQL, Bash' },
+                { id: 'bullet-39', text: 'Frontend: React, Redux, Next.js, HTML5, CSS3, WebSocket, WebRTC' },
+                { id: 'bullet-40', text: 'Backend: Node.js, Express, Django, Spring Boot, GraphQL, gRPC, REST APIs' },
+                { id: 'bullet-41', text: 'Databases: PostgreSQL, MongoDB, Redis, DynamoDB, Elasticsearch' },
+                { id: 'bullet-42', text: 'DevOps: Docker, Kubernetes, Jenkins, AWS (EC2, S3, RDS, Lambda), CI/CD, Terraform' },
+                { id: 'bullet-43', text: 'Tools: Git, GitHub, Jira, Confluence, Prometheus, Grafana, Splunk' },
+                { id: 'bullet-44', text: 'Concepts: Microservices, Distributed Systems, System Design, Machine Learning, Data Structures & Algorithms' }
               ]
             },
             {
@@ -140,9 +228,20 @@ function App() {
               title: 'Awards & Recognition',
               subtitle: '',
               bullets: [
-                { id: 'bullet-25', text: 'Google Hackathon Winner - Best Technical Implementation (2022)' },
-                { id: 'bullet-26', text: 'Stanford Engineering Excellence Award (2021)' },
-                { id: 'bullet-27', text: 'Published research paper on distributed systems in ACM Conference' }
+                { id: 'bullet-45', text: 'Google Hackathon Winner - Best Technical Implementation (2022) - Built AI-powered code review tool' },
+                { id: 'bullet-46', text: 'Stanford Engineering Excellence Award (2021) - Top 5% of Computer Science graduating class' },
+                { id: 'bullet-47', text: 'Published research paper on distributed consensus algorithms in ACM Conference on Distributed Computing (2021)' },
+                { id: 'bullet-48', text: 'Meta Intern Hackathon - First Place (2021) - Developed accessibility tool for visually impaired users' }
+              ]
+            },
+            {
+              id: 'custom-3',
+              title: 'Certifications',
+              subtitle: '',
+              bullets: [
+                { id: 'bullet-49', text: 'AWS Certified Solutions Architect - Associate (2022)' },
+                { id: 'bullet-50', text: 'Kubernetes Certified Application Developer (CKAD) (2023)' },
+                { id: 'bullet-51', text: 'Google Cloud Professional Cloud Architect (2023)' }
               ]
             }
           ],
@@ -150,76 +249,247 @@ function App() {
         };
         
         mockMasterResume.totalBullets = calculateTotalBullets(mockMasterResume);
+        console.log('Saving master resume with', mockMasterResume.totalBullets, 'total bullets');
         await storageService.saveResume(mockMasterResume);
+        console.log('Master resume saved successfully');
         
-        // Initialize saved resumes with mock data
+        // Initialize saved resumes with realistic structured data
         const mockSavedResumes = [
           {
             id: 'resume-1',
-            name: 'Google SWE - Full Stack',
+            name: 'Google SWE - Backend/Infrastructure',
             createdAt: Date.now() - 2 * 24 * 60 * 60 * 1000, // 2 days ago
             updatedAt: Date.now() - 2 * 24 * 60 * 60 * 1000,
             data: {
-              selectedBullets: [
+              experiences: [
                 {
-                  id: 'bullet-1',
-                  text: 'Developed and maintained microservices handling 10M+ daily requests using Python and Kubernetes',
-                  original: 'Developed and maintained microservices handling 10M+ daily requests using Python and Kubernetes',
-                  relevanceScore: 0.92,
-                  rewritten: 'Built scalable microservices architecture processing 10M+ daily requests with Python and Kubernetes, ensuring high availability and performance'
+                  id: 'exp-saved-1',
+                  company: 'Google',
+                  role: 'Software Engineer II',
+                  startDate: 'Jun 2022',
+                  endDate: 'Present',
+                  bullets: [
+                    { id: 'bullet-saved-1', text: 'Developed and maintained microservices handling 10M+ daily requests using Python, Go, and Kubernetes, ensuring 99.9% uptime' },
+                    { id: 'bullet-saved-2', text: 'Optimized database queries and caching strategies, reducing API response time by 40% and saving $50K annually in infrastructure costs' },
+                    { id: 'bullet-saved-3', text: 'Implemented comprehensive CI/CD pipelines using Jenkins, Docker, and Kubernetes, reducing deployment time by 60% and enabling daily releases' },
+                    { id: 'bullet-saved-4', text: 'Designed and built RESTful and gRPC APIs serving 5M+ requests per day with sub-100ms latency, improving mobile app performance by 30%' }
+                  ]
                 },
                 {
-                  id: 'bullet-5',
-                  text: 'Designed and built RESTful APIs serving 5M+ requests per day with 99.9% uptime',
-                  original: 'Designed and built RESTful APIs serving 5M+ requests per day with 99.9% uptime',
-                  relevanceScore: 0.88,
-                  rewritten: 'Architected and implemented RESTful APIs handling 5M+ daily requests with 99.9% uptime, leveraging Node.js and PostgreSQL'
-                },
-                {
-                  id: 'bullet-4',
-                  text: 'Implemented CI/CD pipelines using Jenkins and Docker, reducing deployment time by 60%',
-                  original: 'Implemented CI/CD pipelines using Jenkins and Docker, reducing deployment time by 60%',
-                  relevanceScore: 0.85,
-                  rewritten: 'Established CI/CD pipelines with Jenkins and Docker, automating deployments and reducing release time by 60%'
+                  id: 'exp-saved-2',
+                  company: 'Amazon Web Services',
+                  role: 'Software Development Engineer Intern',
+                  startDate: 'Jun 2020',
+                  endDate: 'Aug 2020',
+                  bullets: [
+                    { id: 'bullet-saved-5', text: 'Developed internal tools using Java and Spring Boot to automate deployment processes, reducing manual work by 40 hours per week' },
+                    { id: 'bullet-saved-6', text: 'Built monitoring and alerting system for AWS services using CloudWatch and Lambda, improving incident detection time by 50%' }
+                  ]
                 }
               ],
-              gaps: ['Cloud infrastructure', 'System design'],
-              mode: 'strict',
-              jobDescription: 'Full-stack software engineer position at Google...'
+              education: [
+                {
+                  id: 'edu-saved-1',
+                  school: 'Stanford University',
+                  degree: 'B.S.',
+                  field: 'Computer Science',
+                  startDate: 'Sep 2018',
+                  endDate: 'Jun 2022',
+                  bullets: [
+                    { id: 'bullet-saved-7', text: 'GPA: 3.9/4.0, Magna Cum Laude, Dean\'s List all semesters' },
+                    { id: 'bullet-saved-8', text: 'Relevant Coursework: Algorithms & Data Structures, Distributed Systems, Database Systems, Computer Networks' }
+                  ]
+                }
+              ],
+              projects: [
+                {
+                  id: 'proj-saved-1',
+                  name: 'Distributed Task Scheduler',
+                  description: 'High-performance distributed task scheduling system with fault tolerance',
+                  technologies: 'Go, Kubernetes, Redis, PostgreSQL, gRPC',
+                  startDate: 'Jan 2022',
+                  endDate: 'May 2022',
+                  bullets: [
+                    { id: 'bullet-saved-9', text: 'Built scalable task scheduler handling 100K+ concurrent tasks using Go and Kubernetes, achieving 99.95% reliability' },
+                    { id: 'bullet-saved-10', text: 'Implemented distributed consensus algorithm using Raft protocol for leader election and task coordination across nodes' }
+                  ]
+                }
+              ],
+              customSections: [
+                {
+                  id: 'custom-saved-1',
+                  title: 'Technical Skills',
+                  subtitle: '',
+                  bullets: [
+                    { id: 'bullet-saved-11', text: 'Languages: Python, Go, Java, C++, SQL' },
+                    { id: 'bullet-saved-12', text: 'Backend: Node.js, Django, Spring Boot, GraphQL, gRPC, REST APIs' },
+                    { id: 'bullet-saved-13', text: 'DevOps: Docker, Kubernetes, Jenkins, AWS (EC2, S3, RDS, Lambda), CI/CD' },
+                    { id: 'bullet-saved-14', text: 'Concepts: Microservices, Distributed Systems, System Design' }
+                  ]
+                }
+              ],
+              jobDescription: 'Software Engineer position at Google focusing on backend infrastructure, distributed systems, and scalable microservices architecture...'
             }
           },
           {
             id: 'resume-2',
-            name: 'Meta Frontend Engineer',
+            name: 'Meta - Frontend Engineer',
             createdAt: Date.now() - 5 * 24 * 60 * 60 * 1000, // 5 days ago
             updatedAt: Date.now() - 5 * 24 * 60 * 60 * 1000,
             data: {
-              selectedBullets: [
+              experiences: [
                 {
-                  id: 'bullet-7',
-                  text: 'Built React components for Facebook Marketplace improving user interface and accessibility',
-                  original: 'Built React components for Facebook Marketplace improving user interface and accessibility',
-                  relevanceScore: 0.95,
-                  rewritten: 'Developed React components for Facebook Marketplace, enhancing UI/UX and accessibility standards'
-                },
-                {
-                  id: 'bullet-8',
-                  text: 'Implemented real-time notifications using WebSocket connections reducing latency by 30%',
-                  original: 'Implemented real-time notifications using WebSocket connections reducing latency by 30%',
-                  relevanceScore: 0.90,
-                  rewritten: 'Created real-time notification system using WebSocket connections, achieving 30% latency reduction'
-                },
-                {
-                  id: 'bullet-14',
-                  text: 'Built scalable web application supporting 1000+ concurrent users with real-time inventory updates',
-                  original: 'Built scalable web application supporting 1000+ concurrent users with real-time inventory updates',
-                  relevanceScore: 0.87,
-                  rewritten: 'Engineered scalable web application handling 1000+ concurrent users with real-time inventory management'
+                  id: 'exp-saved-3',
+                  company: 'Meta',
+                  role: 'Software Engineering Intern',
+                  startDate: 'Jun 2021',
+                  endDate: 'Aug 2021',
+                  bullets: [
+                    { id: 'bullet-saved-15', text: 'Built React components for Facebook Marketplace improving user interface accessibility and mobile responsiveness, increasing conversion rate by 15%' },
+                    { id: 'bullet-saved-16', text: 'Implemented real-time notification system using WebSocket connections and Redis, reducing latency by 30% and improving user engagement' },
+                    { id: 'bullet-saved-17', text: 'Optimized GraphQL API endpoints and data fetching strategies, reducing server load by 25% and improving page load times' }
+                  ]
                 }
               ],
-              gaps: ['TypeScript', 'GraphQL'],
-              mode: 'strict',
-              jobDescription: 'Frontend engineer role focusing on React and user experience...'
+              education: [
+                {
+                  id: 'edu-saved-2',
+                  school: 'Stanford University',
+                  degree: 'B.S.',
+                  field: 'Computer Science',
+                  startDate: 'Sep 2018',
+                  endDate: 'Jun 2022',
+                  bullets: [
+                    { id: 'bullet-saved-18', text: 'GPA: 3.9/4.0, Magna Cum Laude' }
+                  ]
+                }
+              ],
+              projects: [
+                {
+                  id: 'proj-saved-2',
+                  name: 'E-commerce Platform',
+                  description: 'Full-stack e-commerce platform with payment integration',
+                  technologies: 'React, Node.js, Express, PostgreSQL, Stripe API, AWS',
+                  startDate: 'Sep 2020',
+                  endDate: 'Dec 2021',
+                  bullets: [
+                    { id: 'bullet-saved-19', text: 'Built scalable web application supporting 1000+ concurrent users with real-time inventory updates and order processing' },
+                    { id: 'bullet-saved-20', text: 'Integrated Stripe payment processing handling $50K+ in transactions with PCI compliance and fraud detection' },
+                    { id: 'bullet-saved-21', text: 'Optimized database schema and queries, reducing page load time by 45% and improving user experience metrics' }
+                  ]
+                },
+                {
+                  id: 'proj-saved-3',
+                  name: 'Real-time Chat Application',
+                  description: 'WebSocket-based chat application with end-to-end encryption',
+                  technologies: 'React, Node.js, Socket.io, MongoDB, Redis, Docker',
+                  startDate: 'Jun 2020',
+                  endDate: 'Aug 2020',
+                  bullets: [
+                    { id: 'bullet-saved-22', text: 'Developed real-time messaging application supporting 500+ concurrent users with WebSocket connections and message persistence' },
+                    { id: 'bullet-saved-23', text: 'Implemented end-to-end encryption using Web Crypto API, ensuring user privacy and data security' }
+                  ]
+                }
+              ],
+              customSections: [
+                {
+                  id: 'custom-saved-2',
+                  title: 'Technical Skills',
+                  subtitle: '',
+                  bullets: [
+                    { id: 'bullet-saved-24', text: 'Languages: JavaScript, TypeScript, Python, SQL' },
+                    { id: 'bullet-saved-25', text: 'Frontend: React, Redux, Next.js, HTML5, CSS3, WebSocket' },
+                    { id: 'bullet-saved-26', text: 'Backend: Node.js, Express, GraphQL, REST APIs' },
+                    { id: 'bullet-saved-27', text: 'Tools: Git, Docker, AWS, Jest, React Testing Library' }
+                  ]
+                }
+              ],
+              jobDescription: 'Frontend Engineer role at Meta focusing on React, user experience, accessibility, and building scalable web applications...'
+            }
+          },
+          {
+            id: 'resume-3',
+            name: 'Amazon - Full Stack SWE',
+            createdAt: Date.now() - 10 * 24 * 60 * 60 * 1000, // 10 days ago
+            updatedAt: Date.now() - 10 * 24 * 60 * 60 * 1000,
+            data: {
+              experiences: [
+                {
+                  id: 'exp-saved-4',
+                  company: 'Google',
+                  role: 'Software Engineer II',
+                  startDate: 'Jun 2022',
+                  endDate: 'Present',
+                  bullets: [
+                    { id: 'bullet-saved-28', text: 'Developed and maintained microservices handling 10M+ daily requests using Python, Go, and Kubernetes, ensuring 99.9% uptime' },
+                    { id: 'bullet-saved-29', text: 'Optimized database queries and caching strategies, reducing API response time by 40% and saving $50K annually in infrastructure costs' },
+                    { id: 'bullet-saved-30', text: 'Built real-time analytics dashboard using React and WebSockets, enabling product team to monitor user behavior and make data-driven decisions' }
+                  ]
+                },
+                {
+                  id: 'exp-saved-5',
+                  company: 'Amazon Web Services',
+                  role: 'Software Development Engineer Intern',
+                  startDate: 'Jun 2020',
+                  endDate: 'Aug 2020',
+                  bullets: [
+                    { id: 'bullet-saved-31', text: 'Developed internal tools using Java and Spring Boot to automate deployment processes, reducing manual work by 40 hours per week' },
+                    { id: 'bullet-saved-32', text: 'Built monitoring and alerting system for AWS services using CloudWatch and Lambda, improving incident detection time by 50%' },
+                    { id: 'bullet-saved-33', text: 'Optimized database queries and implemented caching layer using DynamoDB and ElastiCache, reducing query latency by 35%' }
+                  ]
+                }
+              ],
+              education: [
+                {
+                  id: 'edu-saved-3',
+                  school: 'Stanford University',
+                  degree: 'B.S.',
+                  field: 'Computer Science',
+                  startDate: 'Sep 2018',
+                  endDate: 'Jun 2022',
+                  bullets: [
+                    { id: 'bullet-saved-34', text: 'GPA: 3.9/4.0, Magna Cum Laude' },
+                    { id: 'bullet-saved-35', text: 'Relevant Coursework: Algorithms & Data Structures, Distributed Systems, Database Systems' }
+                  ]
+                }
+              ],
+              projects: [
+                {
+                  id: 'proj-saved-4',
+                  name: 'E-commerce Platform',
+                  description: 'Full-stack e-commerce platform with payment integration',
+                  technologies: 'React, Node.js, Express, PostgreSQL, Stripe API, AWS',
+                  startDate: 'Sep 2020',
+                  endDate: 'Dec 2021',
+                  bullets: [
+                    { id: 'bullet-saved-36', text: 'Built scalable web application supporting 1000+ concurrent users with real-time inventory updates and order processing' },
+                    { id: 'bullet-saved-37', text: 'Implemented JWT-based authentication and authorization with role-based access control for admin and customer roles' },
+                    { id: 'bullet-saved-38', text: 'Deployed on AWS using EC2, RDS, S3, and CloudFront with automated backup, monitoring, and auto-scaling capabilities' }
+                  ]
+                }
+              ],
+              customSections: [
+                {
+                  id: 'custom-saved-3',
+                  title: 'Technical Skills',
+                  subtitle: '',
+                  bullets: [
+                    { id: 'bullet-saved-39', text: 'Languages: Python, JavaScript, TypeScript, Java, SQL' },
+                    { id: 'bullet-saved-40', text: 'Frontend: React, Redux, Next.js' },
+                    { id: 'bullet-saved-41', text: 'Backend: Node.js, Express, Django, Spring Boot, REST APIs' },
+                    { id: 'bullet-saved-42', text: 'Cloud: AWS (EC2, S3, RDS, Lambda, DynamoDB), Docker, Kubernetes' }
+                  ]
+                },
+                {
+                  id: 'custom-saved-4',
+                  title: 'Certifications',
+                  subtitle: '',
+                  bullets: [
+                    { id: 'bullet-saved-43', text: 'AWS Certified Solutions Architect - Associate (2022)' }
+                  ]
+                }
+              ],
+              jobDescription: 'Full Stack Software Engineer position at Amazon focusing on building scalable web applications, cloud infrastructure, and microservices...'
             }
           }
         ];
@@ -227,12 +497,32 @@ function App() {
         // Save mock resumes with their original timestamps
         for (const resume of mockSavedResumes) {
           await storageService.saveGeneratedResume(resume.name, resume.data, resume.createdAt);
+          console.log('Saved resume:', resume.name);
         }
         
-        console.log('Mock data initialized successfully');
+        console.log('✅ Mock data initialized successfully!');
+        console.log('Master resume:', mockMasterResume.totalBullets, 'bullets');
+        console.log('Saved resumes:', mockSavedResumes.length);
+        
+        // Reload the data to ensure it's displayed
+        await loadResumeData();
+      } else {
+        console.log('Mock data already exists, skipping initialization');
+        console.log('Has master data:', hasMasterData);
+        console.log('Saved resumes count:', savedResumes.length);
+        if (!hasMasterData) {
+          console.log('⚠️ No master data found but condition prevented initialization');
+          console.log('Existing resume structure:', {
+            experiences: existingResume.experiences?.length || 0,
+            education: existingResume.education?.length || 0,
+            projects: existingResume.projects?.length || 0,
+            customSections: existingResume.customSections?.length || 0,
+            totalBullets: existingResume.totalBullets
+          });
+        }
       }
     } catch (error) {
-      console.error('Error initializing mock data:', error);
+      console.error('❌ Error initializing mock data:', error);
     }
   }
 
@@ -241,7 +531,15 @@ function App() {
    */
   async function loadResumeData() {
     try {
+      console.log('📥 Loading resume data...');
       const data = await storageService.getResume();
+      console.log('Raw data from storage:', {
+        experiences: data.experiences?.length || 0,
+        education: data.education?.length || 0,
+        projects: data.projects?.length || 0,
+        customSections: data.customSections?.length || 0
+      });
+      
       // Ensure all fields exist and calculate total bullets
       const normalizedData = {
         experiences: Array.isArray(data.experiences) ? data.experiences : [],
@@ -255,9 +553,18 @@ function App() {
           customSections: Array.isArray(data.customSections) ? data.customSections : []
         })
       };
+      
+      console.log('✅ Setting resume state:', {
+        experiences: normalizedData.experiences.length,
+        education: normalizedData.education.length,
+        projects: normalizedData.projects.length,
+        customSections: normalizedData.customSections.length,
+        totalBullets: normalizedData.totalBullets
+      });
+      
       setResume(normalizedData);
     } catch (error) {
-      console.error('Error loading resume:', error);
+      console.error('❌ Error loading resume:', error);
       // Set default empty state on error
       setResume({
         experiences: [],
@@ -266,6 +573,24 @@ function App() {
         customSections: [],
         totalBullets: 0
       });
+    }
+  }
+  
+  // Force initialization function (for testing)
+  async function forceInitializeMockData() {
+    try {
+      console.log('🔧 FORCE INITIALIZING MOCK DATA...');
+      await storageService.clearResume();
+      const existingSaved = await storageService.getSavedResumes();
+      for (const resume of existingSaved) {
+        await storageService.deleteSavedResume(resume.id);
+      }
+      await initializeMockData();
+      await loadResumeData();
+      alert('Mock data initialized! Check the console for details.');
+    } catch (error) {
+      console.error('Error force initializing:', error);
+      alert('Error: ' + error.message);
     }
   }
 
@@ -319,6 +644,21 @@ function App() {
       <header className="app-header">
         <h1>AI Resume Optimizer</h1>
         <p className="subtitle">Match your resume to any job description</p>
+        <button
+          onClick={forceInitializeMockData}
+          style={{
+            marginTop: '8px',
+            padding: '6px 12px',
+            fontSize: '11px',
+            background: 'rgba(255,255,255,0.2)',
+            color: '#fff',
+            border: '1px solid rgba(255,255,255,0.3)',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}
+        >
+          🔄 Force Load Mock Data
+        </button>
       </header>
 
       <main className="app-main">
