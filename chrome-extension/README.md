@@ -187,13 +187,35 @@ Used in: `content/content-script.js`
 
 ## 🎯 Key Features
 
-### 1. Job Description Extraction
+### 1. 3-Tab Interface
+
+**Tab 1: Master Resume**
+- Unlimited bullet points per experience/education/project
+- All sections editable (Experiences, Education, Projects, Custom Sections)
+- LaTeX line count indicators (1 line, 2 lines, ⚠️ overflow)
+- Auto-saves to Chrome local storage
+
+**Tab 2: Generate New Resume**
+- Extract or paste job description
+- Match best bullets from master resume
+- (Currently mock, will connect to backend)
+- Customize and save optimized resumes
+
+**Tab 3: Saved Resumes**
+- View all saved resumes (sorted by newest)
+- Structured editing: Sections → Entries → Bullets
+- Add bullets from master resume ("+ From Master" button)
+- Edit sections, entries, and bullets
+- Save as new resume (create variations)
+
+### 2. Job Description Extraction
 
 **Three methods:**
 
 1. **Content Script Extraction** (Primary)
-   - Lightweight DOM-based extraction
+   - Enhanced AI-free extraction with noise filtering
    - Site-specific selectors (LinkedIn, Indeed, etc.)
+   - Generic fallback with scoring and cleaning
    - No user permission needed
 
 2. **Chrome Debugger API** (Fallback)
@@ -203,20 +225,27 @@ Used in: `content/content-script.js`
 
 3. **Manual Input** (Always available)
    - User can paste job description manually
+   - Collapsible preview (shortened/expanded view)
 
-### 2. Resume Data Storage
+### 3. Resume Data Storage
 
 - Uses Chrome Storage API (`chrome.storage.local`)
-- Stores locally in browser
-- No backend connection yet
+- Stores master resume and saved resumes separately
+- Master resume: Full structure with unlimited bullets
+- Saved resumes: Structured format (sections → entries → bullets)
 - Data persists across sessions
 
-### 3. React UI
+### 4. React UI Components
 
-- Modern, responsive UI
-- Experience editor with unlimited bullets
-- Job matching interface
-- Optimization results display
+- **ExperienceEditor**: Edit work experiences with unlimited bullets
+- **EducationEditor**: Edit education entries
+- **ProjectEditor**: Edit projects
+- **CustomSectionEditor**: Edit custom sections
+- **GenerateResume**: Job matching and optimization interface
+- **SavedResumes**: View and edit saved resumes
+- **Tabs**: Tab navigation component
+- **JobMatcher**: Job description input with extraction
+- **OptimizationPanel**: Display optimization results
 
 ## 🧪 Testing
 
@@ -227,22 +256,31 @@ Used in: `content/content-script.js`
    - [ ] Popup opens when clicked
    - [ ] No console errors
 
-2. **Resume Management**
-   - [ ] Can add new experience
-   - [ ] Can add unlimited bullet points
+2. **Master Resume (Tab 1)**
+   - [ ] Can add new experiences, education, projects, custom sections
+   - [ ] Can add unlimited bullet points to any entry
+   - [ ] LaTeX line count indicators show correctly
    - [ ] Data persists after closing popup
-   - [ ] Can edit/delete experiences and bullets
+   - [ ] Can edit/delete entries and bullets
 
-3. **Job Description Extraction**
-   - [ ] Extract button appears on job posting pages
-   - [ ] Extraction works on LinkedIn
-   - [ ] Extraction works on Indeed
+3. **Generate New Resume (Tab 2)**
+   - [ ] Extract button works on job posting pages
+   - [ ] Extraction works (with cleaning)
    - [ ] Manual paste works
-
-4. **Optimization (Mock)**
-   - [ ] Optimization button works
+   - [ ] "Select Best Points" button works (mock)
    - [ ] Results display correctly
-   - [ ] Can edit optimized bullets
+   - [ ] Can customize bullets before saving
+   - [ ] Can save with name
+
+4. **Saved Resumes (Tab 3)**
+   - [ ] Saved resumes list shows correctly
+   - [ ] Can click to view/edit resume
+   - [ ] Can add entries to sections
+   - [ ] Can edit entry metadata (company, dates, etc.)
+   - [ ] Can add bullets from master resume ("+ From Master")
+   - [ ] Can add new bullets manually
+   - [ ] Can save as new resume
+   - [ ] Can delete saved resumes
 
 ### Debugging
 
@@ -269,11 +307,17 @@ When ready to connect to backend:
 ### Current State
 
 - ✅ Extension foundation complete
-- ✅ UI components ready
+- ✅ 3-tab interface implemented
+- ✅ Master Resume tab (unlimited bullets)
+- ✅ Generate New Resume tab (job matching UI)
+- ✅ Saved Resumes tab (structured editing)
 - ✅ Chrome APIs integrated
 - ✅ Local storage working
+- ✅ LaTeX line count indicators
+- ✅ Bullet selection from master resume
 - ⏳ Backend connection (not yet)
 - ⏳ Real optimization (mock data only)
+- ⏳ LaTeX preview/export (not yet)
 
 ## 📚 Resources
 

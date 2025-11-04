@@ -6,350 +6,461 @@
 
 ---
 
-## Step 1: Build Super Resume (One-Time Setup)
+## 🏗️ Extension Architecture (3 Tabs)
 
-**User opens Chrome extension popup**
+The extension is organized into 3 main tabs:
+
+1. **Master Resume** - Build and maintain unlimited bullet points
+2. **Generate New Resume** - Match bullets to job descriptions and optimize
+3. **Saved Resumes** - View and edit previously saved optimized resumes
+
+---
+
+## Tab 1: Master Resume (One-Time Setup)
+
+**User opens Chrome extension popup → Defaults to "Master Resume" tab**
 
 ```
 ┌─────────────────────────────────────────┐
 │  AI Resume Optimizer                    │
-│  ┌─────────────────────────────────┐   │
-│  │  EXPERIENCES                     │   │
-│  │                                  │   │
-│  │  ┌─ Google (2020-2023) ─────┐   │   │
-│  │  │ Software Engineer         │   │   │
-│  │  │                           │   │   │
-│  │  │ Bullets (45):            │   │   │
-│  │  │ ☑ Led microservices...  │   │   │
-│  │  │ ☑ Built REST APIs...    │   │   │
-│  │  │ ☑ Implemented CI/CD...   │   │   │
-│  │  │ ... (42 more)            │   │   │
-│  │  │                           │   │   │
-│  │  │ [+ Add Bullet]           │   │   │
-│  │  └──────────────────────────┘   │   │
-│  │                                  │   │
-│  │  ┌─ Amazon (2018-2020) ─────┐   │   │
-│  │  │ Software Engineer         │   │   │
-│  │  │ Bullets (30): ...         │   │   │
-│  │  └──────────────────────────┘   │   │
-│  │                                  │   │
-│  │  [+ Add Experience]             │   │
-│  └─────────────────────────────────┘   │
+│  [Master Resume] [Generate] [Saved]     │
+│  ────────────────────────────────────   │
 │                                          │
-│  Total Bullets: 75                      │
+│  Master Resume                          │
+│  Total Bullets: 51                      │
+│                                          │
+│  ┌─ Personal Information ──────────────┐ │
+│  │  Name: John Doe                    │ │
+│  │  Phone: +1 (555) 123-4567        │ │
+│  │  Email: john.doe@example.com      │ │
+│  │  LinkedIn: linkedin.com/in/johndoe│ │
+│  │  GitHub: github.com/johndoe       │ │
+│  └────────────────────────────────────┘ │
+│                                          │
+│  ┌─ Work Experience ─────────────────┐ │
+│  │  ┌─ Google (Jun 2022-Present) ───┐ │ │
+│  │  │ Software Engineer II          │ │ │
+│  │  │                               │ │ │
+│  │  │ Bullets (8):                 │ │ │
+│  │  │ • **Developed** microservices│ │ │
+│  │  │   1 line [Bold]              │ │ │
+│  │  │ • Optimized database...      │ │ │
+│  │  │   1 line [Non-Negotiable ⭐] │ │ │
+│  │  │ • Led team of 3 engineers... │ │ │
+│  │  │   1 line                     │ │ │
+│  │  │ ... (5 more)                 │ │ │
+│  │  │                               │ │ │
+│  │  │ [+ Add Bullet]               │ │ │
+│  │  └──────────────────────────────┘ │ │
+│  │                                   │ │
+│  │  ┌─ Meta (Jun 2021-Aug 2021) ───┐ │ │
+│  │  │ Software Engineering Intern   │ │ │
+│  │  │ Bullets (5): ...              │ │ │
+│  │  └──────────────────────────────┘ │ │
+│  │                                   │ │
+│  │  [+ Add Experience]              │ │
+│  └───────────────────────────────────┘ │
+│                                          │
+│  ┌─ Education ────────────────────────┐ │
+│  │  ┌─ Stanford University ──────────┐ │ │
+│  │  │ B.S. Computer Science          │ │ │
+│  │  │ Bullets (4): ...               │ │ │
+│  │  └──────────────────────────────┘ │ │
+│  │  [+ Add Education]                │ │
+│  └───────────────────────────────────┘ │
+│                                          │
+│  ┌─ Projects ─────────────────────────┐ │
+│  │  ┌─ Distributed Task Scheduler ───┐ │ │
+│  │  │ Go, Kubernetes, Redis...        │ │ │
+│  │  │ Bullets (4): ...                │ │ │
+│  │  └──────────────────────────────┘ │ │
+│  │  [+ Add Project]                  │ │
+│  └───────────────────────────────────┘ │
+│                                          │
+│  ┌─ Custom Sections ───────────────────┐ │
+│  │  ┌─ Technical Skills ─────────────┐ │ │
+│  │  │ Bullets (7): ...                │ │ │
+│  │  └──────────────────────────────┘ │ │
+│  │  [+ Add Custom Section]           │ │
+│  └───────────────────────────────────┘ │
 └─────────────────────────────────────────┘
 ```
 
-**User has:**
-- 3 work experiences
-- 75 total bullet points (super resume)
-- All stored locally in Chrome extension
+**Key Features:**
+- ✅ Personal information section (name, phone, email, LinkedIn, GitHub)
+- ✅ Unlimited bullet points per experience/education/project
+- ✅ **Bold text** formatting (markdown-style: `**text**`)
+- ✅ Non-negotiable bullets (must-include flag with ⭐ indicator)
+- ✅ LaTeX line count indicator (1 line, 2 lines, or ⚠️ overflow)
+- ✅ All sections editable (Experiences, Education, Projects, Custom)
+- ✅ Data auto-saves to Chrome local storage
+- ✅ Total bullet count displayed
+
+**User Actions:**
+- Add/edit/delete experiences, education, projects, custom sections
+- Add unlimited bullets to any entry
+- See line count warnings for one-page constraint
 
 ---
 
-## Step 2: Find Job & Extract Description
+## Tab 2: Generate New Resume
 
-**User navigates to LinkedIn job posting**
-
-```
-┌─────────────────────────────────────────┐
-│  LinkedIn - Google Jobs                 │
-│                                          │
-│  Senior Software Engineer               │
-│  📍 Mountain View, CA                   │
-│                                          │
-│  [Extension icon appears in toolbar]    │
-│  ┌─────────────────────────────────┐ │
-│  │ 🔍 AI Resume Optimizer            │ │
-│  │ "Extract Job Description"         │ │
-│  └─────────────────────────────────┘ │
-│                                          │
-│  We're looking for a Senior Software... │
-│  • Experience with microservices        │
-│  • Python, REST APIs, CI/CD             │
-│  • Team leadership                       │
-└─────────────────────────────────────────┘
-```
-
-**User clicks extension icon → Job description extracted**
-
----
-
-## Step 3: One-Click Optimization
-
-**Extension shows optimization panel**
+**User clicks "Generate New Resume" tab**
 
 ```
 ┌─────────────────────────────────────────┐
-│  Match Resume to Job                    │
+│  AI Resume Optimizer                    │
+│  [Master] [Generate New Resume] [Saved] │
+│  ────────────────────────────────────   │
+│                                          │
+│  Match to Job Description               │
+│  Extract or paste a job description,    │
+│  then select the best resume points.    │
+│                                          │
 │  ┌─────────────────────────────────┐   │
 │  │ Job Description:                │   │
-│  │ Senior Software Engineer...      │   │
+│  │ [Extract from Page] [Paste]    │   │
 │  │                                  │   │
-│  │ Selected: 45 bullets from       │   │
-│  │           Google experience      │   │
+│  │ ┌─ Job Description Preview ────┐ │   │
+│  │ │ At Raytheon, the foundation...│ │   │
+│  │ │ [Show More ▼]                │ │   │
+│  │ └──────────────────────────────┘ │   │
 │  │                                  │   │
-│  │ [Match Best Bullets]  ← CLICK    │   │
+│  │ [Select Best Points]  ← CLICK    │   │
 │  └─────────────────────────────────┘   │
 │                                          │
-│  Processing... (3 seconds)              │
+│  Processing... (2 seconds)              │
+│                                          │
+│  ┌─ Optimized Resume ────────────────┐ │
+│  │ Selected: 12 bullets              │ │
+│  │                                    │ │
+│  │ BEFORE → AFTER                    │ │
+│  │ ─────────────────────────────      │ │
+│  │                                    │ │
+│  │ "Developed microservices..."       │ │
+│  │     ↓                              │ │
+│  │ "Architected scalable              │ │
+│  │  microservices using Python..."    │ │
+│  │                                    │ │
+│  │  Relevance: 0.92                  │ │
+│  │  [✓ Use] [Edit] [Swap]            │ │
+│  │                                    │ │
+│  │  ... (11 more bullets)             │ │
+│  │                                    │ │
+│  │  Gaps Found:                       │ │
+│  │  • Cloud infrastructure           │ │
+│  │  • System design                  │ │
+│  │                                    │ │
+│  │  [👁️ Preview LaTeX] [💾 Save]     │ │
+│  │  [📄 Export to PDF]               │ │
+│  └───────────────────────────────────┘ │
+│                                          │
+│  ┌─ LaTeX Preview (when opened) ─────┐ │
+│  │  ┌─────────────────────────────┐ │ │
+│  │  │  John Doe                   │ │ │
+│  │  │  +1 (555) 123-4567          │ │ │
+│  │  │  john.doe@example.com       │ │ │
+│  │  │                              │ │ │
+│  │  │  EXPERIENCE                  │ │ │
+│  │  │  Google | Software Engineer  │ │ │
+│  │  │  • **Developed** microservices│ │ │
+│  │  │  • Optimized database...     │ │ │
+│  │  │  ...                         │ │ │
+│  │  └─────────────────────────────┘ │ │
+│  │  Page: 1/1 ✓ (12 bullets)        │ │
+│  └───────────────────────────────────┘ │
 └─────────────────────────────────────────┘
 ```
 
-**Backend processes:**
-1. Vector search: Finds top 15 bullets by similarity
-2. Unified optimizer: Ranks, rewrites, identifies gaps
-3. One-page selector: Picks top 12 that fit one page
-4. Returns optimized selection
+**User Flow:**
+1. **Extract or paste job description** → Click "Extract from Page" or paste manually
+2. **Click "Select Best Points"** → (Currently mock, will connect to backend)
+   - Non-negotiable bullets automatically included
+3. **Review optimized bullets** → See before/after, relevance scores, gaps
+   - Non-negotiable bullets highlighted with ⭐
+4. **Preview LaTeX** → Click "Preview LaTeX" to see rendered output
+5. **Customize bullets** → Edit text (with **bold** support), swap bullets, accept/reject
+6. **Export to PDF** → Click "Export to PDF"
+   - If exceeds 1 page: Warning dialog with auto-trim option
+   - Non-negotiable bullets protected from removal
+7. **Save resume** → Click "Save Resume", enter name (e.g., "Google SWE - Backend")
+
+**What Happens:**
+- Extension collects all bullets from master resume
+- (Mock) Selects top 12 most relevant bullets
+- (Future) Backend does hybrid search + unified optimization
+- User can customize before saving
+- Saved resume appears in "Saved Resumes" tab
 
 ---
 
-## Step 4: See Optimization Results
+## Tab 3: Saved Resumes
 
-**Extension shows before/after comparison**
+**User clicks "Saved Resumes" tab**
 
 ```
 ┌─────────────────────────────────────────┐
-│  Optimization Results                   │
-│  ┌─────────────────────────────────┐   │
-│  │ Selected: 12/12 bullets         │   │
-│  │ Page: 1/1 ✓                      │   │
-│  │                                  │   │
-│  │ BEFORE → AFTER                   │   │
-│  │ ──────────────────────────       │   │
-│  │                                  │   │
-│  │ "Led microservices"              │   │
-│  │     ↓                            │   │
-│  │ "Architected scalable            │   │
-│  │  microservices using Python,     │   │
-│  │  reducing latency by 40%"        │   │
-│  │                                  │   │
-│  │  Relevance: 0.87                │   │
-│  │  Reasoning: Added keywords...   │   │
-│  │                                  │   │
-│  │  [✓ Use]  [Edit]  [Swap]        │   │
-│  │                                  │   │
-│  │  ... (11 more bullets)          │   │
-│  │                                  │   │
-│  │  Gaps Found:                    │   │
-│  │  • Cloud deployment (AWS)       │   │
-│  │  • Machine learning experience  │   │
-│  │                                  │   │
-│  │  [Customize] [Export Resume]    │   │
-│  └─────────────────────────────────┘   │
+│  AI Resume Optimizer                    │
+│  [Master] [Generate] [Saved Resumes]   │
+│  ────────────────────────────────────   │
+│                                          │
+│  Saved Resumes (3)                      │
+│  Click on a resume to view it.          │
+│                                          │
+│  ┌─ Resume List ─────────────────────┐ │
+│  │  ┌─ Google SWE - Backend ───────┐ │ │
+│  │  │ 2 days ago • 4 bullets  [🗑️] │ │ │
+│  │  └──────────────────────────────┘ │ │
+│  │                                     │ │
+│  │  ┌─ Meta - Frontend Engineer ────┐ │ │
+│  │  │ 5 days ago • 3 bullets  [🗑️]   │ │ │
+│  │  └──────────────────────────────┘ │ │
+│  │                                     │ │
+│  │  ┌─ Amazon - Full Stack SWE ─────┐ │ │
+│  │  │ 10 days ago • 3 bullets [🗑️] │ │ │
+│  │  └──────────────────────────────┘ │ │
+│  └─────────────────────────────────────┘ │
+│                                          │
+│  ┌─ Selected: Google SWE - Backend ───┐ │
+│  │  Created: 2 days ago               │ │
+│  │                                    │ │
+│  │  [💾 Save As New Resume] [Close]  │ │
+│  │                                    │ │
+│  │  ┌─ Work Experience ─────────────┐ │ │
+│  │  │  ┌─ Google ─────────────────┐ │ │
+│  │  │  │ Software Engineer II      │ │ │
+│  │  │  │                           │ │ │
+│  │  │  │ Bullets (4):              │ │ │
+│  │  │  │ • Developed microservices │ │ │
+│  │  │  │ • Optimized database...   │ │ │
+│  │  │  │ • Implemented CI/CD...    │ │ │
+│  │  │  │ • Designed REST APIs...   │ │ │
+│  │  │  │                           │ │ │
+│  │  │  │ [+ From Master] [+ Add]   │ │ │
+│  │  │  └───────────────────────────┘ │ │
+│  │  │                               │ │
+│  │  │  [+ Add Experience]           │ │
+│  │  └───────────────────────────────┘ │
+│  │                                    │
+│  │  ┌─ Education ───────────────────┐ │
+│  │  │  ┌─ Stanford University ─────┐ │ │
+│  │  │  │ B.S. Computer Science    │ │ │
+│  │  │  │ Bullets (2): ...          │ │ │
+│  │  │  │ [+ From Master] [+ Add]  │ │ │
+│  │  │  └──────────────────────────┘ │ │
+│  │  │  [+ Add Education]             │ │
+│  │  └───────────────────────────────┘ │
+│  │                                    │
+│  │  ┌─ Projects ─────────────────────┐ │
+│  │  │  ┌─ Distributed Task Scheduler│ │ │
+│  │  │  │ Bullets (2): ...           │ │ │
+│  │  │  │ [+ From Master] [+ Add]   │ │ │
+│  │  │  └───────────────────────────┘ │ │
+│  │  │  [+ Add Project]               │ │
+│  │  └───────────────────────────────┘ │
+│  │                                    │
+│  │  ┌─ Custom Sections ───────────────┐ │
+│  │  │  ┌─ Technical Skills ────────┐ │ │
+│  │  │  │ Bullets (4): ...           │ │ │
+│  │  │  │ [+ From Master] [+ Add]   │ │ │
+│  │  │  └───────────────────────────┘ │ │
+│  │  │  [+ Add Custom Section]        │ │
+│  │  └───────────────────────────────┘ │
+│  └─────────────────────────────────────┘ │
 └─────────────────────────────────────────┘
 ```
 
-**User can:**
-- See all optimized bullets
-- Click "Edit" to modify text
-- Click "Swap" to choose different bullets
-- See what gaps were identified
+**Key Features:**
+- ✅ View all saved resumes (sorted by newest first)
+- ✅ Click resume to view/edit
+- ✅ Edit structure: Sections → Entries → Bullets
+- ✅ Add bullets from master resume ("+ From Master" button)
+- ✅ Add new entries to sections
+- ✅ Save as new resume (create variations)
+
+**User Actions:**
+1. **View saved resume** → Click on resume name
+2. **Edit sections** → Add new entries to Experiences, Education, Projects, etc.
+3. **Edit entries** → Modify company, dates, role, etc.
+4. **Add bullets from master** → Click "+ From Master" → Select bullet from master resume
+5. **Add new bullets** → Click "+ Add Bullet" → Type manually
+6. **Save as new** → Click "Save As New Resume" → Enter name → Creates new saved resume
+
+**Structure:**
+- **Sections**: Work Experience, Education, Projects, Custom Sections
+- **Entries**: Individual experiences, education items, projects (e.g., "Google", "Stanford")
+- **Bullets**: Resume points within each entry
 
 ---
 
-## Step 5: Customize (Optional)
+## Complete Workflow Example
 
-**User clicks "Customize"**
+### Scenario: Apply for Google Backend Engineer Role
 
-```
-┌─────────────────────────────────────────┐
-│  Customize Resume                       │
-│  ┌─────────────────────────────────┐   │
-│  │ Selected Bullets (12):          │   │
-│  │                                  │   │
-│  │  [Drag to reorder]              │   │
-│  │  ☑ Bullet 1 (selected)          │   │
-│  │  ☐ Bullet 2 (from super resume) │   │
-│  │  ☑ Bullet 3 (selected)          │   │
-│  │  ...                             │   │
-│  │                                  │   │
-│  │  Available Bullets (63 others):  │   │
-│  │  ☐ "Optimized database queries" │   │
-│  │  ☐ "Built ML models"             │   │
-│  │  ...                             │   │
-│  │                                  │   │
-│  │  [Add Selected] [Remove]         │   │
-│  │                                  │   │
-│  │  Preview:                        │   │
-│  │  ┌───────────────────────────┐  │   │
-│  │  │ Jake's Resume Template    │  │   │
-│  │  │                           │  │   │
-│  │  │ [LaTeX Preview]           │  │   │
-│  │  │                           │  │   │
-│  │  │ Page: 1/1 ✓               │  │   │
-│  │  └───────────────────────────┘  │   │
-│  │                                  │   │
-│  │  [Save] [Export PDF]            │   │
-│  └─────────────────────────────────┘   │
-└─────────────────────────────────────────┘
-```
+**Step 1: Build Master Resume (Tab 1)**
+- User adds 3 work experiences with 50+ total bullets
+- Adds education, projects, custom sections
+- All stored locally
 
-**User can:**
-- Reorder bullets (drag and drop)
-- Swap selected bullets with others
-- Add/remove bullets
-- See live preview
-- Ensure one-page constraint
+**Step 2: Find Job (External)**
+- User navigates to Google job posting on LinkedIn
+- Clicks extension icon
+
+**Step 3: Generate Optimized Resume (Tab 2)**
+- Extension extracts job description
+- User clicks "Select Best Points"
+- (Mock) Extension selects top 12 bullets
+- (Future) Backend does hybrid search + optimization
+- User reviews and customizes bullets
+- User clicks "Save Resume" → Names it "Google SWE - Backend"
+
+**Step 4: Edit Saved Resume (Tab 3)**
+- User goes to "Saved Resumes" tab
+- Clicks "Google SWE - Backend"
+- User wants to add more backend-specific bullets
+- Clicks "+ From Master" on Google experience entry
+- Selects bullet: "Built distributed systems using Go and Kubernetes"
+- Bullet is added to saved resume
+- User clicks "Save As New Resume" → Names it "Google SWE - Backend v2"
+
+**Step 5: Preview & Export**
+- User clicks "Preview LaTeX" → See rendered resume preview
+- User clicks "Export to PDF"
+  - Extension checks one-page constraint
+  - If exceeds: Shows warning with auto-trim option
+  - Non-negotiable bullets always included (even if exceeds page)
+  - Generates LaTeX using Jake's template
+  - Compiles to PDF with personal info and formatted bullets
+  - User downloads PDF
 
 ---
 
-## Step 6: Export Resume
+## Data Flow
 
-**User clicks "Export PDF"**
+### Master Resume → Saved Resume
 
 ```
-┌─────────────────────────────────────────┐
-│  Export Options                         │
-│  ┌─────────────────────────────────┐   │
-│  │  Resume: "Google Senior SWE"    │   │
-│  │  Format: LaTeX (Jake's Template)│   │
-│  │  Pages: 1/1 ✓                   │   │
-│  │                                  │   │
-│  │  Download Options:              │   │
-│  │  ☑ PDF (.pdf)                   │   │
-│  │  ☐ LaTeX Source (.tex)          │   │
-│  │  ☐ Markdown (.md)               │   │
-│  │                                  │   │
-│  │  [Download PDF]                 │   │
-│  │                                  │   │
-│  │  ✓ Resume downloaded!           │   │
-│  └─────────────────────────────────┘   │
-└─────────────────────────────────────────┘
+Master Resume (Tab 1)
+├── Experiences (3)
+│   ├── Google (8 bullets)
+│   ├── Meta (5 bullets)
+│   └── AWS (4 bullets)
+├── Education (1)
+│   └── Stanford (4 bullets)
+├── Projects (4)
+│   └── Task Scheduler (4 bullets)
+└── Custom Sections (3)
+    └── Skills (7 bullets)
+         ↓
+    [Generate New Resume Tab]
+         ↓
+    [Select Best Points]
+         ↓
+    [Backend Hybrid Search]
+         ↓
+Saved Resume (Tab 3)
+├── Experiences (2)
+│   ├── Google (4 bullets) ← Selected from master
+│   └── AWS (2 bullets)    ← Selected from master
+├── Education (1)
+│   └── Stanford (2 bullets) ← Selected from master
+└── Projects (1)
+    └── Task Scheduler (2 bullets) ← Selected from master
 ```
 
-**Result:**
-- Clean one-page PDF resume
-- Optimized for the specific job
-- Professional LaTeX formatting
-- Ready to submit
+### Editing Saved Resumes
+
+```
+Saved Resume
+├── Experiences
+│   └── Google Entry
+│       ├── Bullet 1 (from master)
+│       ├── Bullet 2 (from master)
+│       ├── [+ From Master] → Opens dialog
+│       │   └── Shows all bullets from master resume
+│       │       └── User selects: "Built CI/CD..."
+│       │           └── Bullet added to entry
+│       └── [+ Add Bullet] → Create new bullet manually
+```
 
 ---
 
-## 🔄 Alternative Flow: Manual Job Description
+## Key Differences from Old Flow
 
-**User doesn't have extension on job site**
+### Old Flow (Single View)
+- Single interface with experiences and optimization
+- Saved resumes were flat bullet lists
+- No structured editing
 
-```
-┌─────────────────────────────────────────┐
-│  Add Job Description                    │
-│  ┌─────────────────────────────────┐   │
-│  │  Paste Job Description:          │   │
-│  │  ┌───────────────────────────┐   │   │
-│  │  │ We're looking for...      │   │   │
-│  │  │ [paste here]              │   │   │
-│  │  └───────────────────────────┘   │   │
-│  │                                  │   │
-│  │  OR                              │   │
-│  │                                  │   │
-│  │  Enter Job URL:                  │   │
-│  │  [https://...]                   │   │
-│  │  [Extract]                       │   │
-│  │                                  │   │
-│  │  [Match Resume]                  │   │
-│  └─────────────────────────────────┘   │
-└─────────────────────────────────────────┘
-```
-
-**Same optimization flow continues...**
+### New Flow (3 Tabs)
+- **Tab 1**: Master resume with unlimited bullets
+- **Tab 2**: Generate optimized resume from job description
+- **Tab 3**: Structured saved resumes (sections → entries → bullets)
+- Can add bullets from master resume to saved resumes
+- Better organization and editing capabilities
 
 ---
 
-## 💾 Data Persistence
+## Technical Implementation
 
-### Local Storage (Chrome Extension)
+### Tab Structure
+```
+App.jsx
+├── Tabs Component
+│   ├── Tab 1: Master Resume
+│   │   └── ExperienceEditor, EducationEditor, etc.
+│   ├── Tab 2: Generate New Resume
+│   │   └── GenerateResume Component
+│   │       ├── JobMatcher
+│   │       └── OptimizationPanel
+│   └── Tab 3: Saved Resumes
+│       └── SavedResumes Component
+│           ├── Resume List
+│           └── Resume Editor (with ExperienceEditor, etc.)
+```
 
-```javascript
-// Super Resume (user's master resume)
-chrome.storage.local.set({
-  resume: {
-    experiences: [...],
-    totalBullets: 75
-  }
-});
-
-// Saved Optimizations
-chrome.storage.local.set({
-  optimizations: [
+### Data Storage
+```
+Chrome Local Storage
+├── resume (Master Resume)
+│   ├── experiences: [...]
+│   ├── education: [...]
+│   ├── projects: [...]
+│   └── customSections: [...]
+└── savedResumes: [
     {
-      jobDescription: "...",
-      selectedBullets: [...],
-      timestamp: "2024-01-15"
+      id: "resume-1",
+      name: "Google SWE - Backend",
+      createdAt: timestamp,
+      data: {
+        experiences: [...],
+        education: [...],
+        projects: [...],
+        customSections: [...]
+      }
     }
   ]
-});
-```
-
-### Backend Storage
-
-```
-POST /api/v1/resumes
-→ Saves super resume to database
-
-POST /api/v1/optimize
-→ Saves optimization result
-→ Links to job description
-→ Stores selected bullets
 ```
 
 ---
 
-## 🎨 UI/UX Principles
+## Future Enhancements
 
-### Design Goals
+### Backend Integration
+- Connect Generate New Resume tab to backend API
+- Real hybrid search + unified optimization
+- Authentication and user accounts
 
-1. **Simplicity**: One-click optimization
-2. **Flexibility**: Full customization control
-3. **Transparency**: Show why bullets were selected
-4. **Feedback**: Real-time preview
-5. **Trust**: User always in control
+### LaTeX Integration
+- Real-time LaTeX compilation
+- One-page constraint enforcement
+- PDF export
 
-### Key Interactions
-
-- **Drag & Drop**: Reorder bullets
-- **Checkboxes**: Select/deselect bullets
-- **Inline Edit**: Quick text modifications
-- **Live Preview**: See changes instantly
-- **One-Page Indicator**: Always visible
-
----
-
-## 📊 State Management
-
-### Extension State
-
-```javascript
-{
-  resume: {
-    experiences: [
-      {
-        id: "exp-1",
-        company: "Google",
-        bullets: [
-          { id: "b1", text: "...", selected: true },
-          { id: "b2", text: "...", selected: false },
-          // ... 45 total
-        ]
-      }
-    ]
-  },
-  currentJob: {
-    description: "...",
-    extractedKeywords: [...]
-  },
-  optimization: {
-    status: "completed", // loading, completed, error
-    selectedBullets: [...],
-    optimizedBullets: [...],
-    gaps: [...]
-  },
-  export: {
-    format: "pdf",
-    preview: "..."
-  }
-}
-```
+### Enhanced Editing
+- Drag-and-drop reordering
+- Bulk operations
+- Search/filter bullets in master resume
 
 ---
 
-This flow provides a seamless experience from building a super resume to exporting a perfectly optimized one-page resume! 🚀
+**This flow represents the current implementation with the 3-tab structure!** 🎉

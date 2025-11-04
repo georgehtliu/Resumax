@@ -31,10 +31,13 @@ The system uses **hybrid search** (semantic + keyword matching) to find the most
 - **Caching**: Embeddings and responses cached to reduce API calls
 
 ### 📱 Chrome Extension
-- React-based popup UI
+- **3-Tab Interface**: Master Resume, Generate New Resume, Saved Resumes
+- **Master Resume**: Unlimited bullet points per experience/education/project
+- **Generate New Resume**: Match best bullets to job descriptions with AI optimization
+- **Saved Resumes**: Structured editing (sections → entries → bullets) with ability to add bullets from master resume
 - Local storage for resume data
 - One-click job description extraction
-- Instant matching and optimization
+- LaTeX line count indicators for one-page enforcement
 
 ## 🏗️ Architecture
 
@@ -174,13 +177,27 @@ Resumax/
 │   ├── popup/                 # React popup UI
 │   │   ├── src/
 │   │   │   ├── components/    # React components
-│   │   │   │   ├── ExperienceEditor.jsx
-│   │   │   │   ├── JobMatcher.jsx
-│   │   │   │   └── OptimizationPanel.jsx
+│   │   │   │   ├── ExperienceEditor.jsx    # Edit work experiences
+│   │   │   │   ├── EducationEditor.jsx     # Edit education
+│   │   │   │   ├── ProjectEditor.jsx        # Edit projects
+│   │   │   │   ├── CustomSectionEditor.jsx  # Edit custom sections
+│   │   │   │   ├── JobMatcher.jsx           # Job description input
+│   │   │   │   ├── OptimizationPanel.jsx     # Optimization results
+│   │   │   │   ├── GenerateResume.jsx       # Tab 2: Generate new resume
+│   │   │   │   ├── SavedResumes.jsx         # Tab 3: Saved resumes
+│   │   │   │   └── Tabs.jsx                 # Tab navigation
+│   │   │   ├── utils/         # Utilities
+│   │   │   │   ├── latexLineCount.js       # LaTeX line estimation
+│   │   │   │   ├── textFormatter.js        # Markdown ↔ LaTeX (NEW)
+│   │   │   │   ├── latexRenderer.js        # LaTeX rendering (NEW)
+│   │   │   │   ├── latexCompiler.js        # LaTeX compilation (NEW)
+│   │   │   │   └── jakeTemplate.js         # Jake's template (NEW)
 │   │   │   └── services/      # Chrome API wrappers
+│   │   │       ├── storage.js                # Chrome Storage API
+│   │   │       └── messaging.js              # Chrome Messaging API
 │   │   └── vite.config.js     # Build config
 │   ├── background/            # Background service worker
-│   ├── content/               # Content scripts
+│   ├── content/               # Content scripts (job description extraction)
 │   └── manifest.json          # Extension manifest
 │
 ├── PROJECT_OVERVIEW.md        # Detailed architecture & roadmap
@@ -237,15 +254,38 @@ Manual testing via Chrome DevTools and extension popup.
 
 ## 💡 How It Works
 
-1. **User adds resume bullets** → Stored locally in Chrome extension
-2. **User pastes job description** → Extracted by content script or manually
-3. **Backend receives request** → Hybrid search finds top matching bullets
-4. **Unified optimizer processes** → Single LLM call:
+### Master Resume (Tab 1)
+1. **User adds personal info** → Name, phone, email, LinkedIn, GitHub
+2. **User builds super resume** → Add unlimited bullet points to experiences, education, projects, and custom sections
+3. **Format bullets** → Use **bold** text (markdown-style: `**text**`)
+4. **Mark non-negotiable bullets** → Flag bullets that must be included in all optimized resumes
+5. **Data stored locally** → Chrome extension local storage
+6. **LaTeX line indicators** → Shows estimated line count for one-page constraint
+
+### Generate New Resume (Tab 2)
+1. **User extracts/pastes job description** → Content script extracts from job sites or manual input
+2. **Match best bullets** → (Currently mock, will connect to backend) Selects top bullets from master resume
+3. **AI optimization** → (Future) Backend processes with hybrid search + unified optimizer
+   - Non-negotiable bullets always included
+   - Respects one-page constraint
+4. **Preview LaTeX** → Real-time preview of resume (future)
+5. **Customize & save** → User edits bullets, then saves as named resume
+6. **Export to PDF** → Generate LaTeX/PDF with one-page warning if exceeds limit
+
+### Saved Resumes (Tab 3)
+1. **View saved resumes** → List of all saved optimized resumes
+2. **Edit structure** → Sections (Experiences/Education/Projects) → Entries → Bullets
+3. **Add from master** → Select bullets from master resume to add to any entry
+4. **Save as new** → Create variations of saved resumes
+
+### Backend Integration (Future)
+1. **Backend receives request** → Hybrid search finds top matching bullets from master resume
+2. **Unified optimizer processes** → Single LLM call:
    - Ranks bullets by relevance
    - Rewrites bullets for better match
    - Identifies skill gaps
-5. **Results returned** → User reviews and customizes
-6. **Export** → (Future) Generate one-page LaTeX resume
+3. **Results returned** → User reviews and customizes in extension
+4. **Export** → (Future) Generate one-page LaTeX resume using Jake's template
 
 ## 🎓 Learning Goals
 

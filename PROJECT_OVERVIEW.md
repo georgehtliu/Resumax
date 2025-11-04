@@ -4,12 +4,12 @@
 
 A **Chrome extension** that lets software engineers maintain a "super resume" with unlimited bullet points per experience, then instantly optimize it for specific job descriptions while enforcing a one-page LaTeX resume format.
 
-### Core User Experience
+### Core User Experience (3-Tab Interface)
 
-1. **Build Super Resume**: Add unlimited bullet points to each work experience
-2. **One-Click Optimization**: Match best bullets to a job description
-3. **Customization**: Fine-tune the optimized selection
-4. **One-Page Export**: Generate clean LaTeX/PDF resume using Jake's template
+1. **Master Resume Tab**: Build and maintain unlimited bullet points across all sections (Experiences, Education, Projects, Custom)
+2. **Generate New Resume Tab**: Match best bullets to a job description with AI optimization
+3. **Saved Resumes Tab**: View and edit saved resumes with structured editing (sections → entries → bullets), add bullets from master resume
+4. **One-Page Export**: (Future) Generate clean LaTeX/PDF resume using Jake's template
 
 ---
 
@@ -427,65 +427,46 @@ chrome-extension/
 
 ## 🎨 React UI Components
 
-### Main Components
+### Main Components (3-Tab Structure)
 
-**1. ExperienceEditor**
-```jsx
-<ExperienceEditor 
-  experience={experience}
-  onUpdate={handleUpdate}
-  onAddBullet={handleAddBullet}
-/>
-```
-- Shows company, role, dates
-- List of bullets for this experience
-- Add/remove/edit bullets
+**Tab 1: Master Resume**
+- **PersonalInfo**: Personal information (name, phone, email, LinkedIn, GitHub)
+- **ExperienceEditor**: Edit work experiences with unlimited bullets
+  - Support for **bold** text formatting
+  - Non-negotiable flag for must-include bullets
+- **EducationEditor**: Edit education entries
+- **ProjectEditor**: Edit projects
+- **CustomSectionEditor**: Edit custom sections (certifications, skills, etc.)
+- All components show LaTeX line count indicators
 
-**2. BulletPointList**
-```jsx
-<BulletPointList 
-  bullets={bullets}
-  onSelect={handleSelect}
-  showSelection={true}
-/>
-```
-- Shows all bullets for an experience
-- Checkbox selection for optimization
-- Drag to reorder
+**Tab 2: Generate New Resume**
+- **GenerateResume**: Main container for job matching
+- **JobMatcher**: Job description input with extraction
+  - Extract from page button
+  - Manual paste input
+  - Collapsible preview (shortened/expanded)
+- **OptimizationPanel**: Display optimization results
+  - Before/after comparison
+  - Relevance scores
+  - Gap analysis
+  - Customization options
+  - Non-negotiable bullets highlighted
+- **LaTeXPreview**: (Future) Real-time LaTeX preview
+- **LaTeXExport**: (Future) Export to PDF with one-page warning
 
-**3. JobMatcher**
-```jsx
-<JobMatcher 
-  jobDescription={jd}
-  onMatch={handleMatch}
-/>
-```
-- Input job description
-- One-click "Match Best Bullets"
-- Shows optimization progress
+**Tab 3: Saved Resumes**
+- **SavedResumes**: Main container for saved resume management
+- **Resume List**: Shows all saved resumes (sorted by newest)
+- **Resume Editor**: Uses same editors as Master Resume
+  - ExperienceEditor, EducationEditor, etc.
+  - "+ From Master" button to add bullets from master resume
+  - Structured editing: Sections → Entries → Bullets
 
-**4. OptimizationPanel**
-```jsx
-<OptimizationPanel 
-  selectedBullets={selected}
-  optimizedBullets={optimized}
-  onCustomize={handleCustomize}
-/>
-```
-- Shows before/after comparison
-- Allows further customization
-- Preview optimized resume
-
-**5. LaTeXPreview**
-```jsx
-<LaTeXPreview 
-  resume={optimizedResume}
-  onExportPDF={handleExportPDF}
-/>
-```
-- Live preview of LaTeX output
-- One-page constraint indicator
-- Export to PDF
+**Shared Components**
+- **Tabs**: Tab navigation component
+- **BulletEditor**: Rich text editor for bullets (bold formatting)
+- **LaTeXPreview**: (Future) Live preview of LaTeX output
+- **LaTeXExport**: (Future) Export dialog with one-page enforcement
 
 ---
 
@@ -588,18 +569,25 @@ class OnePageOptimizer:
     def select_for_one_page(self, optimized_bullets, job_desc):
         """
         Select bullets that fit one page.
+        Non-negotiable bullets are always included.
         """
-        # Sort by relevance
-        sorted_bullets = sorted(
-            optimized_bullets, 
-            key=lambda x: x['relevance_score'], 
+        # Separate non-negotiable from regular bullets
+        non_negotiable = [b for b in optimized_bullets if b.get('nonNegotiable', False)]
+        regular_bullets = [b for b in optimized_bullets if not b.get('nonNegotiable', False)]
+        
+        # Always include non-negotiable bullets first
+        selected = non_negotiable.copy()
+        total_chars = sum(len(b['rewritten']) for b in selected)
+        
+        # Sort regular bullets by relevance
+        sorted_regular = sorted(
+            regular_bullets,
+            key=lambda x: x['relevance_score'],
             reverse=True
         )
         
-        selected = []
-        total_chars = 0
-        
-        for bullet in sorted_bullets:
+        # Add regular bullets until we hit the limit
+        for bullet in sorted_regular:
             bullet_chars = len(bullet['rewritten'])
             
             # Check if adding this bullet exceeds limit
@@ -613,7 +601,19 @@ class OnePageOptimizer:
             selected.append(bullet)
             total_chars += bullet_chars
         
-        return selected
+        # If non-negotiable bullets alone exceed limit, show warning
+        if len(non_negotiable) > 0 and total_chars > self.MAX_CHARS_PER_PAGE:
+            return {
+                'bullets': selected,
+                'exceeds_limit': True,
+                'warning': f'Non-negotiable bullets ({len(non_negotiable)}) exceed one-page limit. Resume will be {total_chars/self.MAX_CHARS_PER_PAGE:.1f} pages.'
+            }
+        
+        return {
+            'bullets': selected,
+            'exceeds_limit': total_chars > self.MAX_CHARS_PER_PAGE,
+            'warning': None
+        }
 ```
 
 ### LaTeX Generation
@@ -753,14 +753,27 @@ GET    /api/v1/job-descriptions/{id}  # Get specific JD
 - [ ] Optimization history tracking
 - [ ] Job description storage
 
-### Phase 10: LaTeX Integration (1-2 weeks)
+### Phase 10: Personal Info & Formatting (1 week)
+- [ ] Personal information component (name, phone, email, LinkedIn, GitHub)
+- [ ] Bolding support for bullets (markdown-style `**text**`)
+- [ ] Rich text editor for bullets
+- [ ] Markdown to LaTeX conversion
+
+### Phase 11: Non-Negotiable Points (1 week)
+- [ ] Non-negotiable flag for bullets
+- [ ] Visual indicators in UI
+- [ ] Enforcement in optimization (always include)
+- [ ] One-page warning if non-negotiable bullets exceed limit
+
+### Phase 12: LaTeX Preview & Export (2 weeks)
+- [ ] LaTeX preview component (real-time rendering)
 - [ ] Jake's template integration
 - [ ] LaTeX generation service
-- [ ] One-page constraint enforcement
-- [ ] PDF compilation
-- [ ] Preview endpoint
+- [ ] One-page constraint enforcement with warnings
+- [ ] Auto-trim functionality
+- [ ] PDF compilation and download
 
-### Phase 11: Polish & Production (2-3 weeks)
+### Phase 13: Polish & Production (2-3 weeks)
 - [ ] Error handling
 - [ ] Loading states
 - [ ] Performance optimization

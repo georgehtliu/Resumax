@@ -11,79 +11,107 @@
 
 ### ✅ Frontend (Foundation Complete)
 - Chrome extension structure ✅
-- React UI components ✅
+- React UI with 3-tab navigation ✅
+- Master Resume tab (unlimited bullets) ✅
+- Generate New Resume tab (job matching UI) ✅
+- Saved Resumes tab (structured editing) ✅
 - Local storage working ✅
+- LaTeX line count indicators ✅
 - Mock optimization UI ✅
+- Bullet selection from master resume ✅
 
 ### ⏳ What's Missing
-- Backend ↔ Frontend connection
+- Backend ↔ Frontend connection (API integration)
+- Real optimization (currently mock data)
 - Database schema for users/experiences
 - Authentication system
-- Job description extraction (real implementation)
-- LaTeX preview/export
+- Job description extraction improvements (better cleaning)
+- LaTeX preview/export (Jake's template integration)
 - Polish & error handling
 
 ---
 
 ## 🎯 Immediate Next Steps (Priority Order)
 
-### **FRONTEND: Phase 7 - Core Features** (2-3 weeks)
+### **FRONTEND: Phase 7 - Integration & Polish** (2-3 weeks)
 
-#### 1. **Job Description Extraction** (3-5 days) 🔴 HIGH PRIORITY
-**Current State:** Mock extraction, needs real implementation
+#### 1. **Backend API Integration** (3-5 days) 🔴 HIGH PRIORITY
+**Current State:** Mock optimization, needs real backend connection
 
 **What to Build:**
-- [ ] Enhance `content/content-script.js` with site-specific extractors
+- [ ] Create API service layer (`popup/src/services/api.js`)
+  - API client with authentication
+  - Request/response interceptors
+  - Error handling and retries
+- [ ] Connect Generate New Resume tab to backend
+  - Replace mock `handleOptimize` with real API call
+  - Send master resume bullets to backend
+  - Receive optimized results
+- [ ] Add authentication flow
+  - Login/register UI
+  - JWT token storage
+  - Token refresh logic
+- [ ] Handle offline scenarios
+  - Graceful degradation
+  - Error messages
+
+**Files to Create/Modify:**
+- `chrome-extension/popup/src/services/api.js` (NEW)
+- `chrome-extension/popup/src/components/GenerateResume.jsx` (update)
+- `chrome-extension/popup/src/App.jsx` (add auth)
+
+**Testing:**
+- Test API calls with real backend
+- Test error handling
+- Test offline scenarios
+
+---
+
+#### 2. **Job Description Extraction Improvements** (2-3 days) 🟡 MEDIUM PRIORITY
+**Current State:** Basic extraction works, needs better cleaning
+
+**What to Build:**
+- [ ] Improve generic extraction cleaning (already started)
+  - Better noise filtering patterns
+  - More robust footer detection
+  - Better start/end detection
+- [ ] Add site-specific extractors
   - LinkedIn job posting extraction
   - Indeed job posting extraction
-  - Generic fallback (DOM-based)
-- [ ] Improve `background/service-worker.js` debugger API usage
-- [ ] Add extraction UI feedback (loading states, success/error messages)
-- [ ] Test on real job posting sites
+  - Glassdoor, AngelList, etc.
+- [ ] Add extraction UI feedback
+  - Loading states
+  - Success/error messages
+  - Preview before using
 
 **Files to Modify:**
 - `chrome-extension/content/content-script.js`
 - `chrome-extension/background/service-worker.js`
 - `chrome-extension/popup/src/components/JobMatcher.jsx`
 
-**Testing:**
-- Test on LinkedIn job postings
-- Test on Indeed job postings
-- Test manual paste fallback
-
 ---
 
-#### 2. **Experience Editor Polish** (2-3 days) 🟡 MEDIUM PRIORITY
-**Current State:** Basic functionality works, needs UX improvements
+#### 3. **Saved Resumes Enhancement** (2-3 days) 🟡 MEDIUM PRIORITY
+**Current State:** Basic structure editing works, needs polish
 
 **What to Build:**
-- [ ] Add date pickers for start/end dates
-- [ ] Add validation (required fields, date logic)
-- [ ] Improve bullet point editing (inline editing, drag-and-drop reordering)
-- [ ] Add confirmation dialogs for deletions
-- [ ] Add auto-save feedback (save indicator)
-- [ ] Improve empty states and onboarding
+- [ ] Improve bullet selection dialog
+  - Search/filter bullets from master resume
+  - Show source information (which experience/project)
+  - Preview before adding
+- [ ] Add drag-and-drop reordering
+  - Reorder entries within sections
+  - Reorder bullets within entries
+- [ ] Add bulk operations
+  - Select multiple bullets to add
+  - Delete multiple entries
+- [ ] Add export functionality
+  - Export to JSON
+  - (Future) Export to LaTeX/PDF
 
 **Files to Modify:**
-- `chrome-extension/popup/src/components/ExperienceEditor.jsx`
-- `chrome-extension/popup/src/components/ExperienceEditor.css`
-
----
-
-#### 3. **Optimization Results Enhancement** (2-3 days) 🟡 MEDIUM PRIORITY
-**Current State:** Shows mock results, needs better UX
-
-**What to Build:**
-- [ ] Improve bullet comparison UI (before/after side-by-side)
-- [ ] Add filtering/sorting (by relevance score, experience)
-- [ ] Add select/deselect all functionality
-- [ ] Show gap analysis more prominently
-- [ ] Add "Save to Resume" button (updates local storage)
-- [ ] Add export option (JSON, CSV for now)
-
-**Files to Modify:**
-- `chrome-extension/popup/src/components/OptimizationPanel.jsx`
-- `chrome-extension/popup/src/components/OptimizationPanel.css`
+- `chrome-extension/popup/src/components/SavedResumes.jsx`
+- `chrome-extension/popup/src/components/SavedResumes.css`
 
 ---
 
@@ -103,26 +131,167 @@
 
 ---
 
-#### 5. **Local Optimization Algorithm** (3-4 days) 🟡 MEDIUM PRIORITY
-**Current State:** Mock data only
+#### 4. **Personal Information Section** (1-2 days) 🟡 MEDIUM PRIORITY
+**Current State:** No personal info section
 
 **What to Build:**
-- [ ] Simple keyword matching algorithm (local, no API)
-  - Extract keywords from job description
-  - Match against resume bullets
-  - Score and rank bullets
-- [ ] Basic ranking UI (shows relevance scores)
-- [ ] Note: This is a **temporary solution** until backend connection
-- [ ] Allows users to test extension functionality locally
+- [ ] Add PersonalInfo component to Master Resume tab
+  - Fields: Name, Phone, Email, LinkedIn, GitHub
+  - Validation for email format, URLs
+  - Auto-save to Chrome storage
+- [ ] Display personal info in saved resumes
+- [ ] Include personal info in LaTeX export
 
-**Files to Create/Modify:**
-- `chrome-extension/popup/src/services/localOptimizer.js` (NEW)
-- `chrome-extension/popup/src/App.jsx` (update `handleOptimize`)
+**Files to Create:**
+- `chrome-extension/popup/src/components/PersonalInfo.jsx` (NEW)
+- `chrome-extension/popup/src/components/PersonalInfo.css` (NEW)
 
-**Why This:**
-- Users can test extension without backend
-- Demonstrates value proposition
-- Can be replaced with real API calls later
+**Files to Modify:**
+- `chrome-extension/popup/src/App.jsx` (add personalInfo state)
+- `chrome-extension/popup/src/services/storage.js` (add personalInfo to resume data)
+- `chrome-extension/popup/src/components/GenerateResume.jsx` (show personal info)
+- `chrome-extension/popup/src/components/SavedResumes.jsx` (show personal info)
+
+---
+
+#### 5. **Bolding Support** (1-2 days) 🟡 MEDIUM PRIORITY
+**Current State:** Plain text bullets only
+
+**What to Build:**
+- [ ] Add rich text editor for bullets
+  - Support for **bold** text (markdown-style: `**text**`)
+  - Inline editor with formatting buttons
+  - Preview of formatted text
+- [ ] Store formatted text in data structure
+- [ ] Convert to LaTeX `\textbf{}` when exporting
+- [ ] Show formatted preview in UI
+
+**Files to Create:**
+- `chrome-extension/popup/src/components/BulletEditor.jsx` (NEW) - Rich text editor
+- `chrome-extension/popup/src/utils/textFormatter.js` (NEW) - Markdown to LaTeX conversion
+
+**Files to Modify:**
+- `chrome-extension/popup/src/components/ExperienceEditor.jsx` (use BulletEditor)
+- `chrome-extension/popup/src/components/EducationEditor.jsx` (use BulletEditor)
+- `chrome-extension/popup/src/components/ProjectEditor.jsx` (use BulletEditor)
+- `chrome-extension/popup/src/components/CustomSectionEditor.jsx` (use BulletEditor)
+
+---
+
+#### 6. **Non-Negotiable Points** (2-3 days) 🟡 MEDIUM PRIORITY
+**Current State:** All bullets treated equally
+
+**What to Build:**
+- [ ] Add "Non-Negotiable" flag to bullets in master resume
+  - Checkbox or toggle in bullet editor
+  - Visual indicator (icon, badge, or different styling)
+- [ ] Enforce non-negotiable bullets in optimization
+  - Always include non-negotiable bullets in optimized selection
+  - Show warning if non-negotiable bullets would exceed one-page limit
+- [ ] Display non-negotiable status in saved resumes
+- [ ] Filter/search by non-negotiable status
+
+**Files to Modify:**
+- `chrome-extension/popup/src/components/ExperienceEditor.jsx` (add non-negotiable checkbox)
+- `chrome-extension/popup/src/components/EducationEditor.jsx` (add non-negotiable checkbox)
+- `chrome-extension/popup/src/components/ProjectEditor.jsx` (add non-negotiable checkbox)
+- `chrome-extension/popup/src/components/CustomSectionEditor.jsx` (add non-negotiable checkbox)
+- `chrome-extension/popup/src/components/GenerateResume.jsx` (enforce non-negotiable bullets)
+- `chrome-extension/popup/src/components/OptimizationPanel.jsx` (show non-negotiable status)
+
+**Data Structure:**
+```javascript
+{
+  id: 'bullet-1',
+  text: 'Developed microservices...',
+  nonNegotiable: true,  // NEW field
+  boldedText: '**Developed** microservices...'  // For bolding
+}
+```
+
+---
+
+#### 7. **LaTeX Preview** (3-4 days) 🟡 MEDIUM PRIORITY
+**Current State:** Line count indicators only
+
+**What to Build:**
+- [ ] Create LaTeXPreview component
+  - Real-time preview of resume in LaTeX format
+  - Show rendered output (using LaTeX.js or similar)
+  - Update as user edits bullets
+- [ ] Add preview tab or side panel
+- [ ] Show page count indicator
+- [ ] Highlight one-page constraint
+
+**Files to Create:**
+- `chrome-extension/popup/src/components/LaTeXPreview.jsx` (NEW)
+- `chrome-extension/popup/src/components/LaTeXPreview.css` (NEW)
+- `chrome-extension/popup/src/utils/latexRenderer.js` (NEW) - Convert data to LaTeX
+
+**Files to Modify:**
+- `chrome-extension/popup/src/components/GenerateResume.jsx` (add preview button)
+- `chrome-extension/popup/src/components/SavedResumes.jsx` (add preview button)
+
+**Dependencies:**
+- Consider using `latex.js` library for client-side rendering
+- Or use backend API for LaTeX compilation (more accurate)
+
+---
+
+#### 8. **LaTeX Generation & One-Page Enforcement** (4-5 days) 🔴 HIGH PRIORITY
+**Current State:** Line count indicators exist, needs full LaTeX integration
+
+**What to Build:**
+- [ ] Integrate Jake's Resume LaTeX template
+  - Load template structure
+  - Map resume data to LaTeX format
+  - Include personal info, experiences, education, projects
+- [ ] One-page constraint enforcement
+  - Real-time character/bullet counting
+  - Warning when approaching limit
+  - Auto-trim if exceeds one page
+  - Show warning: "Resume exceeds 1 page! Remove X bullets to fit."
+- [ ] LaTeX generation service
+  - Generate .tex file
+  - Compile to PDF (backend API or client-side)
+  - Download PDF functionality
+- [ ] Smart bullet selection
+  - Respect non-negotiable bullets (always include)
+  - Auto-select best bullets if manual selection exceeds limit
+  - Suggest which bullets to remove
+
+**Files to Create:**
+- `chrome-extension/popup/src/utils/latexCompiler.js` (NEW) - LaTeX generation
+- `chrome-extension/popup/src/utils/jakeTemplate.js` (NEW) - Jake's template structure
+- `chrome-extension/popup/src/components/LaTeXExport.jsx` (NEW) - Export dialog
+
+**Files to Modify:**
+- `chrome-extension/popup/src/utils/latexLineCount.js` (enhance with accurate counting)
+- `chrome-extension/popup/src/components/GenerateResume.jsx` (add export button)
+- `chrome-extension/popup/src/components/SavedResumes.jsx` (add export button)
+
+**Backend Integration:**
+- Create `/api/latex/generate` endpoint
+- Accept resume data, return PDF
+- Or use client-side LaTeX.js library
+
+**One-Page Warning Flow:**
+```
+User clicks "Export to PDF"
+  ↓
+Check total content length
+  ↓
+If exceeds 1 page:
+  - Show warning dialog
+  - "Resume is 1.2 pages. Remove 2 bullets to fit 1 page."
+  - Show which bullets to consider removing
+  - Options: [Auto-Trim] [Cancel] [Export Anyway]
+  ↓
+If user clicks "Auto-Trim":
+  - Remove lowest priority bullets (respecting non-negotiable)
+  - Show updated preview
+  - Confirm export
+```
 
 ---
 
@@ -275,11 +444,11 @@
 
 ## 📋 Recommended Development Order
 
-### Week 1-2: Frontend Core Features
-1. Job description extraction (3-5 days)
-2. Experience editor polish (2-3 days)
-3. Local optimization algorithm (3-4 days)
-4. Optimization results enhancement (2-3 days)
+### Week 1-2: Backend API Integration
+1. API service layer (1-2 days)
+2. Connect Generate New Resume tab (2-3 days)
+3. Authentication flow (1-2 days)
+4. Testing & error handling (2-3 days)
 
 ### Week 3-4: Backend Enhancements
 1. Database schema (3-4 days)
@@ -287,29 +456,47 @@
 3. Resume management endpoints (3-4 days)
 4. Cost optimization features (2-3 days)
 
-### Week 5-6: Integration
-1. API service layer (1-2 days)
-2. Replace mock data (2-3 days)
-3. Authentication flow (1-2 days)
-4. Testing & polish (2-3 days)
+### Week 5-6: Frontend Polish & Personal Info
+1. Personal information section (1-2 days)
+2. Bolding support (1-2 days)
+3. Non-negotiable points (2-3 days)
+4. Job description extraction improvements (2-3 days)
+5. Saved resumes enhancement (2-3 days)
 
-### Week 7+: LaTeX & Polish
-1. LaTeX template integration
-2. One-page constraint
-3. PDF generation
-4. Final polish
+### Week 7-8: LaTeX Integration
+1. LaTeX preview component (3-4 days)
+2. LaTeX template integration (3-4 days)
+3. One-page constraint enforcement (2-3 days)
+4. PDF generation & export (2-3 days)
+
+### Week 9+: Final Polish
+1. UI/UX improvements (2-3 days)
+2. Error handling & loading states (1-2 days)
+3. Comprehensive testing (2-3 days)
+4. Documentation & launch prep (2-3 days)
 
 ---
 
 ## 🎯 Success Criteria
 
-### Frontend MVP (After Phase 7)
+### Frontend MVP (Current State)
 - ✅ Users can add/edit experiences with unlimited bullets
-- ✅ Job descriptions extracted from LinkedIn/Indeed
-- ✅ Local optimization works (basic keyword matching)
-- ✅ Results displayed clearly
+- ✅ 3-tab interface (Master, Generate, Saved)
+- ✅ Job descriptions extracted from generic sites
+- ✅ Structured saved resume editing
+- ✅ Add bullets from master resume to saved resumes
+- ✅ LaTeX line count indicators
 - ✅ Data persists locally
-- ✅ UI is polished and responsive
+- ⏳ Real optimization (mock data, needs backend connection)
+- ⏳ UI polish (in progress)
+
+### Frontend Next Phase (Week 5-8)
+- ⏳ Personal information section (phone, email, LinkedIn, GitHub)
+- ⏳ Bolding support for resume bullets
+- ⏳ Non-negotiable points (must-include bullets)
+- ⏳ LaTeX preview (real-time rendering)
+- ⏳ LaTeX generation with one-page enforcement
+- ⏳ PDF export functionality
 
 ### Backend MVP (After Phase 9)
 - ✅ Users can register/login
