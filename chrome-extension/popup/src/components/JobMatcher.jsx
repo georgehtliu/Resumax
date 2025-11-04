@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './JobMatcher.css';
 
 /**
@@ -8,10 +8,24 @@ import './JobMatcher.css';
  * - Extracting job description from current tab
  * - Manual job description input
  * - Triggering optimization
+ * - Displaying job description in collapsible textbox
  */
 function JobMatcher({ jobDescription, onExtract, onOptimize, loading }) {
   const [manualJD, setManualJD] = useState(jobDescription || '');
   const [extractionStatus, setExtractionStatus] = useState('');
+  const [isExpanded, setIsExpanded] = useState(false);
+  
+  // Sync jobDescription prop with local state
+  useEffect(() => {
+    if (jobDescription) {
+      setManualJD(jobDescription);
+    }
+  }, [jobDescription]);
+  
+  // Character limit for shortened view
+  const SHORT_LIMIT = 300;
+  const isLong = manualJD.length > SHORT_LIMIT;
+  const displayText = isExpanded || !isLong ? manualJD : manualJD.substring(0, SHORT_LIMIT) + '...';
 
   async function handleExtract() {
     setExtractionStatus('Extracting...');
@@ -82,6 +96,47 @@ function JobMatcher({ jobDescription, onExtract, onOptimize, loading }) {
           )}
         </div>
       </div>
+
+      {/* Job Description Preview (when extracted or entered) */}
+      {manualJD && (
+        <div className="job-matcher-section">
+          <div className="jd-preview-header">
+            <h3>Job Description Preview</h3>
+            {isLong && (
+              <button
+                className="btn-toggle-expand"
+                onClick={() => setIsExpanded(!isExpanded)}
+                title={isExpanded ? 'Collapse' : 'Expand'}
+              >
+                {isExpanded ? '▼ Collapse' : '▶ Expand'}
+              </button>
+            )}
+          </div>
+          <div className={`jd-preview-box ${isExpanded ? 'expanded' : ''}`}>
+            <div className="jd-preview-text">
+              {displayText}
+            </div>
+            {isLong && !isExpanded && (
+              <div className="jd-preview-fade">
+                <button
+                  className="btn-expand-inline"
+                  onClick={() => setIsExpanded(true)}
+                >
+                  Show full description ({manualJD.length} chars)
+                </button>
+              </div>
+            )}
+          </div>
+          <div className="jd-stats">
+            <span>{manualJD.length} characters total</span>
+            {isLong && (
+              <span className="info">
+                {isExpanded ? 'Showing full' : `Showing first ${SHORT_LIMIT} of ${manualJD.length}`}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="job-matcher-actions">
         <button
