@@ -82,6 +82,11 @@
   gap: 8px;
 }
 
+.bullet-text-wrapper {
+  flex: 1;
+  position: relative;
+}
+
 .bullet-number {
   flex-shrink: 0;
   width: 24px;
@@ -91,9 +96,41 @@
 }
 
 .bullet-text {
-  flex: 1;
+  width: 100%;
   resize: vertical;
   min-height: 40px;
+  box-sizing: border-box;
+}
+
+.bullet-text.bullet-warning {
+  border-color: #ff6b6b;
+  background-color: #fff5f5;
+}
+
+.latex-line-indicator {
+  position: absolute;
+  bottom: 4px;
+  right: 8px;
+  font-size: 10px;
+  color: #999;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 2px 6px;
+  border-radius: 3px;
+  pointer-events: none;
+  font-weight: 500;
+}
+
+.latex-line-indicator.single {
+  color: #51cf66;
+}
+
+.latex-line-indicator.double {
+  color: #ffd43b;
+}
+
+.latex-line-indicator.overflow {
+  color: #ff6b6b;
+  font-weight: 600;
 }
 
 .btn-icon {

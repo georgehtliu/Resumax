@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { getLineCountInfo } from '../utils/latexLineCount';
 import './ExperienceEditor.css';
 
 /**
@@ -120,25 +121,33 @@ function ExperienceEditor({ experience, onUpdate, onDelete }) {
             </div>
 
             <div className="bullets-list">
-              {formData.bullets.map((bullet, index) => (
-                <div key={bullet.id} className="bullet-item">
-                  <span className="bullet-number">{index + 1}.</span>
-                  <textarea
-                    className="bullet-text"
-                    value={bullet.text}
-                    onChange={(e) => handleUpdateBullet(bullet.id, e.target.value)}
-                    placeholder="Enter bullet point..."
-                    rows={2}
-                  />
-                  <button
-                    className="btn-icon"
-                    onClick={() => handleDeleteBullet(bullet.id)}
-                    title="Delete bullet"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
+              {formData.bullets.map((bullet, index) => {
+                const lineInfo = getLineCountInfo(bullet.text);
+                return (
+                  <div key={bullet.id} className="bullet-item">
+                    <span className="bullet-number">{index + 1}.</span>
+                    <div className="bullet-text-wrapper">
+                      <textarea
+                        className={`bullet-text ${lineInfo.warning ? 'bullet-warning' : ''}`}
+                        value={bullet.text}
+                        onChange={(e) => handleUpdateBullet(bullet.id, e.target.value)}
+                        placeholder="Enter bullet point..."
+                        rows={2}
+                      />
+                      <span className={`latex-line-indicator ${lineInfo.category}`} title={`Estimated LaTeX lines: ${lineInfo.count}`}>
+                        {lineInfo.count === 0 ? '' : lineInfo.count === 1 ? '1 line' : lineInfo.count === 2 ? '2 lines' : `${lineInfo.count} lines ⚠️`}
+                      </span>
+                    </div>
+                    <button
+                      className="btn-icon"
+                      onClick={() => handleDeleteBullet(bullet.id)}
+                      title="Delete bullet"
+                    >
+                      ×
+                    </button>
+                  </div>
+                );
+              })}
 
               {formData.bullets.length === 0 && (
                 <div className="empty-bullets">
