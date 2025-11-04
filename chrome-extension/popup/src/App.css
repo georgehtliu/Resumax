@@ -85,4 +85,30 @@
   cursor: not-allowed;
 }
 
+.btn-add {
+  margin-top: 12px;
+  width: 100%;
+}
+
+.resume-section-group {
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.resume-section-group:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.section-group-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #667eea;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
 

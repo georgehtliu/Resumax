@@ -22,6 +22,32 @@ export async function saveResume(resumeData) {
 }
 
 /**
+ * Normalize resume data to ensure all required fields exist
+ * @param {Object} resumeData - Resume data from storage
+ * @returns {Object} Normalized resume data
+ */
+function normalizeResume(resumeData) {
+  if (!resumeData) {
+    return {
+      experiences: [],
+      education: [],
+      projects: [],
+      customSections: [],
+      totalBullets: 0
+    };
+  }
+
+  // Ensure all arrays exist and are arrays
+  return {
+    experiences: Array.isArray(resumeData.experiences) ? resumeData.experiences : [],
+    education: Array.isArray(resumeData.education) ? resumeData.education : [],
+    projects: Array.isArray(resumeData.projects) ? resumeData.projects : [],
+    customSections: Array.isArray(resumeData.customSections) ? resumeData.customSections : [],
+    totalBullets: typeof resumeData.totalBullets === 'number' ? resumeData.totalBullets : 0
+  };
+}
+
+/**
  * Get resume data from Chrome local storage
  * @returns {Promise<Object>} Resume data
  */
@@ -31,7 +57,7 @@ export async function getResume() {
       if (chrome.runtime.lastError) {
         reject(new Error(chrome.runtime.lastError.message));
       } else {
-        resolve(result.resume || { experiences: [], totalBullets: 0 });
+        resolve(normalizeResume(result.resume));
       }
     });
   });
