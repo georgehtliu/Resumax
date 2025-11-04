@@ -11,7 +11,7 @@ import './ExperienceEditor.css';
  * - Edit/delete bullet points
  * - Reorder bullets (drag & drop - TODO)
  */
-function ExperienceEditor({ experience, onUpdate, onDelete }) {
+function ExperienceEditor({ experience, onUpdate, onDelete, onAddBulletFromMaster }) {
   const [isEditing, setIsEditing] = useState(!experience.company);
   const [formData, setFormData] = useState({
     company: experience.company || '',
@@ -112,12 +112,23 @@ function ExperienceEditor({ experience, onUpdate, onDelete }) {
           <div className="bullets-section">
             <div className="bullets-header">
               <label>Bullet Points ({formData.bullets.length})</label>
-              <button
-                className="btn btn-small"
-                onClick={handleAddBullet}
-              >
-                + Add Bullet
-              </button>
+              <div className="bullets-header-actions">
+                {onAddBulletFromMaster && (
+                  <button
+                    className="btn btn-small btn-secondary"
+                    onClick={onAddBulletFromMaster}
+                    title="Add bullet from master resume"
+                  >
+                    + From Master
+                  </button>
+                )}
+                <button
+                  className="btn btn-small"
+                  onClick={handleAddBullet}
+                >
+                  + Add Bullet
+                </button>
+              </div>
             </div>
 
             <div className="bullets-list">

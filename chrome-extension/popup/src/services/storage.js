@@ -83,15 +83,15 @@ export async function clearResume() {
  * @param {string} name - Name for the resume
  * @param {Object} resumeData - Resume data to save
  */
-export async function saveGeneratedResume(name, resumeData) {
+export async function saveGeneratedResume(name, resumeData, createdAt = null) {
   return new Promise((resolve, reject) => {
     getSavedResumes().then(savedResumes => {
       const newResume = {
         id: `resume-${Date.now()}`,
         name: name || `Resume ${new Date().toLocaleDateString()}`,
         data: resumeData,
-        createdAt: Date.now(),
-        updatedAt: Date.now()
+        createdAt: createdAt || Date.now(),
+        updatedAt: createdAt || Date.now()
       };
       
       const updated = [newResume, ...savedResumes];

@@ -10,7 +10,7 @@ import './SectionEditor.css';
  * - Add unlimited bullet points
  * - Edit/delete bullet points
  */
-function ProjectEditor({ project, onUpdate, onDelete }) {
+function ProjectEditor({ project, onUpdate, onDelete, onAddBulletFromMaster }) {
   const [isEditing, setIsEditing] = useState(!project.name);
   const [formData, setFormData] = useState({
     name: project.name || '',
@@ -122,12 +122,23 @@ function ProjectEditor({ project, onUpdate, onDelete }) {
           <div className="bullets-section">
             <div className="bullets-header">
               <label>Bullet Points ({formData.bullets.length})</label>
-              <button
-                className="btn btn-small"
-                onClick={handleAddBullet}
-              >
-                + Add Bullet
-              </button>
+              <div className="bullets-header-actions">
+                {onAddBulletFromMaster && (
+                  <button
+                    className="btn btn-small btn-secondary"
+                    onClick={onAddBulletFromMaster}
+                    title="Add bullet from master resume"
+                  >
+                    + From Master
+                  </button>
+                )}
+                <button
+                  className="btn btn-small"
+                  onClick={handleAddBullet}
+                >
+                  + Add Bullet
+                </button>
+              </div>
             </div>
 
             <div className="bullets-list">

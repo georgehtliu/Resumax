@@ -59,6 +59,11 @@
   margin-bottom: 12px;
 }
 
+.bullets-header-actions {
+  display: flex;
+  gap: 8px;
+}
+
 .bullets-header label {
   font-size: 14px;
   font-weight: 600;

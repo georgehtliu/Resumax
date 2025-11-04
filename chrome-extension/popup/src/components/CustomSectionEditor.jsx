@@ -11,7 +11,7 @@ import './SectionEditor.css';
  * - Add unlimited bullet points
  * - Edit/delete bullet points
  */
-function CustomSectionEditor({ section, onUpdate, onDelete }) {
+function CustomSectionEditor({ section, onUpdate, onDelete, onAddBulletFromMaster }) {
   const [isEditing, setIsEditing] = useState(!section.title);
   const [formData, setFormData] = useState({
     title: section.title || '',
@@ -88,12 +88,23 @@ function CustomSectionEditor({ section, onUpdate, onDelete }) {
           <div className="bullets-section">
             <div className="bullets-header">
               <label>Bullet Points ({formData.bullets.length})</label>
-              <button
-                className="btn btn-small"
-                onClick={handleAddBullet}
-              >
-                + Add Bullet
-              </button>
+              <div className="bullets-header-actions">
+                {onAddBulletFromMaster && (
+                  <button
+                    className="btn btn-small btn-secondary"
+                    onClick={onAddBulletFromMaster}
+                    title="Add bullet from master resume"
+                  >
+                    + From Master
+                  </button>
+                )}
+                <button
+                  className="btn btn-small"
+                  onClick={handleAddBullet}
+                >
+                  + Add Bullet
+                </button>
+              </div>
             </div>
 
             <div className="bullets-list">
