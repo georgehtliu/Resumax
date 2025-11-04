@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './OptimizationPanel.css';
 
 /**
@@ -10,9 +10,23 @@ import './OptimizationPanel.css';
  * - Gap analysis
  * - Customization options
  */
-function OptimizationPanel({ result, onClose }) {
+function OptimizationPanel({ result, onClose, onBulletsUpdate }) {
   const [selectedBullets, setSelectedBullets] = useState(result.selectedBullets || []);
   const [editingBullet, setEditingBullet] = useState(null);
+
+  // Update bullets when result changes
+  useEffect(() => {
+    if (result?.selectedBullets) {
+      setSelectedBullets(result.selectedBullets);
+    }
+  }, [result]);
+
+  // Notify parent of bullet updates
+  useEffect(() => {
+    if (onBulletsUpdate) {
+      onBulletsUpdate(selectedBullets);
+    }
+  }, [selectedBullets, onBulletsUpdate]);
 
   if (!result) return null;
 

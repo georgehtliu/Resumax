@@ -21,10 +21,11 @@
 }
 
 .app-main {
-  padding: 20px;
+  padding: 0;
 }
 
 .section {
+  margin: 20px;
   margin-bottom: 32px;
   background: white;
   border-radius: 8px;

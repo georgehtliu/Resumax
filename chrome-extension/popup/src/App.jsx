@@ -3,8 +3,9 @@ import ExperienceEditor from './components/ExperienceEditor';
 import EducationEditor from './components/EducationEditor';
 import ProjectEditor from './components/ProjectEditor';
 import CustomSectionEditor from './components/CustomSectionEditor';
-import JobMatcher from './components/JobMatcher';
-import OptimizationPanel from './components/OptimizationPanel';
+import Tabs from './components/Tabs';
+import GenerateResume from './components/GenerateResume';
+import SavedResumes from './components/SavedResumes';
 import { storageService } from './services/storage';
 import './App.css';
 
@@ -17,6 +18,8 @@ import './App.css';
  * - Optimization results
  */
 function App() {
+  const [activeTab, setActiveTab] = useState('master');
+  const [refreshSaved, setRefreshSaved] = useState(0);
   const [resume, setResume] = useState({
     experiences: [],
     education: [],
@@ -24,9 +27,6 @@ function App() {
     customSections: [],
     totalBullets: 0
   });
-  const [currentJob, setCurrentJob] = useState(null);
-  const [optimizationResult, setOptimizationResult] = useState(null);
-  const [loading, setLoading] = useState(false);
 
   // Load resume data on mount
   useEffect(() => {
@@ -98,70 +98,18 @@ function App() {
   }
 
   /**
-   * Extract job description from current tab
+   * Handle refresh of saved resumes list
    */
-  async function handleExtractJobDescription() {
-    setLoading(true);
-    try {
-      const result = await chrome.runtime.sendMessage({
-        type: 'EXTRACT_JOB_DESCRIPTION'
-      });
-
-      if (result.success) {
-        setCurrentJob({
-          description: result.jobDescription,
-          source: result.source || 'manual'
-        });
-      } else {
-        alert('Could not extract job description: ' + result.error);
-      }
-    } catch (error) {
-      console.error('Error extracting job description:', error);
-      alert('Error extracting job description');
-    } finally {
-      setLoading(false);
-    }
+  function handleResumeSaved() {
+    // Trigger refresh by updating refresh trigger
+    setRefreshSaved(prev => prev + 1);
   }
 
-  /**
-   * Handle optimization request
-   * For now, this is a mock - backend connection comes later
-   */
-  async function handleOptimize(jobDescription) {
-    setLoading(true);
-    try {
-      // TODO: Connect to backend API later
-      // For now, return mock data
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API call
-      
-      // Collect bullets from all sections (safely handle undefined arrays)
-      const allBullets = [
-        ...(Array.isArray(resume.experiences) ? resume.experiences.flatMap(exp => Array.isArray(exp?.bullets) ? exp.bullets : []) : []),
-        ...(Array.isArray(resume.education) ? resume.education.flatMap(edu => Array.isArray(edu?.bullets) ? edu.bullets : []) : []),
-        ...(Array.isArray(resume.projects) ? resume.projects.flatMap(proj => Array.isArray(proj?.bullets) ? proj.bullets : []) : []),
-        ...(Array.isArray(resume.customSections) ? resume.customSections.flatMap(section => Array.isArray(section?.bullets) ? section.bullets : []) : [])
-      ];
-
-      const mockResult = {
-        selectedBullets: allBullets
-          .slice(0, 12)
-          .map(bullet => ({
-            ...bullet,
-            relevanceScore: Math.random() * 0.3 + 0.7,
-            rewritten: bullet.text // Mock - would be optimized by LLM
-          })),
-        gaps: ['Cloud deployment', 'Machine learning'],
-        mode: 'strict'
-      };
-
-      setOptimizationResult(mockResult);
-    } catch (error) {
-      console.error('Error optimizing:', error);
-      alert('Error optimizing resume');
-    } finally {
-      setLoading(false);
-    }
-  }
+  const tabs = [
+    { id: 'master', label: 'Master Resume' },
+    { id: 'generate', label: 'Generate New Resume' },
+    { id: 'saved', label: 'Saved Resumes' }
+  ];
 
   return (
     <div className="app">
@@ -171,12 +119,15 @@ function App() {
       </header>
 
       <main className="app-main">
-        {/* Resume Builder Section */}
-        <section className="section">
-          <h2>Your Resume</h2>
-          <p className="section-subtitle">
-            Total Bullets: {resume.totalBullets}
-          </p>
+        <Tabs activeTab={activeTab} onTabChange={setActiveTab} tabs={tabs} />
+
+        {/* Tab 1: Master Resume */}
+        {activeTab === 'master' && (
+          <section className="section">
+            <h2>Master Resume</h2>
+            <p className="section-subtitle">
+              Total Bullets: {resume.totalBullets} • Add unlimited bullet points per experience
+            </p>
 
           {/* Work Experience Section */}
           <div className="resume-section-group">
@@ -434,29 +385,19 @@ function App() {
             </button>
           </div>
         </section>
+        )}
 
-        {/* Job Matching Section */}
-        <section className="section">
-          <h2>Match to Job Description</h2>
-          
-          <JobMatcher
-            jobDescription={currentJob?.description || ''}
-            onExtract={handleExtractJobDescription}
-            onOptimize={handleOptimize}
-            loading={loading}
+        {/* Tab 2: Generate New Resume */}
+        {activeTab === 'generate' && (
+          <GenerateResume
+            masterResume={resume}
+            onSave={handleResumeSaved}
           />
-        </section>
+        )}
 
-        {/* Optimization Results */}
-        {optimizationResult && (
-          <section className="section">
-            <h2>Optimization Results</h2>
-            
-            <OptimizationPanel
-              result={optimizationResult}
-              onClose={() => setOptimizationResult(null)}
-            />
-          </section>
+        {/* Tab 3: Saved Resumes */}
+        {activeTab === 'saved' && (
+          <SavedResumes onLoadResume={handleResumeSaved} refreshTrigger={refreshSaved} />
         )}
       </main>
     </div>

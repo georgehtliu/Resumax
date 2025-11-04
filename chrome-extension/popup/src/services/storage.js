@@ -79,12 +79,95 @@ export async function clearResume() {
 }
 
 /**
+ * Save a generated resume with a name
+ * @param {string} name - Name for the resume
+ * @param {Object} resumeData - Resume data to save
+ */
+export async function saveGeneratedResume(name, resumeData) {
+  return new Promise((resolve, reject) => {
+    getSavedResumes().then(savedResumes => {
+      const newResume = {
+        id: `resume-${Date.now()}`,
+        name: name || `Resume ${new Date().toLocaleDateString()}`,
+        data: resumeData,
+        createdAt: Date.now(),
+        updatedAt: Date.now()
+      };
+      
+      const updated = [newResume, ...savedResumes];
+      chrome.storage.local.set({ savedResumes: updated }, () => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+        } else {
+          resolve(newResume);
+        }
+      });
+    }).catch(reject);
+  });
+}
+
+/**
+ * Get all saved resumes
+ * @returns {Promise<Array>} Array of saved resumes
+ */
+export async function getSavedResumes() {
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.get(['savedResumes'], (result) => {
+      if (chrome.runtime.lastError) {
+        reject(new Error(chrome.runtime.lastError.message));
+      } else {
+        const saved = Array.isArray(result.savedResumes) ? result.savedResumes : [];
+        // Sort by createdAt (newest first)
+        saved.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        resolve(saved);
+      }
+    });
+  });
+}
+
+/**
+ * Delete a saved resume
+ * @param {string} resumeId - ID of resume to delete
+ */
+export async function deleteSavedResume(resumeId) {
+  return new Promise((resolve, reject) => {
+    getSavedResumes().then(savedResumes => {
+      const updated = savedResumes.filter(r => r.id !== resumeId);
+      chrome.storage.local.set({ savedResumes: updated }, () => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+        } else {
+          resolve();
+        }
+      });
+    }).catch(reject);
+  });
+}
+
+/**
+ * Get a specific saved resume by ID
+ * @param {string} resumeId - ID of resume to get
+ */
+export async function getSavedResume(resumeId) {
+  return new Promise((resolve, reject) => {
+    getSavedResumes().then(savedResumes => {
+      const resume = savedResumes.find(r => r.id === resumeId);
+      resolve(resume || null);
+    }).catch(reject);
+  });
+}
+
+/**
  * Storage service object (for convenience)
  */
 export const storageService = {
   saveResume,
   getResume,
-  clearResume
+  clearResume,
+  saveGeneratedResume,
+  getSavedResumes,
+  deleteSavedResume,
+  getSavedResume
 };
 
 

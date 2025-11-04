@@ -4,4 +4,7 @@ export { default as ProjectEditor } from './ProjectEditor';
 export { default as CustomSectionEditor } from './CustomSectionEditor';
 export { default as JobMatcher } from './JobMatcher';
 export { default as OptimizationPanel } from './OptimizationPanel';
+export { default as Tabs } from './Tabs';
+export { default as GenerateResume } from './GenerateResume';
+export { default as SavedResumes } from './SavedResumes';
 
