@@ -3,7 +3,7 @@ node_modules/
 popup/node_modules/
 
 # Build outputs
-popup/popup-build/
+popup-build/
 popup/dist/
 
 # IDE
