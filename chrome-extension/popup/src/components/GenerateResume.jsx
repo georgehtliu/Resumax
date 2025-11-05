@@ -17,6 +17,7 @@ function GenerateResume({ masterResume, onSave }) {
   const [resumeName, setResumeName] = useState('');
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [customizedBullets, setCustomizedBullets] = useState(null);
+  const [optimizationMode, setOptimizationMode] = useState('select'); // 'select' or 'optimize'
 
   /**
    * Extract job description from current tab
@@ -45,7 +46,46 @@ function GenerateResume({ masterResume, onSave }) {
   }
 
   /**
-   * Handle optimization request (mock data for now)
+   * Handle selection request (no rewriting, just selection)
+   */
+  async function handleSelect(jobDescription) {
+    setLoading(true);
+    try {
+      // Mock selection - will connect to backend later
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Collect bullets from all sections
+      const allBullets = [
+        ...(Array.isArray(masterResume.experiences) ? masterResume.experiences.flatMap(exp => Array.isArray(exp?.bullets) ? exp.bullets : []) : []),
+        ...(Array.isArray(masterResume.education) ? masterResume.education.flatMap(edu => Array.isArray(edu?.bullets) ? edu.bullets : []) : []),
+        ...(Array.isArray(masterResume.projects) ? masterResume.projects.flatMap(proj => Array.isArray(proj?.bullets) ? proj.bullets : []) : []),
+        ...(Array.isArray(masterResume.customSections) ? masterResume.customSections.flatMap(section => Array.isArray(section?.bullets) ? section.bullets : []) : [])
+      ];
+
+      const mockResult = {
+        mode: 'select', // Indicates this is selection only
+        selectedBullets: allBullets
+          .slice(0, 12)
+          .map(bullet => ({
+            ...bullet,
+            relevanceScore: Math.random() * 0.3 + 0.7,
+            // No rewritten field - keeping original text
+          })),
+        gaps: ['Cloud deployment', 'Machine learning'],
+        jobDescription: jobDescription
+      };
+
+      setOptimizationResult(mockResult);
+    } catch (error) {
+      console.error('Error selecting bullets:', error);
+      alert('Error selecting bullets');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  /**
+   * Handle optimization request (with rewriting)
    */
   async function handleOptimize(jobDescription) {
     setLoading(true);
@@ -62,15 +102,16 @@ function GenerateResume({ masterResume, onSave }) {
       ];
 
       const mockResult = {
+        mode: 'optimize', // Indicates this includes rewriting
         selectedBullets: allBullets
           .slice(0, 12)
           .map(bullet => ({
             ...bullet,
             relevanceScore: Math.random() * 0.3 + 0.7,
-            rewritten: bullet.text // Mock - would be optimized by LLM
+            rewritten: bullet.text + ' (optimized)', // Mock - would be optimized by LLM
+            original: bullet.text
           })),
         gaps: ['Cloud deployment', 'Machine learning'],
-        mode: 'strict',
         jobDescription: jobDescription
       };
 
@@ -146,10 +187,55 @@ function GenerateResume({ masterResume, onSave }) {
           Extract or paste a job description, then select the best resume points.
         </p>
         
+        {/* Mode Selection */}
+        <div className="optimization-mode-selector">
+          <div className="mode-option">
+            <input
+              type="radio"
+              id="mode-select"
+              name="optimization-mode"
+              value="select"
+              checked={optimizationMode === 'select'}
+              onChange={(e) => setOptimizationMode(e.target.value)}
+            />
+            <label htmlFor="mode-select">
+              <div className="mode-label">
+                <span className="mode-icon">📋</span>
+                <div className="mode-content">
+                  <div className="mode-title">Select Best Bullets</div>
+                  <div className="mode-description">Fast selection without rewriting</div>
+                </div>
+              </div>
+            </label>
+          </div>
+          
+          <div className="mode-option">
+            <input
+              type="radio"
+              id="mode-optimize"
+              name="optimization-mode"
+              value="optimize"
+              checked={optimizationMode === 'optimize'}
+              onChange={(e) => setOptimizationMode(e.target.value)}
+            />
+            <label htmlFor="mode-optimize">
+              <div className="mode-label">
+                <span className="mode-icon">✨</span>
+                <div className="mode-content">
+                  <div className="mode-title">Optimize & Rewrite</div>
+                  <div className="mode-description">Selection + AI rewriting (slower)</div>
+                </div>
+              </div>
+            </label>
+          </div>
+        </div>
+        
         <JobMatcher
           jobDescription={currentJob?.description || ''}
           onExtract={handleExtractJobDescription}
+          onSelect={handleSelect}
           onOptimize={handleOptimize}
+          optimizationMode={optimizationMode}
           loading={loading}
         />
       </div>
@@ -158,7 +244,9 @@ function GenerateResume({ masterResume, onSave }) {
       {optimizationResult && (
         <div className="section">
           <div className="section-header-with-action">
-            <h2>Optimized Resume</h2>
+            <h2>
+              {optimizationResult.mode === 'optimize' ? 'Optimized Resume' : 'Selected Resume'}
+            </h2>
             <button
               className="btn btn-primary"
               onClick={() => setShowSaveDialog(true)}

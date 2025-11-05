@@ -140,6 +140,36 @@
   padding-top: 20px;
 }
 
+.bullet-selected-only {
+  width: 100%;
+}
+
+.bullet-selected-only label {
+  display: block;
+  font-size: 11px;
+  color: #666;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.bullet-selected-only p {
+  font-size: 13px;
+  color: #333;
+  line-height: 1.5;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 4px;
+  margin: 0;
+  cursor: pointer;
+  border: 1px solid #e0e0e0;
+}
+
+.bullet-selected-only p:hover {
+  background: #f0f0f0;
+  border-color: #667eea;
+}
+
 .bullet-actions {
   display: flex;
   gap: 8px;

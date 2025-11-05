@@ -13,6 +13,10 @@ import './OptimizationPanel.css';
 function OptimizationPanel({ result, onClose, onBulletsUpdate }) {
   const [selectedBullets, setSelectedBullets] = useState(result.selectedBullets || []);
   const [editingBullet, setEditingBullet] = useState(null);
+  
+  // Determine if this is optimized (has rewritten) or just selected
+  const isOptimized = result?.mode === 'optimize' || 
+    (selectedBullets.length > 0 && selectedBullets[0].rewritten !== undefined);
 
   // Update bullets when result changes
   useEffect(() => {
@@ -46,12 +50,14 @@ function OptimizationPanel({ result, onClose, onBulletsUpdate }) {
         </div>
         <div className="stat">
           <span className="stat-label">Mode:</span>
-          <span className="stat-value">{result.mode || 'strict'}</span>
+          <span className="stat-value">
+            {isOptimized ? '✨ Optimized' : '📋 Selected'}
+          </span>
         </div>
       </div>
 
       <div className="bullets-comparison">
-        <h3>Optimized Bullets</h3>
+        <h3>{isOptimized ? 'Optimized Bullets' : 'Selected Bullets'}</h3>
         {selectedBullets.map((bullet, index) => (
           <div key={bullet.id || index} className="bullet-comparison">
             <div className="bullet-header">
@@ -61,24 +67,52 @@ function OptimizationPanel({ result, onClose, onBulletsUpdate }) {
               </span>
             </div>
             
-            <div className="comparison-row">
-              <div className="bullet-before">
-                <label>Original</label>
-                <p>{bullet.original || bullet.text}</p>
+            {isOptimized ? (
+              // Show original vs rewritten comparison
+              <div className="comparison-row">
+                <div className="bullet-before">
+                  <label>Original</label>
+                  <p>{bullet.original || bullet.text}</p>
+                </div>
+                
+                <div className="arrow">→</div>
+                
+                <div className="bullet-after">
+                  <label>Optimized</label>
+                  {editingBullet === bullet.id ? (
+                    <textarea
+                      className="bullet-edit"
+                      value={bullet.rewritten || bullet.text}
+                      onChange={(e) => {
+                        const updated = selectedBullets.map(b =>
+                          b.id === bullet.id
+                            ? { ...b, rewritten: e.target.value }
+                            : b
+                        );
+                        setSelectedBullets(updated);
+                      }}
+                      onBlur={() => setEditingBullet(null)}
+                      rows={3}
+                    />
+                  ) : (
+                    <p onClick={() => setEditingBullet(bullet.id)}>
+                      {bullet.rewritten || bullet.text}
+                    </p>
+                  )}
+                </div>
               </div>
-              
-              <div className="arrow">→</div>
-              
-              <div className="bullet-after">
-                <label>Optimized</label>
+            ) : (
+              // Show just the selected bullet (no rewriting)
+              <div className="bullet-selected-only">
+                <label>Selected Bullet</label>
                 {editingBullet === bullet.id ? (
                   <textarea
                     className="bullet-edit"
-                    value={bullet.rewritten}
+                    value={bullet.text}
                     onChange={(e) => {
                       const updated = selectedBullets.map(b =>
                         b.id === bullet.id
-                          ? { ...b, rewritten: e.target.value }
+                          ? { ...b, text: e.target.value }
                           : b
                       );
                       setSelectedBullets(updated);
@@ -88,11 +122,11 @@ function OptimizationPanel({ result, onClose, onBulletsUpdate }) {
                   />
                 ) : (
                   <p onClick={() => setEditingBullet(bullet.id)}>
-                    {bullet.rewritten || bullet.text}
+                    {bullet.text}
                   </p>
                 )}
               </div>
-            </div>
+            )}
 
             <div className="bullet-actions">
               <button className="btn-small">✓ Use</button>
@@ -102,7 +136,7 @@ function OptimizationPanel({ result, onClose, onBulletsUpdate }) {
               >
                 Edit
               </button>
-              <button className="btn-small">Swap</button>
+              {isOptimized && <button className="btn-small">Swap</button>}
             </div>
           </div>
         ))}

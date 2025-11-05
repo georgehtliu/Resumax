@@ -7,10 +7,10 @@ import './JobMatcher.css';
  * Handles:
  * - Extracting job description from current tab
  * - Manual job description input
- * - Triggering optimization
+ * - Triggering selection or optimization based on mode
  * - Displaying job description in collapsible textbox
  */
-function JobMatcher({ jobDescription, onExtract, onOptimize, loading }) {
+function JobMatcher({ jobDescription, onExtract, onSelect, onOptimize, optimizationMode, loading }) {
   const [manualJD, setManualJD] = useState(jobDescription || '');
   const [extractionStatus, setExtractionStatus] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
@@ -39,7 +39,7 @@ function JobMatcher({ jobDescription, onExtract, onOptimize, loading }) {
     }
   }
 
-  function handleOptimize() {
+  function handleProcess() {
     const jd = manualJD.trim();
     if (!jd) {
       alert('Please enter or extract a job description first.');
@@ -51,7 +51,12 @@ function JobMatcher({ jobDescription, onExtract, onOptimize, loading }) {
       return;
     }
 
-    onOptimize(jd);
+    // Call appropriate handler based on mode
+    if (optimizationMode === 'select' && onSelect) {
+      onSelect(jd);
+    } else if (optimizationMode === 'optimize' && onOptimize) {
+      onOptimize(jd);
+    }
   }
 
   return (
@@ -141,10 +146,14 @@ function JobMatcher({ jobDescription, onExtract, onOptimize, loading }) {
       <div className="job-matcher-actions">
         <button
           className="btn btn-primary btn-large"
-          onClick={handleOptimize}
+          onClick={handleProcess}
           disabled={loading || !manualJD.trim()}
         >
-          {loading ? 'Optimizing...' : '🚀 Match Best Bullets'}
+          {loading 
+            ? (optimizationMode === 'optimize' ? 'Optimizing...' : 'Selecting...')
+            : (optimizationMode === 'optimize' 
+                ? '✨ Optimize & Rewrite' 
+                : '📋 Select Best Bullets')}
         </button>
       </div>
     </div>
