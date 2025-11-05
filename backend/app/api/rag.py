@@ -5,18 +5,27 @@ This module exposes the RAG pipeline through REST API endpoints.
 """
 
 from fastapi import APIRouter, HTTPException, BackgroundTasks
-from app.schemas.rag import RAGRequest, RAGResponse
+from app.schemas.rag import (
+    RAGRequest, RAGResponse, SelectionRequest, SelectionResponse,
+    OptimizationRequest, OptimizationResponse
+)
 from app.services.rag_service import RAGService
+from app.services.selection_service import SelectionService, calculate_total_lines, identify_gaps
+from app.services.optimization_service import OptimizationService
 import json
 import os
+import time
 from datetime import datetime
 
 router = APIRouter()
 
-@router.post("/optimize", response_model=RAGResponse)
-async def optimize_resume(request: RAGRequest, background_tasks: BackgroundTasks):
+@router.post("/optimize/flat", response_model=RAGResponse)
+async def optimize_resume_flat(request: RAGRequest, background_tasks: BackgroundTasks):
     """
-    Main RAG endpoint: Optimize resume points for a job description.
+    Legacy RAG endpoint: Optimize flat list of resume points for a job description.
+    
+    This is the old endpoint that works with flat bullet lists.
+    Use /select or /optimize for structured resume format.
     
     This endpoint implements the complete RAG pipeline:
     1. Retrieve relevant resume points using vector search
@@ -181,5 +190,163 @@ async def list_results():
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to list results: {str(e)}")
+
+# ============================================================================
+# NEW STRUCTURED ENDPOINTS (/select and /optimize)
+# ============================================================================
+
+@router.post("/select", response_model=SelectionResponse)
+async def select_bullets(request: SelectionRequest):
+    """
+    Select top bullets per experience without rewriting.
+    
+    Fast endpoint - just vector search ranking, no LLM calls.
+    
+    Args:
+        request: Selection request with structured resume and parameters
+        
+    Returns:
+        Selection response with selected bullets (original text preserved)
+    """
+    start_time = time.time()
+    
+    try:
+        print(f"📋 Selecting bullets for job: {request.job_description[:50]}...")
+        
+        selection_service = SelectionService()
+        
+        # Select bullets per section
+        selected_resume = await selection_service.select_bullets(
+            resume=request.resume,
+            job_description=request.job_description,
+            bullets_per_experience=request.bullets_per_experience,
+            bullets_per_education=request.bullets_per_education,
+            bullets_per_project=request.bullets_per_project,
+            bullets_per_custom=request.bullets_per_custom
+        )
+        
+        # Calculate total lines
+        total_lines = calculate_total_lines(selected_resume)
+        max_lines = 50
+        fits_one_page = total_lines <= max_lines
+        
+        # Identify gaps
+        gaps = identify_gaps(selected_resume, request.job_description)
+        
+        processing_time = time.time() - start_time
+        
+        print(f"✅ Selection completed in {processing_time:.2f} seconds")
+        print(f"   - Selected {total_lines} lines (fits one page: {fits_one_page})")
+        print(f"   - Identified {len(gaps)} gaps")
+        
+        return SelectionResponse(
+            mode="select",
+            selectedResume=selected_resume,
+            totalLineCount=total_lines,
+            maxLines=max_lines,
+            fitsOnePage=fits_one_page,
+            gaps=gaps,
+            processing_time=processing_time,
+            created_at=datetime.now()
+        )
+        
+    except Exception as e:
+        print(f"❌ Error in selection endpoint: {e}")
+        raise HTTPException(status_code=500, detail=f"Selection failed: {str(e)}")
+
+@router.post("/optimize", response_model=OptimizationResponse)
+async def optimize_resume_structured(request: OptimizationRequest, background_tasks: BackgroundTasks):
+    """
+    Select top bullets AND rewrite them with LLM.
+    
+    Slower endpoint - includes LLM rewriting.
+    
+    Args:
+        request: Optimization request with structured resume and parameters
+        background_tasks: For saving results in background
+        
+    Returns:
+        Optimization response with selected and rewritten bullets
+    """
+    start_time = time.time()
+    
+    try:
+        print(f"✨ Optimizing resume for job: {request.job_description[:50]}...")
+        
+        optimization_service = OptimizationService()
+        
+        # Select and rewrite bullets
+        optimized_resume = await optimization_service.optimize_resume(
+            resume=request.resume,
+            job_description=request.job_description,
+            bullets_per_experience=request.bullets_per_experience,
+            bullets_per_education=request.bullets_per_education,
+            bullets_per_project=request.bullets_per_project,
+            bullets_per_custom=request.bullets_per_custom,
+            rewrite_style=request.rewrite_style,
+            optimization_mode=request.optimization_mode
+        )
+        
+        # Calculate total lines
+        total_lines = calculate_total_lines(optimized_resume)
+        max_lines = 50
+        fits_one_page = total_lines <= max_lines
+        
+        # Identify gaps
+        gaps = identify_gaps(optimized_resume, request.job_description)
+        
+        processing_time = time.time() - start_time
+        
+        print(f"✅ Optimization completed in {processing_time:.2f} seconds")
+        print(f"   - Optimized {total_lines} lines (fits one page: {fits_one_page})")
+        print(f"   - Identified {len(gaps)} gaps")
+        
+        # Save results in background
+        result_dict = {
+            "mode": "optimize",
+            "job_description": request.job_description,
+            "optimized_resume": optimized_resume.dict(),
+            "total_line_count": total_lines,
+            "fits_one_page": fits_one_page,
+            "gaps": gaps,
+            "processing_time": processing_time
+        }
+        background_tasks.add_task(_save_results, result_dict)
+        
+        return OptimizationResponse(
+            mode="optimize",
+            optimizedResume=optimized_resume,
+            totalLineCount=total_lines,
+            maxLines=max_lines,
+            fitsOnePage=fits_one_page,
+            gaps=gaps,
+            processing_time=processing_time,
+            created_at=datetime.now()
+        )
+        
+    except Exception as e:
+        print(f"❌ Error in optimization endpoint: {e}")
+        raise HTTPException(status_code=500, detail=f"Optimization failed: {str(e)}")
+
+async def _save_results(result_dict: dict):
+    """
+    Save optimization results to JSON file.
+    
+    Args:
+        result_dict: Result dictionary to save
+    """
+    try:
+        os.makedirs("data/results", exist_ok=True)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"data/results/optimization_result_{timestamp}.json"
+        
+        result_dict["saved_at"] = datetime.now().isoformat()
+        
+        with open(filename, "w") as f:
+            json.dump(result_dict, f, indent=2, default=str)
+        
+        print(f"💾 Results saved to {filename}")
+    except Exception as e:
+        print(f"❌ Error saving results: {e}")
 
 
