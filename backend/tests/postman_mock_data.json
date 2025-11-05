@@ -1,0 +1,394 @@
+{
+  "description": "Mock data for testing /api/v1/select and /api/v1/optimize endpoints in Postman",
+  
+  "select_endpoint_request": {
+    "job_description": "We are looking for a Senior Software Engineer with experience in microservices architecture, Python development, REST APIs, Kubernetes, Docker, CI/CD pipelines, and team leadership. The ideal candidate should have experience with cloud platforms (AWS, GCP), database optimization, and distributed systems. Experience with machine learning is a plus.",
+    "resume": {
+      "experiences": [
+        {
+          "id": "exp-1",
+          "company": "Google",
+          "role": "Software Engineer II",
+          "startDate": "Jun 2022",
+          "endDate": "Present",
+          "bullets": [
+            {
+              "id": "bullet-1",
+              "text": "Developed and maintained microservices handling 10M+ daily requests using Python, Go, and Kubernetes, ensuring 99.9% uptime"
+            },
+            {
+              "id": "bullet-2",
+              "text": "Optimized database queries and caching strategies, reducing API response time by 40% and saving $50K annually in infrastructure costs"
+            },
+            {
+              "id": "bullet-3",
+              "text": "Led a team of 3 engineers to ship a new recommendation feature that increased user engagement by 25% and generated $2M in additional revenue"
+            },
+            {
+              "id": "bullet-4",
+              "text": "Implemented comprehensive CI/CD pipelines using Jenkins, Docker, and Kubernetes, reducing deployment time by 60% and enabling daily releases"
+            },
+            {
+              "id": "bullet-5",
+              "text": "Designed and built RESTful and gRPC APIs serving 5M+ requests per day with sub-100ms latency, improving mobile app performance by 30%"
+            },
+            {
+              "id": "bullet-6",
+              "text": "Collaborated with product managers and designers to define technical requirements, architecture, and success metrics for new features"
+            },
+            {
+              "id": "bullet-7",
+              "text": "Mentored 2 junior engineers through code reviews, pair programming, and technical design discussions, improving team velocity by 20%"
+            },
+            {
+              "id": "bullet-8",
+              "text": "Built real-time analytics dashboard using React and WebSockets, enabling product team to monitor user behavior and make data-driven decisions"
+            }
+          ]
+        },
+        {
+          "id": "exp-2",
+          "company": "Meta",
+          "role": "Software Engineering Intern",
+          "startDate": "Jun 2021",
+          "endDate": "Aug 2021",
+          "bullets": [
+            {
+              "id": "bullet-9",
+              "text": "Built React components for Facebook Marketplace improving user interface accessibility and mobile responsiveness, increasing conversion rate by 15%"
+            },
+            {
+              "id": "bullet-10",
+              "text": "Implemented real-time notification system using WebSocket connections and Redis, reducing latency by 30% and improving user engagement"
+            },
+            {
+              "id": "bullet-11",
+              "text": "Optimized GraphQL API endpoints and data fetching strategies, reducing server load by 25% and improving page load times"
+            },
+            {
+              "id": "bullet-12",
+              "text": "Participated in code reviews and contributed to team best practices documentation, improving code quality and onboarding efficiency"
+            },
+            {
+              "id": "bullet-13",
+              "text": "Developed A/B testing framework for feature rollouts, enabling data-driven product decisions and reducing risk of regressions"
+            }
+          ]
+        },
+        {
+          "id": "exp-3",
+          "company": "Amazon Web Services",
+          "role": "Software Development Engineer Intern",
+          "startDate": "Jun 2020",
+          "endDate": "Aug 2020",
+          "bullets": [
+            {
+              "id": "bullet-14",
+              "text": "Developed internal tools using Java and Spring Boot to automate deployment processes, reducing manual work by 40 hours per week"
+            },
+            {
+              "id": "bullet-15",
+              "text": "Built monitoring and alerting system for AWS services using CloudWatch and Lambda, improving incident detection time by 50%"
+            },
+            {
+              "id": "bullet-16",
+              "text": "Optimized database queries and implemented caching layer using DynamoDB and ElastiCache, reducing query latency by 35%"
+            },
+            {
+              "id": "bullet-17",
+              "text": "Collaborated with senior engineers on distributed systems design, learning best practices for scalability and reliability"
+            }
+          ]
+        }
+      ],
+      "education": [
+        {
+          "id": "edu-1",
+          "school": "Stanford University",
+          "degree": "B.S.",
+          "field": "Computer Science",
+          "startDate": "Sep 2018",
+          "endDate": "Jun 2022",
+          "bullets": [
+            {
+              "id": "bullet-18",
+              "text": "GPA: 3.9/4.0, Magna Cum Laude, Dean's List all semesters"
+            },
+            {
+              "id": "bullet-19",
+              "text": "Relevant Coursework: Algorithms & Data Structures, Machine Learning, Distributed Systems, Database Systems, Computer Networks"
+            },
+            {
+              "id": "bullet-20",
+              "text": "Teaching Assistant for CS161 (Design and Analysis of Algorithms) - graded assignments and held office hours for 50+ students"
+            },
+            {
+              "id": "bullet-21",
+              "text": "Research Assistant in Machine Learning Lab - worked on deep learning models for computer vision applications"
+            }
+          ]
+        }
+      ],
+      "projects": [
+        {
+          "id": "proj-1",
+          "name": "Distributed Task Scheduler",
+          "description": "High-performance distributed task scheduling system with fault tolerance",
+          "technologies": "Go, Kubernetes, Redis, PostgreSQL, gRPC",
+          "startDate": "Jan 2022",
+          "endDate": "May 2022",
+          "bullets": [
+            {
+              "id": "bullet-22",
+              "text": "Built scalable task scheduler handling 100K+ concurrent tasks using Go and Kubernetes, achieving 99.95% reliability"
+            },
+            {
+              "id": "bullet-23",
+              "text": "Implemented distributed consensus algorithm using Raft protocol for leader election and task coordination across nodes"
+            },
+            {
+              "id": "bullet-24",
+              "text": "Designed fault-tolerant architecture with automatic failover and task replication, ensuring zero data loss during node failures"
+            },
+            {
+              "id": "bullet-25",
+              "text": "Created monitoring dashboard using Prometheus and Grafana, enabling real-time visibility into system performance and health"
+            }
+          ]
+        },
+        {
+          "id": "proj-2",
+          "name": "E-commerce Platform",
+          "description": "Full-stack e-commerce platform with payment integration and inventory management",
+          "technologies": "React, Node.js, Express, PostgreSQL, Stripe API, AWS",
+          "startDate": "Sep 2020",
+          "endDate": "Dec 2021",
+          "bullets": [
+            {
+              "id": "bullet-26",
+              "text": "Built scalable web application supporting 1000+ concurrent users with real-time inventory updates and order processing"
+            },
+            {
+              "id": "bullet-27",
+              "text": "Integrated Stripe payment processing handling $50K+ in transactions with PCI compliance and fraud detection"
+            },
+            {
+              "id": "bullet-28",
+              "text": "Implemented JWT-based authentication and authorization with role-based access control for admin and customer roles"
+            },
+            {
+              "id": "bullet-29",
+              "text": "Deployed on AWS using EC2, RDS, S3, and CloudFront with automated backup, monitoring, and auto-scaling capabilities"
+            }
+          ]
+        }
+      ],
+      "customSections": [
+        {
+          "id": "custom-1",
+          "title": "Technical Skills",
+          "subtitle": "",
+          "bullets": [
+            {
+              "id": "bullet-30",
+              "text": "Languages: Python, JavaScript, TypeScript, Go, Java, C++, SQL, Bash"
+            },
+            {
+              "id": "bullet-31",
+              "text": "Frontend: React, Redux, Next.js, HTML5, CSS3, WebSocket, WebRTC"
+            },
+            {
+              "id": "bullet-32",
+              "text": "Backend: Node.js, Express, Django, Spring Boot, GraphQL, gRPC, REST APIs"
+            },
+            {
+              "id": "bullet-33",
+              "text": "Databases: PostgreSQL, MongoDB, Redis, DynamoDB, Elasticsearch"
+            },
+            {
+              "id": "bullet-34",
+              "text": "DevOps: Docker, Kubernetes, Jenkins, AWS (EC2, S3, RDS, Lambda), CI/CD, Terraform"
+            },
+            {
+              "id": "bullet-35",
+              "text": "Tools: Git, GitHub, Jira, Confluence, Prometheus, Grafana, Splunk"
+            },
+            {
+              "id": "bullet-36",
+              "text": "Concepts: Microservices, Distributed Systems, System Design, Machine Learning, Data Structures & Algorithms"
+            }
+          ]
+        },
+        {
+          "id": "custom-2",
+          "title": "Awards & Recognition",
+          "subtitle": "",
+          "bullets": [
+            {
+              "id": "bullet-37",
+              "text": "Google Hackathon Winner - Best Technical Implementation (2022) - Built AI-powered code review tool"
+            },
+            {
+              "id": "bullet-38",
+              "text": "Stanford Engineering Excellence Award (2021) - Top 5% of Computer Science graduating class"
+            }
+          ]
+        }
+      ]
+    },
+    "bullets_per_experience": 3,
+    "bullets_per_education": 2,
+    "bullets_per_project": 2,
+    "bullets_per_custom": 5
+  },
+
+  "optimize_endpoint_request": {
+    "job_description": "We are looking for a Senior Software Engineer with experience in microservices architecture, Python development, REST APIs, Kubernetes, Docker, CI/CD pipelines, and team leadership. The ideal candidate should have experience with cloud platforms (AWS, GCP), database optimization, and distributed systems. Experience with machine learning is a plus.",
+    "resume": {
+      "experiences": [
+        {
+          "id": "exp-1",
+          "company": "Google",
+          "role": "Software Engineer II",
+          "startDate": "Jun 2022",
+          "endDate": "Present",
+          "bullets": [
+            {
+              "id": "bullet-1",
+              "text": "Developed and maintained microservices handling 10M+ daily requests using Python, Go, and Kubernetes, ensuring 99.9% uptime"
+            },
+            {
+              "id": "bullet-2",
+              "text": "Optimized database queries and caching strategies, reducing API response time by 40% and saving $50K annually in infrastructure costs"
+            },
+            {
+              "id": "bullet-3",
+              "text": "Led a team of 3 engineers to ship a new recommendation feature that increased user engagement by 25% and generated $2M in additional revenue"
+            },
+            {
+              "id": "bullet-4",
+              "text": "Implemented comprehensive CI/CD pipelines using Jenkins, Docker, and Kubernetes, reducing deployment time by 60% and enabling daily releases"
+            },
+            {
+              "id": "bullet-5",
+              "text": "Designed and built RESTful and gRPC APIs serving 5M+ requests per day with sub-100ms latency, improving mobile app performance by 30%"
+            }
+          ]
+        },
+        {
+          "id": "exp-2",
+          "company": "Meta",
+          "role": "Software Engineering Intern",
+          "startDate": "Jun 2021",
+          "endDate": "Aug 2021",
+          "bullets": [
+            {
+              "id": "bullet-6",
+              "text": "Built React components for Facebook Marketplace improving user interface accessibility and mobile responsiveness"
+            },
+            {
+              "id": "bullet-7",
+              "text": "Optimized GraphQL API endpoints and data fetching strategies, reducing server load by 25%"
+            }
+          ]
+        }
+      ],
+      "education": [
+        {
+          "id": "edu-1",
+          "school": "Stanford University",
+          "degree": "B.S.",
+          "field": "Computer Science",
+          "startDate": "Sep 2018",
+          "endDate": "Jun 2022",
+          "bullets": [
+            {
+              "id": "bullet-8",
+              "text": "GPA: 3.9/4.0, Magna Cum Laude, Dean's List all semesters"
+            },
+            {
+              "id": "bullet-9",
+              "text": "Relevant Coursework: Algorithms & Data Structures, Machine Learning, Distributed Systems"
+            }
+          ]
+        }
+      ],
+      "projects": [
+        {
+          "id": "proj-1",
+          "name": "Distributed Task Scheduler",
+          "description": "High-performance distributed task scheduling system",
+          "technologies": "Go, Kubernetes, Redis, PostgreSQL",
+          "startDate": "Jan 2022",
+          "endDate": "May 2022",
+          "bullets": [
+            {
+              "id": "bullet-10",
+              "text": "Built scalable task scheduler handling 100K+ concurrent tasks using Go and Kubernetes"
+            },
+            {
+              "id": "bullet-11",
+              "text": "Implemented distributed consensus algorithm using Raft protocol for leader election"
+            }
+          ]
+        }
+      ],
+      "customSections": [
+        {
+          "id": "custom-1",
+          "title": "Technical Skills",
+          "bullets": [
+            {
+              "id": "bullet-12",
+              "text": "Languages: Python, JavaScript, Go, Java, SQL"
+            },
+            {
+              "id": "bullet-13",
+              "text": "Backend: Node.js, Express, Django, Spring Boot, REST APIs"
+            },
+            {
+              "id": "bullet-14",
+              "text": "DevOps: Docker, Kubernetes, Jenkins, AWS, CI/CD"
+            }
+          ]
+        }
+      ]
+    },
+    "bullets_per_experience": 3,
+    "bullets_per_education": 2,
+    "bullets_per_project": 2,
+    "bullets_per_custom": 5,
+    "rewrite_style": "professional",
+    "optimization_mode": "strict"
+  },
+
+  "minimal_example": {
+    "job_description": "Software Engineer with Python and microservices experience",
+    "resume": {
+      "experiences": [
+        {
+          "id": "exp-1",
+          "company": "Tech Corp",
+          "role": "Software Engineer",
+          "startDate": "2020",
+          "endDate": "Present",
+          "bullets": [
+            {
+              "id": "b1",
+              "text": "Developed Python microservices"
+            },
+            {
+              "id": "b2",
+              "text": "Built REST APIs"
+            }
+          ]
+        }
+      ],
+      "education": [],
+      "projects": [],
+      "customSections": []
+    },
+    "bullets_per_experience": 2
+  }
+}
+

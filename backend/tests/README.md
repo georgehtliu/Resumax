@@ -1,6 +1,6 @@
-# Hybrid Search Tests
+# Backend Tests
 
-This directory contains comprehensive tests for the hybrid search functionality.
+This directory contains comprehensive tests for the resume optimization system.
 
 ## Test Files
 
@@ -18,22 +18,61 @@ Integration tests that can run with real data (requires `OPENAI_API_KEY`):
 - Keyword scoring with realistic resume bullets
 - Hybrid vs semantic search comparison
 
+### `test_selection_service.py` ⭐ NEW
+Comprehensive tests for SelectionService (bullet selection without rewriting):
+- **TestSelectionService**: Tests bullet selection per experience/education/project
+- **TestCalculateTotalLines**: Tests LaTeX line count calculation
+- **TestIdentifyGaps**: Tests skill gap identification
+- **TestEstimateLatexLines**: Tests line estimation for bullets
+- Covers: empty resumes, missing bullets, keyword fallback, limits, etc.
+
+### `test_optimization_service.py` ⭐ NEW
+Comprehensive tests for OptimizationService (selection + rewriting):
+- **TestOptimizationService**: Tests full optimization flow
+- Tests: rewriting success/failure, partial matches, all sections, error handling
+
+### `test_api_endpoints.py` ⭐ NEW
+Integration tests for `/api/v1/select` and `/api/v1/optimize` endpoints:
+- **TestSelectEndpoint**: Tests selection endpoint (request/response validation)
+- **TestOptimizeEndpoint**: Tests optimization endpoint
+- **TestEndpointsComparison**: Compares select vs optimize responses
+- Covers: success cases, error handling, validation, empty inputs, etc.
+
 ## Running Tests
 
 ### Run all pytest tests:
 ```bash
-cd phase2
+cd backend
 pytest tests/ -v
+```
+
+### Run new endpoint tests:
+```bash
+# Selection service tests
+pytest tests/test_selection_service.py -v
+
+# Optimization service tests
+pytest tests/test_optimization_service.py -v
+
+# API endpoint tests
+pytest tests/test_api_endpoints.py -v
 ```
 
 ### Run specific test file:
 ```bash
 pytest tests/test_hybrid_search.py -v
+pytest tests/test_selection_service.py -v
 ```
 
 ### Run specific test class:
 ```bash
 pytest tests/test_hybrid_search.py::TestKeywordExtraction -v
+pytest tests/test_selection_service.py::TestSelectionService -v
+```
+
+### Run with coverage:
+```bash
+pytest tests/ --cov=app.services --cov=app.api --cov-report=html
 ```
 
 ### Run integration tests (requires API key):
@@ -51,6 +90,7 @@ pytest tests/ --cov=app.core --cov-report=html
 
 The tests cover:
 
+### Hybrid Search Tests
 1. **Keyword Extraction**
    - Programming languages (Python, Java, TypeScript, etc.)
    - Frontend frameworks (React, Vue, Angular, etc.)
@@ -76,6 +116,37 @@ The tests cover:
 4. **Comparison Tests**
    - Hybrid vs semantic-only search
    - Verification that keyword matches boost rankings
+
+### New Endpoint Tests ⭐
+1. **SelectionService Tests**
+   - Bullet selection per experience/education/project/custom section
+   - Respects bullets_per_experience limits
+   - Empty resume handling
+   - Missing bullets in sections
+   - Keyword fallback when embeddings fail
+   - Line count calculation
+   - Gap identification
+
+2. **OptimizationService Tests**
+   - Full optimization flow (selection + rewriting)
+   - Rewriting success and failure cases
+   - Partial matches from optimizer
+   - All resume sections (experiences, education, projects, custom)
+   - Error handling
+
+3. **API Endpoint Tests**
+   - `/api/v1/select` endpoint:
+     - Success cases
+     - Request validation (missing fields, invalid values)
+     - Empty resume handling
+     - Error handling
+   - `/api/v1/optimize` endpoint:
+     - Success cases
+     - Optional field defaults
+     - Error handling
+   - Response structure validation
+   - Mode differentiation (select vs optimize)
+   - Response field differences (rewritten, original, reasoning)
 
 ## Requirements
 

@@ -1,0 +1,83 @@
+{
+  "info": {
+    "name": "Resumax API - Select & Optimize",
+    "description": "API collection for testing resume selection and optimization endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Select Best Bullets",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"job_description\": \"We are looking for a Senior Software Engineer with experience in microservices architecture, Python development, REST APIs, Kubernetes, Docker, CI/CD pipelines, and team leadership. The ideal candidate should have experience with cloud platforms (AWS, GCP), database optimization, and distributed systems.\",\n  \"resume\": {\n    \"experiences\": [\n      {\n        \"id\": \"exp-1\",\n        \"company\": \"Google\",\n        \"role\": \"Software Engineer II\",\n        \"startDate\": \"Jun 2022\",\n        \"endDate\": \"Present\",\n        \"bullets\": [\n          {\"id\": \"bullet-1\", \"text\": \"Developed and maintained microservices handling 10M+ daily requests using Python, Go, and Kubernetes, ensuring 99.9% uptime\"},\n          {\"id\": \"bullet-2\", \"text\": \"Optimized database queries and caching strategies, reducing API response time by 40% and saving $50K annually in infrastructure costs\"},\n          {\"id\": \"bullet-3\", \"text\": \"Led a team of 3 engineers to ship a new recommendation feature that increased user engagement by 25% and generated $2M in additional revenue\"},\n          {\"id\": \"bullet-4\", \"text\": \"Implemented comprehensive CI/CD pipelines using Jenkins, Docker, and Kubernetes, reducing deployment time by 60% and enabling daily releases\"},\n          {\"id\": \"bullet-5\", \"text\": \"Designed and built RESTful and gRPC APIs serving 5M+ requests per day with sub-100ms latency, improving mobile app performance by 30%\"}\n        ]\n      },\n      {\n        \"id\": \"exp-2\",\n        \"company\": \"Meta\",\n        \"role\": \"Software Engineering Intern\",\n        \"startDate\": \"Jun 2021\",\n        \"endDate\": \"Aug 2021\",\n        \"bullets\": [\n          {\"id\": \"bullet-6\", \"text\": \"Built React components for Facebook Marketplace improving user interface accessibility and mobile responsiveness, increasing conversion rate by 15%\"},\n          {\"id\": \"bullet-7\", \"text\": \"Optimized GraphQL API endpoints and data fetching strategies, reducing server load by 25% and improving page load times\"}\n        ]\n      }\n    ],\n    \"education\": [\n      {\n        \"id\": \"edu-1\",\n        \"school\": \"Stanford University\",\n        \"degree\": \"B.S.\",\n        \"field\": \"Computer Science\",\n        \"startDate\": \"Sep 2018\",\n        \"endDate\": \"Jun 2022\",\n        \"bullets\": [\n          {\"id\": \"bullet-8\", \"text\": \"GPA: 3.9/4.0, Magna Cum Laude, Dean's List all semesters\"},\n          {\"id\": \"bullet-9\", \"text\": \"Relevant Coursework: Algorithms & Data Structures, Machine Learning, Distributed Systems, Database Systems\"}\n        ]\n      }\n    ],\n    \"projects\": [\n      {\n        \"id\": \"proj-1\",\n        \"name\": \"Distributed Task Scheduler\",\n        \"description\": \"High-performance distributed task scheduling system\",\n        \"technologies\": \"Go, Kubernetes, Redis, PostgreSQL\",\n        \"bullets\": [\n          {\"id\": \"bullet-10\", \"text\": \"Built scalable task scheduler handling 100K+ concurrent tasks using Go and Kubernetes, achieving 99.95% reliability\"},\n          {\"id\": \"bullet-11\", \"text\": \"Implemented distributed consensus algorithm using Raft protocol for leader election and task coordination\"}\n        ]\n      }\n    ],\n    \"customSections\": [\n      {\n        \"id\": \"custom-1\",\n        \"title\": \"Technical Skills\",\n        \"bullets\": [\n          {\"id\": \"bullet-12\", \"text\": \"Languages: Python, JavaScript, TypeScript, Go, Java, C++, SQL\"},\n          {\"id\": \"bullet-13\", \"text\": \"Backend: Node.js, Express, Django, Spring Boot, GraphQL, gRPC, REST APIs\"},\n          {\"id\": \"bullet-14\", \"text\": \"DevOps: Docker, Kubernetes, Jenkins, AWS (EC2, S3, RDS, Lambda), CI/CD\"}\n        ]\n      }\n    ]\n  },\n  \"bullets_per_experience\": 3,\n  \"bullets_per_education\": 2,\n  \"bullets_per_project\": 2,\n  \"bullets_per_custom\": 5\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/select",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "select"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Optimize & Rewrite",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"job_description\": \"We are looking for a Senior Software Engineer with experience in microservices architecture, Python development, REST APIs, Kubernetes, Docker, CI/CD pipelines, and team leadership. The ideal candidate should have experience with cloud platforms (AWS, GCP), database optimization, and distributed systems.\",\n  \"resume\": {\n    \"experiences\": [\n      {\n        \"id\": \"exp-1\",\n        \"company\": \"Google\",\n        \"role\": \"Software Engineer II\",\n        \"startDate\": \"Jun 2022\",\n        \"endDate\": \"Present\",\n        \"bullets\": [\n          {\"id\": \"bullet-1\", \"text\": \"Developed and maintained microservices handling 10M+ daily requests using Python, Go, and Kubernetes, ensuring 99.9% uptime\"},\n          {\"id\": \"bullet-2\", \"text\": \"Optimized database queries and caching strategies, reducing API response time by 40% and saving $50K annually in infrastructure costs\"},\n          {\"id\": \"bullet-3\", \"text\": \"Led a team of 3 engineers to ship a new recommendation feature that increased user engagement by 25% and generated $2M in additional revenue\"},\n          {\"id\": \"bullet-4\", \"text\": \"Implemented comprehensive CI/CD pipelines using Jenkins, Docker, and Kubernetes, reducing deployment time by 60% and enabling daily releases\"}\n        ]\n      }\n    ],\n    \"education\": [],\n    \"projects\": [],\n    \"customSections\": []\n  },\n  \"bullets_per_experience\": 3,\n  \"bullets_per_education\": 2,\n  \"bullets_per_project\": 2,\n  \"bullets_per_custom\": 5,\n  \"rewrite_style\": \"professional\",\n  \"optimization_mode\": \"strict\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/optimize",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "optimize"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Minimal Test (Select)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"job_description\": \"Python developer with microservices experience\",\n  \"resume\": {\n    \"experiences\": [\n      {\n        \"id\": \"exp-1\",\n        \"company\": \"Tech Corp\",\n        \"role\": \"Software Engineer\",\n        \"bullets\": [\n          {\"id\": \"b1\", \"text\": \"Developed Python microservices\"},\n          {\"id\": \"b2\", \"text\": \"Built REST APIs\"}\n        ]\n      }\n    ],\n    \"education\": [],\n    \"projects\": [],\n    \"customSections\": []\n  },\n  \"bullets_per_experience\": 2\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/select",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "select"]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    }
+  ]
+}
+

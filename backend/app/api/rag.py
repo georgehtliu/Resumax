@@ -302,10 +302,16 @@ async def optimize_resume_structured(request: OptimizationRequest, background_ta
         print(f"   - Identified {len(gaps)} gaps")
         
         # Save results in background
+        # Use model_dump() for Pydantic v2, fallback to dict() for v1
+        try:
+            resume_dict = optimized_resume.model_dump()
+        except AttributeError:
+            resume_dict = optimized_resume.dict()
+        
         result_dict = {
             "mode": "optimize",
             "job_description": request.job_description,
-            "optimized_resume": optimized_resume.dict(),
+            "optimized_resume": resume_dict,
             "total_line_count": total_lines,
             "fits_one_page": fits_one_page,
             "gaps": gaps,
