@@ -1,0 +1,205 @@
+%-------------------------
+% Resume in Latex
+% Author : Jake Gutierrez
+% Based off of: https://github.com/sb2nov/resume
+% License : MIT
+%-------------------------
+
+\documentclass[letterpaper,11pt]{article}
+
+\usepackage{latexsym}
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage{marvosym}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{verbatim}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\usepackage[english]{babel}
+\usepackage{tabularx}
+\input{glyphtounicode}
+
+%----------FONT OPTIONS----------
+% sans-serif
+% \usepackage[sfdefault]{FiraSans}
+% \usepackage[sfdefault]{roboto}
+% \usepackage[sfdefault]{noto-sans}
+% \usepackage[default]{sourcesanspro}
+
+% serif
+% \usepackage{CormorantGaramond}
+% \usepackage{charter}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% Adjust margins
+\addtolength{\oddsidemargin}{-0.5in}
+\addtolength{\evensidemargin}{-0.5in}
+\addtolength{\textwidth}{1in}
+\addtolength{\topmargin}{-.5in}
+\addtolength{\textheight}{1.0in}
+
+\urlstyle{same}
+
+\raggedbottom
+\raggedright
+\setlength{\tabcolsep}{0in}
+
+% Sections formatting
+\titleformat{\section}{
+  \vspace{-4pt}\scshape\raggedright\large
+}{}{0em}{}[\color{black}\titlerule \vspace{-5pt}]
+
+% Ensure that generated pdf is machine readable/ATS parsable
+\pdfgentounicode=1
+
+%-------------------------
+% Custom commands
+\newcommand{\resumeItem}[1]{
+  \item\small{#1 \vspace{-2pt}}
+}
+
+\newcommand{\resumeSubheading}[4]{
+  \vspace{-2pt}\item
+    \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & #2 \\
+      \textit{\small#3} & \textit{\small #4} \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeSubSubheading}[2]{
+    \item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \textit{\small#1} & \textit{\small #2} \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeProjectHeading}[2]{
+    \item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \small#1 & #2 \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeSubItem}[1]{\resumeItem{#1}\vspace{-4pt}}
+
+\renewcommand\labelitemii{$\vcenter{\hbox{\tiny$\bullet$}}$}
+
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0.15in, label={}]}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
+\newcommand{\resumeItemListStart}{\begin{itemize}}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-5pt}}
+
+%-------------------------------------------
+%%%%%%  RESUME STARTS HERE  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+%----------HEADING----------
+\begin{center}
+    \textbf{\Huge \scshape George Liu} \\ \vspace{1pt}
+    \small \underline{+1(613) 261-6934} $|$ \href{} {\underline{georgeliu220@gmail.com}} $|$ 
+    \href{https://linkedin.com/in/georgehtliu}{\underline{linkedin.com/in/georgehtliu}} $|$
+    \href{https://github.com/georgehtliu}{\underline{github.com/georgehtliu}}
+\end{center}
+
+%-----------EDUCATION-----------
+\section{Education}
+\resumeSubHeadingListStart
+  \resumeSubheading
+    {University of Waterloo}{Expected Graduation: Dec. 2025}
+    {Bachelor of Computer Science, Computer Science Co-op}{GPA: 3.7/4.0}
+    \resumeItemListStart
+      \resumeItem{\textbf{Relevant Coursework:} Algorithms/Data Structures, Operating Systems, Distributed Systems, Compilers, Software Architecture, Object-oriented Programming, Human-computer Interaction, Machine Learning}
+    \resumeItemListEnd
+\resumeSubHeadingListEnd
+
+%-----------EXPERIENCE-----------
+\section{Experience}
+\resumeSubHeadingListStart
+
+  \resumeSubheading
+    {Tesla}{May 2025 -- Aug. 2025}
+    {Software Engineer Intern}{Fremont, CA}
+    \resumeItemListStart
+      \resumeItem{Pioneered an autonomous \textbf{AI agent} with real-time streaming to automate \textbf{95\%} of customer delivery inquiries.}
+      \resumeItem{Routed agent between \textbf{RAG}-based documentation and 10+ Elasticsearch tool lookups with LangGraph/FastAPI.}
+      \resumeItem{Implemented \textbf{LlamaGuard} moderation to enforce policy compliance and prevent unsafe customer queries.}
+      \resumeItem{Developed an idempotent migration service using \textbf{Kubernetes} CronJobs to port over \textbf{4M+} legacy customer records to MongoDB, offloading \textbf{70\%} of query load from the primary MySQL database.}
+    \resumeItemListEnd
+
+  \resumeSubheading
+    {Tesla}{Jan. 2025 -- May 2025}
+    {Software Engineer Intern}{Fremont, CA}
+    \resumeItemListStart
+      \resumeItem{Re-architected the vehicle registration workflow for 5M+ users and 300 advisors by implementing a \textbf{.NET} partial saves API and a new \textbf{Angular} stepper UI, reducing abandonment by \textbf{40\%}.}
+      \resumeItem{Authored scalable, region-aware, step-aware JSON rule configs ensuring registration compliance in \textbf{10+} countries.}
+      \resumeItem{Led a performance audit of the Tesla registration API, identifying and eliminating redundant calls and implementing a \textbf{Redis} caching layer to slash response time from \textbf{8s} to \textbf{3s}.}
+    \resumeItemListEnd
+
+  \resumeSubheading
+    {Ford}{Sep. 2024 -- Dec. 2024}
+    {Android Platform Developer Intern}{Waterloo, ON}
+    \resumeItemListStart
+      \resumeItem{Engineered \textbf{C++} AUTOSAR middleware services on Android Automotive and QNX, enabling low-latency inter-process communication across infotainment subsystems deployed in \textbf{1M+} vehicles.}
+      \resumeItem{Developed rigorous GTest \& JUnit testing framework enforcing \textbf{95\%+} coverage, ensuring stable vehicle software.}
+    \resumeItemListEnd
+
+  \resumeSubheading
+    {Huawei (Canada R\&D)}{May 2023 -- Jul. 2023}
+    {Compiler Software Engineer Intern}{Toronto, ON}
+    \resumeItemListStart
+      \resumeItem{Implemented 10 compiler passes in C++ lowering MLIR to optimized LLVM IR for the Ascend AI accelerator.}
+      \resumeItem{Applied loop tiling \& polyhedral analysis to maximize cache utilization, increasing hardware throughput by \textbf{40\%}.}
+    \resumeItemListEnd
+
+  \resumeSubheading
+    {Trend Micro}{Sep. 2022 -- Dec. 2022}
+    {Software Developer Intern}{Ottawa, ON}
+    \resumeItemListStart
+      \resumeItem{Built an auth service to secure multi-cloud environments for F500 enterprises with Go/\textbf{AWS Lambda} functions.}
+      \resumeItem{Automated DynamoDB cloud security metric extraction to S3, reducing daily manual oversight by 15 hours/week.}
+    \resumeItemListEnd
+
+\resumeSubHeadingListEnd
+
+%-----------PROJECTS-----------
+\section{Projects}
+\resumeSubHeadingListStart
+
+  \resumeProjectHeading
+    {\href{} {\textbf{Resumax}} $|$ \emph{FastAPI, React, Python, LangChain, OpenAI API}}{}
+    \resumeItemListStart
+      \setlength{\itemsep}{0pt}
+      \resumeItem{Built an agentic AI assistant that tailors resumes to job descriptions using RAG, \textbf{vector embeddings}, and \textbf{semantic similarity} to optimize for ATS and recruiter relevance.}
+      \resumeItem{Designed a React UI and Chrome extension enabling one-click resume tailoring and transparent AI reasoning.}
+    \resumeItemListEnd
+
+  \resumeProjectHeading
+    {\href{https://github.com/georgehtliu/Type-Glazer}{\textbf{Type Glazer}} $|$ \emph{Kotlin, Ktor, Compose, SQLite, Docker, DigitalOcean}}{}
+    \resumeItemListStart
+      \setlength{\itemsep}{0pt}
+      \resumeItem{Crafted a full-stack multiplayer type racing game featuring live races, practice mode, and race history tracking.}
+      \resumeItem{Architected SQLite database tables and a Ktor REST API, using WebSockets to deliver real-time typing races.}
+    \resumeItemListEnd
+
+\resumeSubHeadingListEnd
+
+%-----------SKILLS-----------
+\section{Skills}
+\begin{itemize}[leftmargin=0in, label={}]
+  \small{\item{
+    \textbf{Programming Languages}: C++, C\#, JavaScript, Go, Python\\
+    \textbf{Frameworks}: .NET, Node, Express, React, Angular, FastAPI, LangGraph, LangChain\\
+    \textbf{Tools}: AWS, Kafka, RabbitMQ, Jenkins, Git, Docker, Kubernetes, Splunk, MongoDB, PostgreSQL, Redis\\
+    \textbf{Concepts}: Backend Development, Fullstack Development, Networking, Microservices, CI/CD, Automation, Agile
+  }}
+\end{itemize}
+
+\end{document}
+
