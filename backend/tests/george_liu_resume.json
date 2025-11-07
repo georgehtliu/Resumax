@@ -1,0 +1,387 @@
+{
+  "description": "George Liu's resume in structured format for testing /api/v1/select and /api/v1/optimize endpoints",
+  
+  "resume": {
+    "experiences": [
+      {
+        "id": "exp-1",
+        "company": "Tesla",
+        "role": "Software Engineer Intern",
+        "startDate": "May 2025",
+        "endDate": "Aug 2025",
+        "bullets": [
+          {
+            "id": "bullet-1",
+            "text": "Pioneered an autonomous AI agent with real-time streaming to automate 95% of customer delivery inquiries"
+          },
+          {
+            "id": "bullet-2",
+            "text": "Routed agent between RAG-based documentation and 10+ Elasticsearch tool lookups with LangGraph/FastAPI"
+          },
+          {
+            "id": "bullet-3",
+            "text": "Implemented LlamaGuard moderation to enforce policy compliance and prevent unsafe customer queries"
+          },
+          {
+            "id": "bullet-4",
+            "text": "Developed an idempotent migration service using Kubernetes CronJobs to port over 4M+ legacy customer records to MongoDB, offloading 70% of query load from the primary MySQL database"
+          }
+        ]
+      },
+      {
+        "id": "exp-2",
+        "company": "Tesla",
+        "role": "Software Engineer Intern",
+        "startDate": "Jan 2025",
+        "endDate": "May 2025",
+        "bullets": [
+          {
+            "id": "bullet-5",
+            "text": "Re-architected the vehicle registration workflow for 5M+ users and 300 advisors by implementing a .NET partial saves API and a new Angular stepper UI, to reduce abandonment by 40%"
+          },
+          {
+            "id": "bullet-6",
+            "text": "Authored scalable, region-aware, step-aware JSON rule configs ensuring registration compliance in 10+ countries"
+          },
+          {
+            "id": "bullet-7",
+            "text": "Led a performance audit of the Tesla registration API, identifying and eliminating redundant calls and implementing a Redis caching layer to slash response time from 8s to 3s"
+          }
+        ]
+      },
+      {
+        "id": "exp-3",
+        "company": "Ford",
+        "role": "Android Platform Developer Intern",
+        "startDate": "Sep 2024",
+        "endDate": "Dec 2024",
+        "bullets": [
+          {
+            "id": "bullet-8",
+            "text": "Engineered C++ AUTOSAR middleware services on Android Automotive and QNX, enabling low-latency inter-process communication across infotainment subsystems deployed in 1M+ vehicles"
+          },
+          {
+            "id": "bullet-9",
+            "text": "Developed rigorous GTest & JUnit testing framework enforcing 95%+ coverage, ensuring stable vehicle software"
+          }
+        ]
+      },
+      {
+        "id": "exp-4",
+        "company": "Huawei (Canada R&D)",
+        "role": "Compiler Software Engineer Intern",
+        "startDate": "May 2023",
+        "endDate": "Jul 2023",
+        "bullets": [
+          {
+            "id": "bullet-10",
+            "text": "Implemented 10 compiler passes in C++ lowering MLIR to optimized LLVM IR for the Ascend AI accelerator"
+          },
+          {
+            "id": "bullet-11",
+            "text": "Applied loop tiling & polyhedral analysis to maximize cache utilization, increasing hardware throughput by 40%"
+          }
+        ]
+      },
+      {
+        "id": "exp-5",
+        "company": "Trend Micro",
+        "role": "Software Developer Intern",
+        "startDate": "Sep 2022",
+        "endDate": "Dec 2022",
+        "bullets": [
+          {
+            "id": "bullet-12",
+            "text": "Built an auth service to secure multi-cloud environments for F500 enterprises with Go/AWS Lambda functions"
+          },
+          {
+            "id": "bullet-13",
+            "text": "Automated DynamoDB cloud security metric extraction to S3, reducing daily manual oversight by 15 hours/week"
+          }
+        ]
+      }
+    ],
+    "education": [
+      {
+        "id": "edu-1",
+        "school": "University of Waterloo",
+        "degree": "Bachelor of Computer Science",
+        "field": "Computer Science Co-op",
+        "startDate": null,
+        "endDate": "Dec 2025",
+        "bullets": [
+          {
+            "id": "bullet-edu-1",
+            "text": "GPA: 3.7/4.0"
+          },
+          {
+            "id": "bullet-edu-2",
+            "text": "Relevant Coursework: Algorithms/Data Structures, Operating Systems, Distributed Systems, Compilers, Software Architecture, Objected-oriented Programming, Human-computer Interaction, Machine Learning"
+          }
+        ]
+      }
+    ],
+    "projects": [
+      {
+        "id": "proj-1",
+        "name": "Resumax",
+        "description": "AI-powered resume optimization tool",
+        "technologies": "FastAPI, React, Python, LangChain, OpenAI API",
+        "startDate": null,
+        "endDate": null,
+        "bullets": [
+          {
+            "id": "bullet-proj-1",
+            "text": "Built an agentic AI assistant that tailors resumes to job descriptions using RAG, vector embeddings, and semantic similarity to optimize for ATS and recruiter relevance"
+          },
+          {
+            "id": "bullet-proj-2",
+            "text": "Designed a React UI and Chrome extension enabling one-click resume tailoring and transparent AI reasoning"
+          }
+        ]
+      },
+      {
+        "id": "proj-2",
+        "name": "Type Glazer",
+        "description": "Multiplayer type racing game",
+        "technologies": "Kotlin, Ktor, Compose, SQLite, Docker, DigitalOcean",
+        "startDate": null,
+        "endDate": null,
+        "bullets": [
+          {
+            "id": "bullet-proj-3",
+            "text": "Crafted a full-stack multiplayer type racing game featuring live races, practice mode, and race history tracking"
+          },
+          {
+            "id": "bullet-proj-4",
+            "text": "Architected SQLite database tables and a Ktor REST API, and used websockets to deliver real-time typing races"
+          }
+        ]
+      }
+    ],
+    "customSections": []
+  },
+  
+  "sample_job_descriptions": {
+    "tesla_swe": "We are looking for a Software Engineer with experience in Python, FastAPI, AI/ML systems, RAG pipelines, Kubernetes, MongoDB, and real-time streaming. The ideal candidate should have experience with LangGraph, Elasticsearch, and building scalable microservices. Experience with customer-facing AI systems is a plus.",
+    
+    "google_swe": "We are looking for a Software Engineer with experience in full-stack development, distributed systems, microservices architecture, and cloud platforms. The ideal candidate should have experience with Python, Go, React, databases, and API design. Experience with performance optimization and caching strategies is preferred.",
+    
+    "meta_swe": "We are looking for a Software Engineer with experience in large-scale systems, backend development, and distributed systems. The ideal candidate should have experience with React, performance optimization, caching, and building scalable APIs. Experience with real-time systems and WebSockets is a plus.",
+    
+    "general_backend": "We are looking for a Backend Software Engineer with experience in API design, database optimization, caching strategies, and distributed systems. The ideal candidate should have experience with Python, Go, microservices, and cloud platforms. Experience with performance tuning and scalability is preferred."
+  },
+  
+  "example_select_request": {
+    "job_description": "We are looking for a Software Engineer with experience in Python, FastAPI, AI/ML systems, RAG pipelines, Kubernetes, MongoDB, and real-time streaming. The ideal candidate should have experience with LangGraph, Elasticsearch, and building scalable microservices. Experience with customer-facing AI systems is a plus.",
+    "resume": {
+      "experiences": [
+        {
+          "id": "exp-1",
+          "company": "Tesla",
+          "role": "Software Engineer Intern",
+          "startDate": "May 2025",
+          "endDate": "Aug 2025",
+          "bullets": [
+            {
+              "id": "bullet-1",
+              "text": "Pioneered an autonomous AI agent with real-time streaming to automate 95% of customer delivery inquiries"
+            },
+            {
+              "id": "bullet-2",
+              "text": "Routed agent between RAG-based documentation and 10+ Elasticsearch tool lookups with LangGraph/FastAPI"
+            },
+            {
+              "id": "bullet-3",
+              "text": "Implemented LlamaGuard moderation to enforce policy compliance and prevent unsafe customer queries"
+            },
+            {
+              "id": "bullet-4",
+              "text": "Developed an idempotent migration service using Kubernetes CronJobs to port over 4M+ legacy customer records to MongoDB, offloading 70% of query load from the primary MySQL database"
+            }
+          ]
+        },
+        {
+          "id": "exp-2",
+          "company": "Tesla",
+          "role": "Software Engineer Intern",
+          "startDate": "Jan 2025",
+          "endDate": "May 2025",
+          "bullets": [
+            {
+              "id": "bullet-5",
+              "text": "Re-architected the vehicle registration workflow for 5M+ users and 300 advisors by implementing a .NET partial saves API and a new Angular stepper UI, to reduce abandonment by 40%"
+            },
+            {
+              "id": "bullet-6",
+              "text": "Authored scalable, region-aware, step-aware JSON rule configs ensuring registration compliance in 10+ countries"
+            },
+            {
+              "id": "bullet-7",
+              "text": "Led a performance audit of the Tesla registration API, identifying and eliminating redundant calls and implementing a Redis caching layer to slash response time from 8s to 3s"
+            }
+          ]
+        },
+        {
+          "id": "exp-3",
+          "company": "Ford",
+          "role": "Android Platform Developer Intern",
+          "startDate": "Sep 2024",
+          "endDate": "Dec 2024",
+          "bullets": [
+            {
+              "id": "bullet-8",
+              "text": "Engineered C++ AUTOSAR middleware services on Android Automotive and QNX, enabling low-latency inter-process communication across infotainment subsystems deployed in 1M+ vehicles"
+            },
+            {
+              "id": "bullet-9",
+              "text": "Developed rigorous GTest & JUnit testing framework enforcing 95%+ coverage, ensuring stable vehicle software"
+            }
+          ]
+        },
+        {
+          "id": "exp-4",
+          "company": "Huawei (Canada R&D)",
+          "role": "Compiler Software Engineer Intern",
+          "startDate": "May 2023",
+          "endDate": "Jul 2023",
+          "bullets": [
+            {
+              "id": "bullet-10",
+              "text": "Implemented 10 compiler passes in C++ lowering MLIR to optimized LLVM IR for the Ascend AI accelerator"
+            },
+            {
+              "id": "bullet-11",
+              "text": "Applied loop tiling & polyhedral analysis to maximize cache utilization, increasing hardware throughput by 40%"
+            }
+          ]
+        },
+        {
+          "id": "exp-5",
+          "company": "Trend Micro",
+          "role": "Software Developer Intern",
+          "startDate": "Sep 2022",
+          "endDate": "Dec 2022",
+          "bullets": [
+            {
+              "id": "bullet-12",
+              "text": "Built an auth service to secure multi-cloud environments for F500 enterprises with Go/AWS Lambda functions"
+            },
+            {
+              "id": "bullet-13",
+              "text": "Automated DynamoDB cloud security metric extraction to S3, reducing daily manual oversight by 15 hours/week"
+            }
+          ]
+        }
+      ],
+      "education": [
+        {
+          "id": "edu-1",
+          "school": "University of Waterloo",
+          "degree": "Bachelor of Computer Science",
+          "field": "Computer Science Co-op",
+          "startDate": null,
+          "endDate": "Dec 2025",
+          "bullets": [
+            {
+              "id": "bullet-edu-1",
+              "text": "GPA: 3.7/4.0"
+            },
+            {
+              "id": "bullet-edu-2",
+              "text": "Relevant Coursework: Algorithms/Data Structures, Operating Systems, Distributed Systems, Compilers, Software Architecture, Objected-oriented Programming, Human-computer Interaction, Machine Learning"
+            }
+          ]
+        }
+      ],
+      "projects": [
+        {
+          "id": "proj-1",
+          "name": "Resumax",
+          "description": "AI-powered resume optimization tool",
+          "technologies": "FastAPI, React, Python, LangChain, OpenAI API",
+          "startDate": null,
+          "endDate": null,
+          "bullets": [
+            {
+              "id": "bullet-proj-1",
+              "text": "Built an agentic AI assistant that tailors resumes to job descriptions using RAG, vector embeddings, and semantic similarity to optimize for ATS and recruiter relevance"
+            },
+            {
+              "id": "bullet-proj-2",
+              "text": "Designed a React UI and Chrome extension enabling one-click resume tailoring and transparent AI reasoning"
+            }
+          ]
+        },
+        {
+          "id": "proj-2",
+          "name": "Type Glazer",
+          "description": "Multiplayer type racing game",
+          "technologies": "Kotlin, Ktor, Compose, SQLite, Docker, DigitalOcean",
+          "startDate": null,
+          "endDate": null,
+          "bullets": [
+            {
+              "id": "bullet-proj-3",
+              "text": "Crafted a full-stack multiplayer type racing game featuring live races, practice mode, and race history tracking"
+            },
+            {
+              "id": "bullet-proj-4",
+              "text": "Architected SQLite database tables and a Ktor REST API, and used websockets to deliver real-time typing races"
+            }
+          ]
+        }
+      ],
+      "customSections": []
+    },
+    "bullets_per_experience": 3,
+    "bullets_per_education": 2,
+    "bullets_per_project": 2,
+    "bullets_per_custom": 5
+  },
+  
+  "example_optimize_request": {
+    "job_description": "We are looking for a Software Engineer with experience in Python, FastAPI, AI/ML systems, RAG pipelines, Kubernetes, MongoDB, and real-time streaming. The ideal candidate should have experience with LangGraph, Elasticsearch, and building scalable microservices. Experience with customer-facing AI systems is a plus.",
+    "resume": {
+      "experiences": [
+        {
+          "id": "exp-1",
+          "company": "Tesla",
+          "role": "Software Engineer Intern",
+          "startDate": "May 2025",
+          "endDate": "Aug 2025",
+          "bullets": [
+            {
+              "id": "bullet-1",
+              "text": "Pioneered an autonomous AI agent with real-time streaming to automate 95% of customer delivery inquiries"
+            },
+            {
+              "id": "bullet-2",
+              "text": "Routed agent between RAG-based documentation and 10+ Elasticsearch tool lookups with LangGraph/FastAPI"
+            },
+            {
+              "id": "bullet-3",
+              "text": "Implemented LlamaGuard moderation to enforce policy compliance and prevent unsafe customer queries"
+            },
+            {
+              "id": "bullet-4",
+              "text": "Developed an idempotent migration service using Kubernetes CronJobs to port over 4M+ legacy customer records to MongoDB, offloading 70% of query load from the primary MySQL database"
+            }
+          ]
+        }
+      ],
+      "education": [],
+      "projects": [],
+      "customSections": []
+    },
+    "bullets_per_experience": 3,
+    "bullets_per_education": 2,
+    "bullets_per_project": 2,
+    "bullets_per_custom": 5,
+    "rewrite_style": "professional",
+    "optimization_mode": "strict"
+  }
+}
+
+
+

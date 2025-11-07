@@ -253,10 +253,25 @@ Use the complete example from `postman_mock_data.json` - includes:
 
 ## Full Mock Data
 
+### Option 1: Generic Mock Data
 See `tests/postman_mock_data.json` for complete examples with:
 - Multiple experiences
 - Education entries
 - Projects
 - Custom sections
 - Various bullet counts
+
+### Option 2: Real Resume Data
+See `tests/george_liu_resume.json` for a real-world resume example with:
+- Complete resume with all experiences (Tesla, Ford, Huawei, Trend Micro)
+- Education (University of Waterloo)
+- Projects (Resumax, Type Glazer)
+- Sample job descriptions for testing
+- Ready-to-use request examples for both `/select` and `/optimize` endpoints
+
+**Quick Start with Real Resume:**
+1. Open `tests/george_liu_resume.json`
+2. Copy the `example_select_request` or `example_optimize_request` object
+3. Paste into Postman request body
+4. Modify `job_description` to match the role you're applying for
 

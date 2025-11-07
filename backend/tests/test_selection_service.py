@@ -26,7 +26,14 @@ class TestSelectionService:
         with patch('app.services.selection_service.VectorSearch'):
             service = SelectionService()
             # Mock the embedding generator
-            service.vector_search.embedding_generator = Mock()
+            embedding_generator = Mock()
+            embedding_generator.generate_embedding = Mock()
+
+            def default_batch(texts):
+                return [[0.1] * 1536 for _ in texts]
+
+            embedding_generator.generate_embeddings_batch = Mock(side_effect=default_batch)
+            service.vector_search.embedding_generator = embedding_generator
             return service
     
     @pytest.fixture
@@ -112,6 +119,9 @@ class TestSelectionService:
             return np.random.rand(1536).astype(np.float32)
         
         selection_service.vector_search.embedding_generator.generate_embedding = Mock(side_effect=mock_embedding)
+        selection_service.vector_search.embedding_generator.generate_embeddings_batch = Mock(
+            side_effect=lambda texts: [mock_embedding(text) for text in texts]
+        )
         
         # Mock numpy operations by patching at the point of use
         with patch('numpy.dot', return_value=0.8), \
@@ -183,6 +193,9 @@ class TestSelectionService:
         """Test that selection respects the bullets_per_experience limit."""
         selection_service.vector_search.embedding_generator.generate_embedding = Mock(
             return_value=np.random.rand(1536).astype(np.float32)
+        )
+        selection_service.vector_search.embedding_generator.generate_embeddings_batch = Mock(
+            side_effect=lambda texts: [np.random.rand(1536).astype(np.float32) for _ in texts]
         )
         
         # Mock numpy operations by patching at the point of use

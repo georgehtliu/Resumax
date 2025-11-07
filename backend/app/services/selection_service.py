@@ -5,14 +5,13 @@ This service handles the fast selection endpoint that ranks bullets by relevance
 and selects the top N bullets per section without any LLM rewriting.
 """
 
-from typing import List, Tuple
+from typing import List, Optional
+import numpy as np
 from app.core.search import VectorSearch
 from app.schemas.rag import (
     StructuredResume, SelectedResume, SelectedExperience, SelectedEducation,
-    SelectedProject, SelectedCustomSection, SelectedBullet, Experience,
-    Education, Project, CustomSection, Bullet
+    SelectedProject, SelectedCustomSection, SelectedBullet, Bullet
 )
-import time
 
 def estimate_latex_lines(text: str, chars_per_line: int = 70) -> int:
     """
@@ -74,14 +73,17 @@ class SelectionService:
             SelectedResume with top bullets per section
         """
         print(f"📋 Selecting bullets for {len(resume.experiences)} experiences...")
-        
+
+        job_embedding = self._generate_job_embedding(job_description)
+
         # Select from experiences
         selected_experiences = []
         for experience in resume.experiences:
             selected_bullets = await self._select_bullets_for_section(
                 experience.bullets,
                 job_description,
-                bullets_per_experience
+                bullets_per_experience,
+                job_embedding
             )
             
             selected_experiences.append(SelectedExperience(
@@ -99,7 +101,8 @@ class SelectionService:
             selected_bullets = await self._select_bullets_for_section(
                 edu.bullets,
                 job_description,
-                bullets_per_education
+                bullets_per_education,
+                job_embedding
             )
             
             selected_education.append(SelectedEducation(
@@ -118,7 +121,8 @@ class SelectionService:
             selected_bullets = await self._select_bullets_for_section(
                 project.bullets,
                 job_description,
-                bullets_per_project
+                bullets_per_project,
+                job_embedding
             )
             
             selected_projects.append(SelectedProject(
@@ -137,7 +141,8 @@ class SelectionService:
             selected_bullets = await self._select_bullets_for_section(
                 section.bullets,
                 job_description,
-                bullets_per_custom
+                bullets_per_custom,
+                job_embedding
             )
             
             selected_custom.append(SelectedCustomSection(
@@ -154,11 +159,22 @@ class SelectionService:
             customSections=selected_custom
         )
     
+    def _generate_job_embedding(self, job_description: str) -> Optional[List[float]]:
+        """Generate embedding for the job description once per selection request."""
+        try:
+            embedding = self.vector_search.embedding_generator.generate_embedding(job_description)
+            if embedding:
+                return embedding
+        except Exception as exc:
+            print(f"⚠️ Error generating job embedding: {exc}")
+        return None
+
     async def _select_bullets_for_section(
         self,
         bullets: List[Bullet],
         job_description: str,
-        top_n: int
+        top_n: int,
+        job_embedding: Optional[List[float]]
     ) -> List[SelectedBullet]:
         """
         Select top N bullets from a section based on relevance.
@@ -176,40 +192,51 @@ class SelectionService:
         
         # Score all bullets
         bullet_scores = []
-        
-        # Generate embedding for job description once
-        try:
-            job_embedding = self.vector_search.embedding_generator.generate_embedding(job_description)
-        except Exception as e:
-            print(f"⚠️ Error generating job embedding: {e}")
-            job_embedding = None
-        
-        for bullet in bullets:
+
+        # If we have a job embedding, try to score via cosine similarity with batched bullet embeddings
+        bullet_embeddings: Optional[List[List[float]]] = None
+        job_vector: Optional[np.ndarray] = None
+        job_norm: Optional[float] = None
+
+        if job_embedding:
             try:
-                if job_embedding:
-                    # Generate embedding for bullet text
-                    bullet_embedding = self.vector_search.embedding_generator.generate_embedding(bullet.text)
-                    
-                    if bullet_embedding:
-                        # Calculate cosine similarity
-                        import numpy as np
-                        similarity = np.dot(bullet_embedding, job_embedding) / (
-                            np.linalg.norm(bullet_embedding) * np.linalg.norm(job_embedding)
-                        )
-                        score = float(similarity)
-                    else:
-                        # Fallback: simple keyword matching
-                        score = self._simple_keyword_match(bullet.text, job_description)
-                else:
-                    # Fallback: simple keyword matching
+                bullet_texts = [bullet.text for bullet in bullets]
+                bullet_embeddings = self.vector_search.embedding_generator.generate_embeddings_batch(bullet_texts)
+                job_vector = np.array(job_embedding, dtype=np.float32)
+                job_norm = float(np.linalg.norm(job_vector))
+                if job_norm == 0.0:
+                    job_vector = None
+            except Exception as exc:
+                print(f"⚠️ Error generating bullet embeddings: {exc}")
+                bullet_embeddings = None
+                job_vector = None
+
+        for idx, bullet in enumerate(bullets):
+            score: float
+
+            if bullet_embeddings and job_vector is not None and job_norm and idx < len(bullet_embeddings):
+                bullet_embedding = bullet_embeddings[idx]
+
+                try:
+                    if not bullet_embedding:
+                        raise ValueError("Missing bullet embedding")
+
+                    bullet_vector = np.array(bullet_embedding, dtype=np.float32)
+                    bullet_norm = float(np.linalg.norm(bullet_vector))
+                    denominator = bullet_norm * job_norm
+
+                    if denominator == 0.0:
+                        raise ValueError("Zero norm encountered in cosine similarity")
+
+                    similarity = float(np.dot(bullet_vector, job_vector) / denominator)
+                    score = similarity
+                except Exception as exc:
+                    print(f"⚠️ Error scoring bullet '{bullet.text[:50]}...': {exc}")
                     score = self._simple_keyword_match(bullet.text, job_description)
-                
-                bullet_scores.append((bullet, score))
-            except Exception as e:
-                print(f"⚠️ Error scoring bullet '{bullet.text[:50]}...': {e}")
-                # Fallback to simple keyword matching
+            else:
                 score = self._simple_keyword_match(bullet.text, job_description)
-                bullet_scores.append((bullet, score))
+
+            bullet_scores.append((bullet, score))
         
         # Sort by score (highest first)
         bullet_scores.sort(key=lambda x: x[1], reverse=True)

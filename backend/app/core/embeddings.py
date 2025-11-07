@@ -91,29 +91,54 @@ class EmbeddingGenerator:
             # TODO: Decide on error handling strategy
             return None
     
-    def generate_embeddings_batch(self, texts: List[str]) -> List[List[float]]:
+    def generate_embeddings_batch(self, texts: List[str], batch_size: int = 64) -> List[List[float]]:
         """
-        Generate embeddings for multiple texts efficiently.
+        Generate embeddings for multiple texts efficiently using batched API calls.
         
         Args:
             texts: List of input texts to embed
+            batch_size: Maximum number of texts to send per API request
             
         Returns:
-            List of embedding vectors
+            List of embedding vectors aligned with the input order
         """
-        # TODO: Implement batch processing
-        # HINT: OpenAI API supports batch requests - more efficient than individual calls
-        # HINT: Consider rate limiting and chunking for large batches
-        
-        embeddings = []
-        for text in texts:
-            embedding = self.generate_embedding(text)
-            if embedding:
-                embeddings.append(embedding)
-            else:
-                # TODO: Handle failed embeddings - skip, retry, or use fallback?
-                embeddings.append([0.0] * self.embedding_dimensions)
-        
+        if not texts:
+            return []
+
+        embeddings: List[List[float]] = []
+        url = "https://api.openai.com/v1/embeddings"
+        headers = {
+            "Authorization": f"Bearer {self._api_key}",
+            "Content-Type": "application/json",
+        }
+
+        for start in range(0, len(texts), batch_size):
+            batch = texts[start:start + batch_size]
+            try:
+                payload = {"model": self.model_name, "input": batch}
+                resp = requests.post(url, headers=headers, json=payload, timeout=30)
+                resp.raise_for_status()
+                data = resp.json().get("data", [])
+
+                if not data:
+                    raise ValueError("No embedding data returned from API")
+
+                # Preserve order: OpenAI returns embeddings in the same order as inputs
+                for item in data:
+                    embeddings.append(item.get("embedding", [0.0] * self.embedding_dimensions))
+            except Exception as exc:
+                print(f"Error generating batch embeddings: {exc}")
+                # Fallback: append zero vectors for each item in the failed batch
+                zero_vector = [0.0] * self.embedding_dimensions
+                embeddings.extend([zero_vector for _ in batch])
+
+        # Ensure the returned list aligns with the input length
+        if len(embeddings) < len(texts):
+            zero_vector = [0.0] * self.embedding_dimensions
+            embeddings.extend([zero_vector for _ in range(len(texts) - len(embeddings))])
+        elif len(embeddings) > len(texts):
+            embeddings = embeddings[:len(texts)]
+
         return embeddings
     
     def compute_similarity(self, embedding1: List[float], embedding2: List[float]) -> float:
