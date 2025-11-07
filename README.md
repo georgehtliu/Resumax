@@ -32,12 +32,18 @@ The system uses **hybrid search** (semantic + keyword matching) to find the most
 
 ### 📱 Chrome Extension
 - **3-Tab Interface**: Master Resume, Generate New Resume, Saved Resumes
-- **Master Resume**: Unlimited bullet points per experience/education/project
-- **Generate New Resume**: Match best bullets to job descriptions with AI optimization
+- **Master Resume**: Unlimited bullet points per experience/education/project with personal info + skills editors
+- **Generate New Resume**: Match best bullets to job descriptions with AI optimization; dynamic one-page caps keep Jake’s template compliant
 - **Saved Resumes**: Structured editing (sections → entries → bullets) with ability to add bullets from master resume
+- **LaTeX Preview**: Side-by-side `.tex` and live PDF preview before export
 - Local storage for resume data
 - One-click job description extraction
 - LaTeX line count indicators for one-page enforcement
+
+### 💾 Backend Enhancements
+- `/api/v1/select`: bullet selection without rewriting
+- `/api/v1/optimize`: selection plus AI rewriting
+- `/api/v1/latex/render`: generate LaTeX/PDF for Jake’s template via `tectonic`
 
 ## 🏗️ Architecture
 
@@ -183,15 +189,13 @@ Resumax/
 │   │   │   │   ├── CustomSectionEditor.jsx  # Edit custom sections
 │   │   │   │   ├── JobMatcher.jsx           # Job description input
 │   │   │   │   ├── OptimizationPanel.jsx     # Optimization results
-│   │   │   │   ├── GenerateResume.jsx       # Tab 2: Generate new resume
+│   │   │   │   ├── GenerateResume.jsx       # Tab 2: Generate new resume + LaTeX preview
 │   │   │   │   ├── SavedResumes.jsx         # Tab 3: Saved resumes
+│   │   │   │   ├── LatexPreviewModal.jsx    # LaTeX + PDF modal
 │   │   │   │   └── Tabs.jsx                 # Tab navigation
 │   │   │   ├── utils/         # Utilities
-│   │   │   │   ├── latexLineCount.js       # LaTeX line estimation
-│   │   │   │   ├── textFormatter.js        # Markdown ↔ LaTeX (NEW)
-│   │   │   │   ├── latexRenderer.js        # LaTeX rendering (NEW)
-│   │   │   │   ├── latexCompiler.js        # LaTeX compilation (NEW)
-│   │   │   │   └── jakeTemplate.js         # Jake's template (NEW)
+│   │   │   │   ├── latexLineCount.js       # LaTeX line estimation helpers
+│   │   │   │   └── latexTemplate.js        # Jake template builder for previews
 │   │   │   └── services/      # Chrome API wrappers
 │   │   │       ├── storage.js                # Chrome Storage API
 │   │   │       └── messaging.js              # Chrome Messaging API
@@ -313,4 +317,10 @@ For questions or suggestions, open an issue or contact the maintainer.
 ---
 
 **Built with ❤️ for software engineers who want to optimize their resumes efficiently.**
+
+## Latest Features
+
+- **Dynamic One-Page Selection**: the extension now auto-adjusts bullets-per-section before calling `/api/v1/select`, ensuring the returned resume fits Jake's template while adapting to experience- or project-heavy profiles.
+- **LaTeX + PDF Preview**: the Chrome popup exposes a LaTeX preview modal with copy/download options, real-time PDF rendering, and side-by-side comparison so users can inspect the generated `.tex` source before export.
+- **Backend PDF Rendering**: new `/api/v1/latex/render` endpoint converts a structured resume into PDF (via `tectonic`), returning Base64 so the frontend can show inline previews or downloads.
 

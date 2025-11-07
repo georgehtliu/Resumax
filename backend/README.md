@@ -4,13 +4,14 @@ A production-ready optimization system that consolidates multiple AI operations 
 
 ## 🎯 What This Phase Adds
 
-Phase 3 introduces a **unified optimizer** that replaces separate agent workflows with a single, comprehensive LLM call:
+Phase 3 introduces a **unified optimizer** that replaces separate agent workflows with a single, comprehensive LLM call and adds production exporting tooling:
 
 1. **Cost Efficiency** - 80-90% reduction in API costs
 2. **Unified Processing** - Ranking + Rewriting + Gap Analysis in one call
 3. **Mode Selection** - Strict (existing only) vs Creative (allow new bullets)
 4. **Gap Analysis** - Identifies missing skills and keywords
 5. **Structured Outputs** - Reliable JSON parsing with validation
+6. **LaTeX/PDF Rendering** - `/api/v1/latex/render` compiles Jake’s template via `tectonic`
 
 ## 🚀 Quick Start
 
@@ -22,12 +23,23 @@ cp -r ../phase2/data ./
 pip install -r requirements.txt
 ```
 
-### 2. Start the Server
+### 2. Install LaTeX Compiler (for PDF previews)
+```bash
+# macOS (Homebrew)
+brew install tectonic
+
+# Alternatively, use the official bootstrap script
+curl --proto '=https' --tlsv1.2 -sSf https://tectonic-typesetting.github.io/tectonic/bootstrap.sh | sh
+```
+
+Ensure `tectonic` is on your `PATH` before running the API.
+
+### 3. Start the Server
 ```bash
 uvicorn app.main:app --reload
 ```
 
-### 3. Test the API
+### 4. Test the API
 Visit http://localhost:8000/docs to see the enhanced API documentation.
 
 ## 📁 Key Changes from Phase 2
@@ -37,8 +49,9 @@ Visit http://localhost:8000/docs to see the enhanced API documentation.
 
 ### Modified Files
 - `app/services/rag_service.py` - Now uses unified optimizer
-- `app/schemas/rag.py` - Enhanced with gaps and new bullet suggestions
-- `app/api/rag.py` - Updated with mode selection
+- `app/schemas/rag.py` - Enhanced with gaps and new bullet suggestions (plus LaTeX render schemas)
+- `app/api/rag.py` - Updated with mode selection and LaTeX render endpoint
+- `app/utils/latex.py` - Jake template builder + PDF rendering helper
 
 ## 🔧 New Features
 
@@ -81,6 +94,9 @@ The response now includes:
   ]
 }
 ```
+
+### 7. **Dynamic One-Page Caps** - Selection service auto-tunes bullet counts per section to stay within Jake’s one-page layout
+### 8. **Backend PDF Rendering** - New LaTeX utility + endpoint powering the Chrome extension preview
 
 ## 💰 Cost Comparison
 
@@ -125,6 +141,9 @@ The response now includes:
   "created_at": "2024-01-15T10:30:00Z"
 }
 ```
+
+### `/api/v1/latex/render`
+Compiles a structured resume into the Jake LaTeX template and returns a Base64 PDF. Requires `tectonic` to be installed on the host.
 
 ## 🎓 Learning Objectives
 
