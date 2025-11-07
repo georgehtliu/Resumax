@@ -6,6 +6,7 @@ export { default as JobMatcher } from './JobMatcher';
 export { default as OptimizationPanel } from './OptimizationPanel';
 export { default as SelectedResumeEditor } from './SelectedResumeEditor';
 export { default as PersonalInfoEditor } from './PersonalInfoEditor';
+export { default as LatexPreviewModal } from './LatexPreviewModal';
 export { default as SkillsEditor } from './SkillsEditor';
 export { default as Tabs } from './Tabs';
 export { default as GenerateResume } from './GenerateResume';

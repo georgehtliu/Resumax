@@ -10,6 +10,7 @@ from starlette.testclient import TestClient
 from unittest.mock import patch, AsyncMock, Mock
 import sys
 import os
+import base64
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -463,4 +464,54 @@ class TestEndpointsComparison:
                 # Optimize mode SHOULD have rewritten field
                 assert "rewritten" in optimize_bullet
                 assert "original" in optimize_bullet
+
+    def test_latex_render_success(self, client):
+        """Ensure LaTeX render endpoint returns base64 PDF."""
+        payload = {
+            "resume": {
+                "personalInfo": {
+                    "firstName": "George",
+                    "lastName": "Liu",
+                    "email": "george@example.com"
+                },
+                "skills": [],
+                "experiences": [],
+                "education": [],
+                "projects": [],
+                "customSections": []
+            }
+        }
+
+        fake_pdf = b"%PDF-1.4"
+        with patch("app.api.rag.build_resume_latex", return_value="\\begin{document}\\end{document}"), \
+             patch("app.api.rag.render_pdf_from_latex", return_value=fake_pdf):
+            response = client.post("/api/v1/latex/render", json=payload)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "pdf_base64" in data
+        assert data["pdf_base64"] == base64.b64encode(fake_pdf).decode("utf-8")
+
+    def test_latex_render_missing_compiler(self, client):
+        """Assert endpoint surfaces 503 when compiler is unavailable."""
+        payload = {
+            "resume": {
+                "personalInfo": {
+                    "firstName": "George",
+                    "lastName": "Liu"
+                },
+                "skills": [],
+                "experiences": [],
+                "education": [],
+                "projects": [],
+                "customSections": []
+            }
+        }
+
+        with patch("app.api.rag.build_resume_latex", return_value="\\begin{document}\\end{document}"), \
+             patch("app.api.rag.render_pdf_from_latex", side_effect=RuntimeError("tectonic not installed")):
+            response = client.post("/api/v1/latex/render", json=payload)
+
+        assert response.status_code == 503
+        assert "tectonic not installed" in response.json()["detail"]
 

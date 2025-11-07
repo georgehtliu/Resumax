@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import JobMatcher from './JobMatcher';
 import OptimizationPanel from './OptimizationPanel';
 import SelectedResumeEditor from './SelectedResumeEditor';
+import LatexPreviewModal from './LatexPreviewModal';
 import { storageService } from '../services/storage';
 import { buildStructuredResume, selectResume } from '../services/api';
+import { buildLatexDocument } from '../utils/latexTemplate';
 import './GenerateResume.css';
 
 /**
@@ -21,6 +23,8 @@ function GenerateResume({ masterResume, onSave }) {
   const [customizedBullets, setCustomizedBullets] = useState(null);
   const [customizedResume, setCustomizedResume] = useState(null);
   const [optimizationMode, setOptimizationMode] = useState('select'); // 'select' or 'optimize'
+  const [showLatexPreview, setShowLatexPreview] = useState(false);
+  const [latexSource, setLatexSource] = useState('');
 
   /**
    * Extract job description from current tab
@@ -171,6 +175,43 @@ function GenerateResume({ masterResume, onSave }) {
     setCustomizedResume(updatedResume);
   }
 
+  function openLatexPreview() {
+    const resumeSource = customizedResume || optimizationResult?.selectedResume;
+    if (!resumeSource) {
+      return;
+    }
+    try {
+      const latex = buildLatexDocument(resumeSource);
+      setLatexSource(latex);
+      setShowLatexPreview(true);
+    } catch (error) {
+      console.error('Error building LaTeX preview:', error);
+      alert('Could not generate LaTeX preview. Please try again.');
+    }
+  }
+
+  async function copyLatexToClipboard() {
+    try {
+      await navigator.clipboard.writeText(latexSource);
+      alert('LaTeX copied to clipboard!');
+    } catch (error) {
+      console.error('Clipboard copy failed:', error);
+      alert('Could not copy to clipboard. Please copy manually.');
+    }
+  }
+
+  function downloadLatex() {
+    const blob = new Blob([latexSource], { type: 'application/x-tex' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${(resumeName || 'resume').replace(/\s+/g, '_')}.tex`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
   /**
    * Handle save with name
    */
@@ -314,6 +355,14 @@ function GenerateResume({ masterResume, onSave }) {
             >
               💾 Save Resume
             </button>
+            {optimizationResult.mode === 'select' && (
+              <button
+                className="btn btn-secondary"
+                onClick={openLatexPreview}
+              >
+                👁️ LaTeX Preview
+              </button>
+            )}
           </div>
           
           {optimizationResult.mode === 'select' ? (
@@ -383,6 +432,14 @@ function GenerateResume({ masterResume, onSave }) {
           </div>
         </div>
       )}
+
+      <LatexPreviewModal
+        open={showLatexPreview}
+        latexSource={latexSource}
+        onClose={() => setShowLatexPreview(false)}
+        onCopy={copyLatexToClipboard}
+        onDownload={downloadLatex}
+      />
     </div>
   );
 }

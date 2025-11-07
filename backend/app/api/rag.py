@@ -7,11 +7,13 @@ This module exposes the RAG pipeline through REST API endpoints.
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from app.schemas.rag import (
     RAGRequest, RAGResponse, SelectionRequest, SelectionResponse,
-    OptimizationRequest, OptimizationResponse
+    OptimizationRequest, OptimizationResponse,
+    LatexRenderRequest, LatexRenderResponse
 )
 from app.services.rag_service import RAGService
 from app.services.selection_service import SelectionService, calculate_total_lines, identify_gaps
 from app.services.optimization_service import OptimizationService
+from app.utils.latex import build_resume_latex, render_pdf_from_latex, pdf_bytes_to_base64
 import json
 import os
 import time
@@ -354,5 +356,18 @@ async def _save_results(result_dict: dict):
         print(f"💾 Results saved to {filename}")
     except Exception as e:
         print(f"❌ Error saving results: {e}")
+
+@router.post("/latex/render", response_model=LatexRenderResponse)
+async def render_latex_resume(request: LatexRenderRequest):
+    """Compile the provided structured resume into a PDF using tectonic."""
+    try:
+        latex_source = build_resume_latex(request.resume)
+        pdf_bytes = render_pdf_from_latex(latex_source)
+        pdf_base64 = pdf_bytes_to_base64(pdf_bytes)
+        return LatexRenderResponse(pdf_base64=pdf_base64)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Failed to render LaTeX: {exc}")
 
 

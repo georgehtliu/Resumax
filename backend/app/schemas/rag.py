@@ -256,4 +256,14 @@ class OptimizationResponse(BaseModel):
     processing_time: float = Field(..., description="Processing time in seconds")
     created_at: datetime = Field(default_factory=datetime.now, description="Timestamp")
 
+class LatexRenderRequest(BaseModel):
+    """Request to render a resume into LaTeX/PDF."""
+    resume: SelectedResume = Field(..., description="Structured resume to render")
+
+
+class LatexRenderResponse(BaseModel):
+    """Response containing the rendered PDF in base64."""
+    pdf_base64: str = Field(..., description="Base64-encoded PDF bytes")
+    rendered_at: datetime = Field(default_factory=datetime.now, description="Timestamp for rendering")
+
 

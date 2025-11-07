@@ -3,7 +3,8 @@ from .rag import (
     StructuredResume, SelectionRequest, SelectionResponse,
     OptimizationRequest, OptimizationResponse,
     Bullet, Experience, Education, Project, CustomSection,
-    SelectedBullet, SelectedResume
+    SelectedBullet, SelectedResume,
+    LatexRenderRequest, LatexRenderResponse
 )
 
 __all__ = [
@@ -11,7 +12,8 @@ __all__ = [
     "StructuredResume", "SelectionRequest", "SelectionResponse",
     "OptimizationRequest", "OptimizationResponse",
     "Bullet", "Experience", "Education", "Project", "CustomSection",
-    "SelectedBullet", "SelectedResume"
+    "SelectedBullet", "SelectedResume",
+    "LatexRenderRequest", "LatexRenderResponse"
 ]
 
 
