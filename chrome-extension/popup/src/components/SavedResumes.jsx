@@ -6,6 +6,9 @@ import ProjectEditor from './ProjectEditor';
 import CustomSectionEditor from './CustomSectionEditor';
 import PersonalInfoEditor from './PersonalInfoEditor';
 import SkillsEditor from './SkillsEditor';
+import LatexPreviewModal from './LatexPreviewModal';
+import { renderLatex } from '../services/api';
+import { buildLatexDocument } from '../utils/latexTemplate';
 import './SavedResumes.css';
 
 /**
@@ -24,6 +27,10 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
   const [saving, setSaving] = useState(false);
   const [showAddBulletDialog, setShowAddBulletDialog] = useState(null); // { sectionType, entryId }
   const [availableBullets, setAvailableBullets] = useState([]);
+  const [showLatexPreview, setShowLatexPreview] = useState(false);
+  const [latexSource, setLatexSource] = useState('');
+  const [latexPdfBase64, setLatexPdfBase64] = useState(null);
+  const [renderingPdf, setRenderingPdf] = useState(false);
 
   const DEFAULT_PERSONAL_INFO = {
     firstName: '',
@@ -33,6 +40,61 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
     linkedin: '',
     github: ''
   };
+
+  function normalizeBullet(bullet, prefix, index) {
+    if (!bullet || typeof bullet !== 'object') {
+      return {
+        id: `${prefix}-${index}`,
+        text: typeof bullet === 'string' ? bullet : '',
+        original: typeof bullet === 'string' ? bullet : ''
+      };
+    }
+
+    const baseText = typeof bullet.text === 'string' && bullet.text.trim().length > 0
+      ? bullet.text
+      : typeof bullet.rewritten === 'string'
+        ? bullet.rewritten
+        : '';
+
+    return {
+      ...bullet,
+      id: bullet.id || `${prefix}-${index}`,
+      text: baseText,
+      original: bullet.original || baseText || bullet.text || ''
+    };
+  }
+
+  function normalizeSectionEntries(entries, sectionPrefix) {
+    if (!Array.isArray(entries)) {
+      return [];
+    }
+
+    return entries.map((entry, entryIndex) => {
+      const entryId = entry.id || `${sectionPrefix}-${entryIndex}-${Date.now()}`;
+      const candidateBullets = Array.isArray(entry.bullets) && entry.bullets.length > 0
+        ? entry.bullets
+        : Array.isArray(entry.selectedBullets)
+          ? entry.selectedBullets
+          : [];
+
+      const normalizedBullets = candidateBullets.map((bullet, bulletIndex) =>
+        normalizeBullet(bullet, `${entryId}-bullet`, bulletIndex)
+      );
+
+      const selectedBullets = Array.isArray(entry.selectedBullets) && entry.selectedBullets.length > 0
+        ? entry.selectedBullets.map((bullet, bulletIndex) =>
+            normalizeBullet(bullet, `${entryId}-selected`, bulletIndex)
+          )
+        : normalizedBullets;
+
+      return {
+        ...entry,
+        id: entryId,
+        bullets: normalizedBullets,
+        selectedBullets
+      };
+    });
+  }
 
   function normalizePersonalInfo(info) {
     if (!info || typeof info !== 'object') {
@@ -129,7 +191,7 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
       await loadSavedResumes();
       if (selectedResume?.id === resumeId) {
         setSelectedResume(null);
-        setEditedBullets([]);
+        setEditedResume(null);
       }
       setShowDeleteConfirm(null);
     } catch (error) {
@@ -158,13 +220,15 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
         
         // Create a single entry for each bullet (basic conversion)
         savedData.selectedBullets.forEach((bullet, index) => {
+          const normalizedBullet = normalizeBullet(bullet, `legacy-exp-${index}`, 0);
           structured.experiences.push({
             id: `exp-${index}`,
             company: 'Experience',
             role: '',
             startDate: '',
             endDate: '',
-            bullets: [bullet]
+            bullets: [normalizedBullet],
+            selectedBullets: [normalizedBullet]
           });
         });
         
@@ -174,14 +238,20 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
         setEditedResume({
           personalInfo: normalizePersonalInfo(savedData.personalInfo),
           skills: normalizeSkills(savedData.skills),
-          experiences: savedData.experiences || [],
-          education: savedData.education || [],
-          projects: savedData.projects || [],
-          customSections: savedData.customSections || []
+          experiences: normalizeSectionEntries(savedData.experiences, 'experience'),
+          education: normalizeSectionEntries(savedData.education, 'education'),
+          projects: normalizeSectionEntries(savedData.projects, 'project'),
+          customSections: normalizeSectionEntries(savedData.customSections, 'custom')
         });
       }
     }
   }, [selectedResume]);
+
+  useEffect(() => {
+    setShowLatexPreview(false);
+    setLatexSource('');
+    setLatexPdfBase64(null);
+  }, [selectedResume?.id]);
 
   // Collect all available bullets from master resume
   function collectMasterBullets() {
@@ -250,7 +320,17 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
   function handleUpdateEntry(sectionType, updatedEntry) {
     const updated = { ...editedResume };
     updated[sectionType] = updated[sectionType].map(entry =>
-      entry.id === updatedEntry.id ? updatedEntry : entry
+      entry.id === updatedEntry.id
+        ? {
+            ...entry,
+            ...updatedEntry,
+            selectedBullets: Array.isArray(updatedEntry.selectedBullets) && updatedEntry.selectedBullets.length > 0
+              ? updatedEntry.selectedBullets
+              : Array.isArray(updatedEntry.bullets)
+                ? updatedEntry.bullets
+                : []
+          }
+        : entry
     );
     setEditedResume(updated);
   }
@@ -274,16 +354,86 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
     const entry = updated[sectionType].find(e => e.id === entryId);
     
     if (entry) {
-      const newBullet = {
-        id: `bullet-${Date.now()}`,
-        text: bullet.text || bullet.rewritten || '',
-        original: bullet.text || bullet.original || ''
-      };
+      const newBullet = normalizeBullet(
+        {
+          ...bullet,
+          text: bullet.text || bullet.rewritten || ''
+        },
+        `${entryId}-bullet`,
+        (entry.bullets?.length || 0)
+      );
       entry.bullets = [...(entry.bullets || []), newBullet];
+      entry.selectedBullets = [...(entry.selectedBullets || []), newBullet];
       setEditedResume({ ...updated });
     }
     
     setShowAddBulletDialog(null);
+  }
+
+  function openLatexPreview() {
+    if (!editedResume) {
+      alert('Select a resume to preview.');
+      return;
+    }
+
+    try {
+      const latex = buildLatexDocument(editedResume);
+      setLatexSource(latex);
+      setLatexPdfBase64(null);
+      setShowLatexPreview(true);
+    } catch (error) {
+      console.error('Error building LaTeX for saved resume:', error);
+      alert('Unable to generate LaTeX for this resume. Please check that all sections are filled out correctly.');
+    }
+  }
+
+  async function copyLatexToClipboard() {
+    try {
+      await navigator.clipboard.writeText(latexSource);
+      alert('LaTeX copied to clipboard!');
+    } catch (error) {
+      console.error('Clipboard copy failed:', error);
+      alert('Could not copy to clipboard. Please copy manually.');
+    }
+  }
+
+  function downloadLatex() {
+    if (!latexSource) {
+      return;
+    }
+
+    const fileName = (selectedResume?.name || 'saved_resume').replace(/\s+/g, '_');
+    const blob = new Blob([latexSource], { type: 'application/x-tex' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${fileName}.tex`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
+  async function renderPdfPreview() {
+    if (!editedResume) {
+      return;
+    }
+
+    setRenderingPdf(true);
+    setLatexPdfBase64(null);
+    try {
+      const response = await renderLatex(editedResume);
+      if (response?.pdf_base64) {
+        setLatexPdfBase64(response.pdf_base64);
+      } else {
+        alert('LaTeX render did not return a PDF.');
+      }
+    } catch (error) {
+      console.error('Failed to render PDF for saved resume:', error);
+      alert(error?.message || 'Failed to render PDF preview.');
+    } finally {
+      setRenderingPdf(false);
+    }
   }
 
   function getDefaultEntry(sectionType) {
@@ -296,7 +446,8 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
           role: '',
           startDate: '',
           endDate: '',
-          bullets: []
+          bullets: [],
+          selectedBullets: []
         };
       case 'education':
         return {
@@ -306,7 +457,8 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
           field: '',
           startDate: '',
           endDate: '',
-          bullets: []
+          bullets: [],
+          selectedBullets: []
         };
       case 'projects':
         return {
@@ -316,17 +468,19 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
           technologies: '',
           startDate: '',
           endDate: '',
-          bullets: []
+          bullets: [],
+          selectedBullets: []
         };
       case 'customSections':
         return {
           id: `custom-${timestamp}`,
           title: '',
           subtitle: '',
-          bullets: []
+          bullets: [],
+          selectedBullets: []
         };
       default:
-        return { id: `entry-${timestamp}`, bullets: [] };
+        return { id: `entry-${timestamp}`, bullets: [], selectedBullets: [] };
     }
   }
 
@@ -447,9 +601,17 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
                   </button>
                   <button
                     className="btn btn-secondary"
+                    onClick={openLatexPreview}
+                  >
+                    👁️ LaTeX Preview
+                  </button>
+                  <button
+                    className="btn btn-secondary"
                     onClick={() => {
                       setSelectedResume(null);
                       setEditedResume(null);
+                      setShowLatexPreview(false);
+                      setLatexPdfBase64(null);
                     }}
                   >
                     Close
@@ -622,6 +784,17 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
           )}
         </>
       )}
+
+      <LatexPreviewModal
+        open={showLatexPreview}
+        latexSource={latexSource}
+        onClose={() => setShowLatexPreview(false)}
+        onCopy={copyLatexToClipboard}
+        onDownloadTex={downloadLatex}
+        onRefreshPdf={renderPdfPreview}
+        pdfBase64={latexPdfBase64}
+        loadingPdf={renderingPdf}
+      />
 
       {/* Save As New Dialog */}
       {showSaveDialog && (

@@ -644,6 +644,62 @@ function cloneStructuredResume(resume) {
 
   try {
     const cloned = JSON.parse(JSON.stringify(resume));
+
+    const normalizeBullet = (bullet, prefix, index) => {
+      if (!bullet || typeof bullet !== 'object') {
+        return {
+          id: `${prefix}-${index}`,
+          text: typeof bullet === 'string' ? bullet : '',
+          original: typeof bullet === 'string' ? bullet : ''
+        };
+      }
+
+      const baseText = typeof bullet.text === 'string' && bullet.text.trim().length > 0
+        ? bullet.text
+        : typeof bullet.rewritten === 'string'
+          ? bullet.rewritten
+          : '';
+
+      return {
+        ...bullet,
+        id: bullet.id || `${prefix}-${index}`,
+        text: baseText,
+        original: bullet.original || baseText || bullet.text || ''
+      };
+    };
+
+    const normalizeSection = (entries, sectionPrefix) => {
+      if (!Array.isArray(entries)) {
+        return [];
+      }
+
+      return entries.map((entry, entryIndex) => {
+        const entryId = entry.id || `${sectionPrefix}-${entryIndex}-${Date.now()}`;
+        const candidateBullets = Array.isArray(entry.bullets) && entry.bullets.length > 0
+          ? entry.bullets
+          : Array.isArray(entry.selectedBullets)
+            ? entry.selectedBullets
+            : [];
+
+        const normalizedBullets = candidateBullets.map((bullet, bulletIndex) =>
+          normalizeBullet(bullet, `${entryId}-bullet`, bulletIndex)
+        );
+
+        const selectedBullets = Array.isArray(entry.selectedBullets) && entry.selectedBullets.length > 0
+          ? entry.selectedBullets.map((bullet, bulletIndex) =>
+              normalizeBullet(bullet, `${entryId}-selected`, bulletIndex)
+            )
+          : normalizedBullets;
+
+        return {
+          ...entry,
+          id: entryId,
+          bullets: normalizedBullets,
+          selectedBullets
+        };
+      });
+    };
+
     return {
       ...base,
       ...cloned,
@@ -652,10 +708,10 @@ function cloneStructuredResume(resume) {
         ...(cloned.personalInfo || {})
       },
       skills: Array.isArray(cloned.skills) ? cloned.skills : [],
-      experiences: Array.isArray(cloned.experiences) ? cloned.experiences : [],
-      education: Array.isArray(cloned.education) ? cloned.education : [],
-      projects: Array.isArray(cloned.projects) ? cloned.projects : [],
-      customSections: Array.isArray(cloned.customSections) ? cloned.customSections : []
+      experiences: normalizeSection(cloned.experiences, 'experience'),
+      education: normalizeSection(cloned.education, 'education'),
+      projects: normalizeSection(cloned.projects, 'project'),
+      customSections: normalizeSection(cloned.customSections, 'custom')
     };
   } catch (error) {
     console.warn('Unable to clone resume structure, returning original reference.', error);
