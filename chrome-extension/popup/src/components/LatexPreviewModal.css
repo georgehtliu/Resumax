@@ -5,13 +5,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
+  padding: 1.5rem;
   z-index: 2000;
 }
 
 .latex-preview-modal {
-  width: min(1100px, 100%);
-  max-height: 92vh;
+  width: min(1380px, 96vw);
+  height: min(92vh, 900px);
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25);
@@ -54,8 +54,8 @@
 
 .latex-preview-content {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.25rem;
+  grid-template-columns: minmax(220px, 0.28fr) minmax(0, 0.72fr);
+  gap: 1rem;
   padding: 0 1.5rem 1.5rem;
   flex: 1;
   overflow: hidden;
@@ -68,8 +68,14 @@
   height: 100%;
 }
 
+.latex-column {
+  max-width: 420px;
+}
+
 .latex-preview-textarea {
   flex: 1;
+  min-width: 0;
+  max-width: 420px;
   border: 1px solid var(--border-light, #d7dff0);
   border-radius: 10px;
   padding: 1rem;
@@ -88,14 +94,15 @@
 }
 
 .pdf-column {
-  background: #f8fafc;
+  background: #ffffff;
   border: 1px solid #dbe4ff;
-  border-radius: 10px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   overflow: hidden;
+  padding: 0;
 }
 
 .pdf-frame {
@@ -117,14 +124,16 @@
   .latex-preview-content {
     grid-template-columns: 1fr;
     height: auto;
+    padding-bottom: 1rem;
   }
 
   .pdf-column {
-    min-height: 300px;
+    min-height: 320px;
   }
 
   .latex-preview-modal {
     max-height: 95vh;
+    width: min(95vw, 980px);
   }
 
   .latex-preview-actions {
