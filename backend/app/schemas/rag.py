@@ -135,8 +135,25 @@ class CustomSection(BaseModel):
     subtitle: Optional[str] = Field(None, description="Section subtitle")
     bullets: List[Bullet] = Field(default_factory=list, description="List of bullet points")
 
+class PersonalInfo(BaseModel):
+    """Personal information for the resume header."""
+    firstName: Optional[str] = Field(None, description="First name")
+    lastName: Optional[str] = Field(None, description="Last name")
+    email: Optional[str] = Field(None, description="Email address")
+    phone: Optional[str] = Field(None, description="Phone number")
+    linkedin: Optional[str] = Field(None, description="LinkedIn profile URL")
+    github: Optional[str] = Field(None, description="GitHub profile URL")
+
+class SkillGroup(BaseModel):
+    """Grouped skills (e.g., Languages, Frameworks)."""
+    id: str = Field(..., description="Unique identifier for the skill group")
+    title: Optional[str] = Field(None, description="Group title (e.g., Languages)")
+    skills: List[str] = Field(default_factory=list, description="List of individual skills")
+
 class StructuredResume(BaseModel):
     """Complete structured resume with all sections."""
+    personalInfo: Optional[PersonalInfo] = Field(None, description="Personal information block")
+    skills: List[SkillGroup] = Field(default_factory=list, description="Skill groups")
     experiences: List[Experience] = Field(default_factory=list)
     education: List[Education] = Field(default_factory=list)
     projects: List[Project] = Field(default_factory=list)
@@ -190,6 +207,8 @@ class SelectedCustomSection(BaseModel):
 
 class SelectedResume(BaseModel):
     """Resume with selected bullets."""
+    personalInfo: Optional[PersonalInfo] = Field(None, description="Personal information block")
+    skills: List[SkillGroup] = Field(default_factory=list, description="Skill groups")
     experiences: List[SelectedExperience] = Field(default_factory=list)
     education: List[SelectedEducation] = Field(default_factory=list)
     projects: List[SelectedProject] = Field(default_factory=list)

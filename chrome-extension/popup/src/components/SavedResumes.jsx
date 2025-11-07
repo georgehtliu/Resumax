@@ -4,6 +4,8 @@ import ExperienceEditor from './ExperienceEditor';
 import EducationEditor from './EducationEditor';
 import ProjectEditor from './ProjectEditor';
 import CustomSectionEditor from './CustomSectionEditor';
+import PersonalInfoEditor from './PersonalInfoEditor';
+import SkillsEditor from './SkillsEditor';
 import './SavedResumes.css';
 
 /**
@@ -22,6 +24,88 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
   const [saving, setSaving] = useState(false);
   const [showAddBulletDialog, setShowAddBulletDialog] = useState(null); // { sectionType, entryId }
   const [availableBullets, setAvailableBullets] = useState([]);
+
+  const DEFAULT_PERSONAL_INFO = {
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    linkedin: '',
+    github: ''
+  };
+
+  function normalizePersonalInfo(info) {
+    if (!info || typeof info !== 'object') {
+      return { ...DEFAULT_PERSONAL_INFO };
+    }
+
+    return {
+      firstName: typeof info.firstName === 'string' ? info.firstName : '',
+      lastName: typeof info.lastName === 'string' ? info.lastName : '',
+      email: typeof info.email === 'string' ? info.email : '',
+      phone: typeof info.phone === 'string' ? info.phone : '',
+      linkedin: typeof info.linkedin === 'string' ? info.linkedin : '',
+      github: typeof info.github === 'string' ? info.github : ''
+    };
+  }
+
+  function normalizeSkills(skills) {
+    if (!Array.isArray(skills)) {
+      return [];
+    }
+
+    return skills.map((group, index) => ({
+      id: typeof group?.id === 'string' && group.id.length > 0 ? group.id : `skill-${Date.now()}-${index}`,
+      title: typeof group?.title === 'string' ? group.title : '',
+      skills: Array.isArray(group?.skills)
+        ? group.skills.map(skill => (typeof skill === 'string' ? skill : '')).filter(Boolean)
+        : []
+    }));
+  }
+
+  function getStructuredBulletCount(data) {
+    if (!data) return 0;
+
+    const experiences = Array.isArray(data.experiences) ? data.experiences : [];
+    const education = Array.isArray(data.education) ? data.education : [];
+    const projects = Array.isArray(data.projects) ? data.projects : [];
+    const customSections = Array.isArray(data.customSections) ? data.customSections : [];
+    const skills = Array.isArray(data.skills) ? data.skills : [];
+
+    const fromSkills = skills.reduce((sum, group) => sum + (Array.isArray(group?.skills) ? group.skills.filter(Boolean).length : 0), 0);
+
+    const fromSections = (sections) => sections.reduce((sum, entry) => sum + (Array.isArray(entry?.bullets) ? entry.bullets.length : 0), 0);
+
+    return fromSkills + fromSections(experiences) + fromSections(education) + fromSections(projects) + fromSections(customSections);
+  }
+
+  function flattenStructuredResume(resume) {
+    if (!resume) return [];
+
+    const result = [];
+
+    const append = (entries = [], sectionType) => {
+      entries.forEach((entry) => {
+        (entry.bullets || entry.selectedBullets || []).forEach((bullet, index) => {
+          result.push({
+            id: bullet.id || `${sectionType}-${entry.id || index}-${index}`,
+            text: typeof bullet.text === 'string' ? bullet.text : '',
+            sectionType,
+            parentId: entry.id,
+            parentTitle: entry.company || entry.school || entry.name || entry.title || '',
+            parentRole: entry.role || entry.degree || entry.subtitle || ''
+          });
+        });
+      });
+    };
+
+    append(resume.experiences, 'experience');
+    append(resume.education, 'education');
+    append(resume.projects, 'project');
+    append(resume.customSections, 'custom');
+
+    return result;
+  }
 
   useEffect(() => {
     loadSavedResumes();
@@ -64,6 +148,8 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
       if (savedData.selectedBullets && !savedData.experiences) {
         // Convert flat bullet list to structured format
         const structured = {
+          personalInfo: { ...DEFAULT_PERSONAL_INFO },
+          skills: [],
           experiences: [],
           education: [],
           projects: [],
@@ -86,6 +172,8 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
       } else {
         // Already in structured format
         setEditedResume({
+          personalInfo: normalizePersonalInfo(savedData.personalInfo),
+          skills: normalizeSkills(savedData.skills),
           experiences: savedData.experiences || [],
           education: savedData.education || [],
           projects: savedData.projects || [],
@@ -251,11 +339,14 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
     setSaving(true);
     try {
       const resumeData = {
+        personalInfo: normalizePersonalInfo(editedResume.personalInfo),
+        skills: normalizeSkills(editedResume.skills),
         experiences: editedResume.experiences || [],
         education: editedResume.education || [],
         projects: editedResume.projects || [],
         customSections: editedResume.customSections || [],
-        jobDescription: selectedResume.data?.jobDescription || ''
+        jobDescription: selectedResume.data?.jobDescription || '',
+        selectedBullets: flattenStructuredResume(editedResume)
       };
 
       await storageService.saveGeneratedResume(newResumeName.trim(), resumeData);
@@ -323,7 +414,7 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
                   <div className="resume-item-content">
                     <h3 className="resume-name">{resume.name}</h3>
                     <p className="resume-meta">
-                      {formatDate(resume.createdAt)} • {resume.data?.selectedBullets?.length || 0} bullets
+                      {formatDate(resume.createdAt)} • {getStructuredBulletCount(resume.data)} bullets
                     </p>
                   </div>
                   <div className="resume-item-actions">
@@ -384,6 +475,32 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
               {/* Structured Resume Editor */}
               {editedResume && (
                 <div className="resume-editor">
+                  <div className="resume-section-group">
+                    <h3 className="section-group-title">Personal Information</h3>
+                    <PersonalInfoEditor
+                      value={editedResume.personalInfo}
+                      onChange={(updatedInfo) =>
+                        setEditedResume((prev) => ({
+                          ...prev,
+                          personalInfo: updatedInfo
+                        }))
+                      }
+                      variant="compact"
+                    />
+                  </div>
+
+                  <div className="resume-section-group">
+                    <SkillsEditor
+                      skills={editedResume.skills}
+                      onChange={(updatedSkills) =>
+                        setEditedResume((prev) => ({
+                          ...prev,
+                          skills: updatedSkills
+                        }))
+                      }
+                    />
+                  </div>
+
                   {/* Work Experience Section */}
                   <div className="resume-section-group">
                     <div className="section-group-header">

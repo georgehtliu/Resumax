@@ -13,7 +13,7 @@ from app.services.selection_service import (
 from app.schemas.rag import (
     StructuredResume, Experience, Education, Project, CustomSection, Bullet,
     SelectedResume, SelectedExperience, SelectedEducation, SelectedProject,
-    SelectedCustomSection, SelectedBullet
+    SelectedCustomSection, SelectedBullet, PersonalInfo, SkillGroup
 )
 
 
@@ -40,6 +40,21 @@ class TestSelectionService:
     def sample_resume(self):
         """Create a sample structured resume for testing."""
         return StructuredResume(
+            personalInfo=PersonalInfo(
+                firstName="John",
+                lastName="Doe",
+                email="john.doe@example.com",
+                phone="555-123-4567",
+                linkedin="linkedin.com/in/johndoe",
+                github="github.com/johndoe"
+            ),
+            skills=[
+                SkillGroup(
+                    id="skills-1",
+                    title="Languages",
+                    skills=["Python", "Go", "TypeScript"]
+                )
+            ],
             experiences=[
                 Experience(
                     id="exp-1",
@@ -138,6 +153,9 @@ class TestSelectionService:
             
             assert isinstance(result, SelectedResume)
             assert len(result.experiences) == 2
+            assert result.personalInfo is not None
+            assert result.personalInfo.firstName == "John"
+            assert result.skills and result.skills[0].title == "Languages"
             
             # First experience should have up to 3 bullets
             assert len(result.experiences[0].selectedBullets) <= 3

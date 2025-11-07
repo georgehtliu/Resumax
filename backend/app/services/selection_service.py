@@ -153,6 +153,8 @@ class SelectionService:
             ))
         
         return SelectedResume(
+            personalInfo=resume.personalInfo,
+            skills=resume.skills,
             experiences=selected_experiences,
             education=selected_education,
             projects=selected_projects,

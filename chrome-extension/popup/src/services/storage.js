@@ -26,9 +26,57 @@ export async function saveResume(resumeData) {
  * @param {Object} resumeData - Resume data from storage
  * @returns {Object} Normalized resume data
  */
+function normalizePersonalInfo(info) {
+  const normalized = {
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    linkedin: '',
+    github: ''
+  };
+
+  if (!info || typeof info !== 'object') {
+    return normalized;
+  }
+
+  return {
+    firstName: typeof info.firstName === 'string' ? info.firstName : '',
+    lastName: typeof info.lastName === 'string' ? info.lastName : '',
+    email: typeof info.email === 'string' ? info.email : '',
+    phone: typeof info.phone === 'string' ? info.phone : '',
+    linkedin: typeof info.linkedin === 'string' ? info.linkedin : '',
+    github: typeof info.github === 'string' ? info.github : ''
+  };
+}
+
+function normalizeSkills(skills = []) {
+  if (!Array.isArray(skills)) {
+    return [];
+  }
+
+  return skills
+    .filter(group => group && (group.title || (group.skills && group.skills.length)))
+    .map((group, index) => {
+      const normalizedSkills = Array.isArray(group.skills)
+        ? group.skills
+            .map((skill) => (typeof skill === 'string' ? skill.trim() : ''))
+            .filter(Boolean)
+        : [];
+
+      return {
+        id: typeof group.id === 'string' && group.id.length > 0 ? group.id : `skill-${Date.now()}-${index}`,
+        title: typeof group.title === 'string' ? group.title : '',
+        skills: normalizedSkills
+      };
+    });
+}
+
 function normalizeResume(resumeData) {
   if (!resumeData) {
     return {
+      personalInfo: normalizePersonalInfo(),
+      skills: [],
       experiences: [],
       education: [],
       projects: [],
@@ -39,6 +87,8 @@ function normalizeResume(resumeData) {
 
   // Ensure all arrays exist and are arrays
   return {
+    personalInfo: normalizePersonalInfo(resumeData.personalInfo),
+    skills: normalizeSkills(resumeData.skills),
     experiences: Array.isArray(resumeData.experiences) ? resumeData.experiences : [],
     education: Array.isArray(resumeData.education) ? resumeData.education : [],
     projects: Array.isArray(resumeData.projects) ? resumeData.projects : [],

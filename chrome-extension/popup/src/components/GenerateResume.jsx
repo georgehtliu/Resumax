@@ -389,7 +389,13 @@ function flattenSelectedResume(selectedResume) {
 
   const appendBullets = (items = [], sectionType) => {
     items.forEach((item) => {
-      (item.selectedBullets || []).forEach((bullet) => {
+      const bulletList = Array.isArray(item.selectedBullets) && item.selectedBullets.length > 0
+        ? item.selectedBullets
+        : Array.isArray(item.bullets)
+          ? item.bullets
+          : [];
+
+      bulletList.forEach((bullet) => {
         resultBullets.push({
           ...bullet,
           sectionType,
@@ -410,20 +416,47 @@ function flattenSelectedResume(selectedResume) {
 }
 
 function cloneStructuredResume(resume) {
+  const base = {
+    personalInfo: {
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+      linkedin: '',
+      github: ''
+    },
+    skills: [],
+    experiences: [],
+    education: [],
+    projects: [],
+    customSections: []
+  };
+
   if (!resume) {
-    return {
-      experiences: [],
-      education: [],
-      projects: [],
-      customSections: []
-    };
+    return base;
   }
 
   try {
-    return JSON.parse(JSON.stringify(resume));
+    const cloned = JSON.parse(JSON.stringify(resume));
+    return {
+      ...base,
+      ...cloned,
+      personalInfo: {
+        ...base.personalInfo,
+        ...(cloned.personalInfo || {})
+      },
+      skills: Array.isArray(cloned.skills) ? cloned.skills : [],
+      experiences: Array.isArray(cloned.experiences) ? cloned.experiences : [],
+      education: Array.isArray(cloned.education) ? cloned.education : [],
+      projects: Array.isArray(cloned.projects) ? cloned.projects : [],
+      customSections: Array.isArray(cloned.customSections) ? cloned.customSections : []
+    };
   } catch (error) {
     console.warn('Unable to clone resume structure, returning original reference.', error);
-    return resume;
+    return {
+      ...base,
+      ...resume
+    };
   }
 }
 

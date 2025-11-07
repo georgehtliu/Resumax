@@ -90,8 +90,59 @@ function normalizeCustomSections(customSections = []) {
     .filter((section) => section.bullets.length > 0);
 }
 
+function normalizePersonalInfo(info = {}) {
+  if (!info || typeof info !== 'object') {
+    return null;
+  }
+
+  const normalized = {
+    firstName: typeof info.firstName === 'string' ? info.firstName : '',
+    lastName: typeof info.lastName === 'string' ? info.lastName : '',
+    email: typeof info.email === 'string' ? info.email : '',
+    phone: typeof info.phone === 'string' ? info.phone : '',
+    linkedin: typeof info.linkedin === 'string' ? info.linkedin : '',
+    github: typeof info.github === 'string' ? info.github : ''
+  };
+
+  const hasValue = Object.values(normalized).some((value) => value && value.trim().length > 0);
+  return hasValue ? normalized : null;
+}
+
+function normalizeSkillGroups(skills = []) {
+  if (!Array.isArray(skills)) {
+    return [];
+  }
+
+  return skills
+    .map((group, index) => {
+      const id = typeof group?.id === 'string' && group.id.length > 0
+        ? group.id
+        : ensureBulletId(group, index);
+
+      const title = typeof group?.title === 'string' ? group.title : '';
+      const normalizedSkills = Array.isArray(group?.skills)
+        ? group.skills
+            .map((skill) => (typeof skill === 'string' ? skill.trim() : ''))
+            .filter(Boolean)
+        : [];
+
+      if (!title && normalizedSkills.length === 0) {
+        return null;
+      }
+
+      return {
+        id,
+        title,
+        skills: normalizedSkills
+      };
+    })
+    .filter(Boolean);
+}
+
 export function buildStructuredResume(masterResume = {}) {
   return {
+    personalInfo: normalizePersonalInfo(masterResume.personalInfo),
+    skills: normalizeSkillGroups(masterResume.skills),
     experiences: normalizeExperiences(masterResume.experiences),
     education: normalizeEducation(masterResume.education),
     projects: normalizeProjects(masterResume.projects),

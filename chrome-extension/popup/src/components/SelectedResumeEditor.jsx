@@ -1,6 +1,17 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { getLineCountInfo } from '../utils/latexLineCount';
+import PersonalInfoEditor from './PersonalInfoEditor';
+import SkillsEditor from './SkillsEditor';
 import './SelectedResumeEditor.css';
+
+const DEFAULT_PERSONAL_INFO = {
+  firstName: '',
+  lastName: '',
+  email: '',
+  phone: '',
+  linkedin: '',
+  github: ''
+};
 
 const SECTION_CONFIG = [
   {
@@ -166,6 +177,26 @@ function SelectedResumeEditor({ resume, onUpdate, summary }) {
         </div>
       )}
 
+      <div className="selected-section">
+        <h3>Personal Information</h3>
+        <PersonalInfoEditor
+          value={localResume.personalInfo}
+          onChange={(info) => updateResume((draft) => {
+            draft.personalInfo = info;
+          })}
+          variant="compact"
+        />
+      </div>
+
+      <div className="selected-section">
+        <SkillsEditor
+          skills={localResume.skills}
+          onChange={(updatedSkills) => updateResume((draft) => {
+            draft.skills = updatedSkills;
+          })}
+        />
+      </div>
+
       {SECTION_CONFIG.map((section) => (
         <SectionEditor
           key={section.key}
@@ -292,6 +323,8 @@ function SectionEditor({
 function normalizeResume(resume) {
   if (!resume) {
     return {
+      personalInfo: { ...DEFAULT_PERSONAL_INFO },
+      skills: [],
       experiences: [],
       education: [],
       projects: [],
@@ -300,6 +333,8 @@ function normalizeResume(resume) {
   }
 
   return {
+    personalInfo: normalizePersonalInfo(resume.personalInfo),
+    skills: normalizeSkills(resume.skills),
     experiences: normalizeEntries(resume.experiences),
     education: normalizeEntries(resume.education),
     projects: normalizeEntries(resume.projects),
@@ -318,6 +353,34 @@ function normalizeEntries(entries = []) {
           relevanceScore: bullet.relevanceScore,
           lineCount: bullet.lineCount
         }))
+      : []
+  }));
+}
+
+function normalizePersonalInfo(info) {
+  if (!info || typeof info !== 'object') {
+    return { ...DEFAULT_PERSONAL_INFO };
+  }
+  return {
+    firstName: typeof info.firstName === 'string' ? info.firstName : '',
+    lastName: typeof info.lastName === 'string' ? info.lastName : '',
+    email: typeof info.email === 'string' ? info.email : '',
+    phone: typeof info.phone === 'string' ? info.phone : '',
+    linkedin: typeof info.linkedin === 'string' ? info.linkedin : '',
+    github: typeof info.github === 'string' ? info.github : ''
+  };
+}
+
+function normalizeSkills(skills = []) {
+  if (!Array.isArray(skills)) {
+    return [];
+  }
+
+  return skills.map((group, index) => ({
+    id: typeof group?.id === 'string' && group.id.length > 0 ? group.id : generateId(`skill-${index}`),
+    title: typeof group?.title === 'string' ? group.title : '',
+    skills: Array.isArray(group?.skills)
+      ? group.skills.map((skill) => (typeof skill === 'string' ? skill : '')).filter(Boolean)
       : []
   }));
 }
@@ -399,6 +462,16 @@ function calculateTotalLines(resume) {
   accumulate(resume.education);
   accumulate(resume.projects);
   accumulate(resume.customSections);
+
+  (resume.skills || []).forEach((group) => {
+    const items = Array.isArray(group?.skills) ? group.skills.filter(Boolean) : [];
+    if (items.length > 0) {
+      if (group.title) {
+        total += 1;
+      }
+      total += items.length;
+    }
+  });
 
   return total;
 }

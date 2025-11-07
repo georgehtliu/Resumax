@@ -3,6 +3,8 @@ import ExperienceEditor from './components/ExperienceEditor';
 import EducationEditor from './components/EducationEditor';
 import ProjectEditor from './components/ProjectEditor';
 import CustomSectionEditor from './components/CustomSectionEditor';
+import PersonalInfoEditor from './components/PersonalInfoEditor';
+import SkillsEditor from './components/SkillsEditor';
 import Tabs from './components/Tabs';
 import GenerateResume from './components/GenerateResume';
 import SavedResumes from './components/SavedResumes';
@@ -21,6 +23,15 @@ function App() {
   const [activeTab, setActiveTab] = useState('master');
   const [refreshSaved, setRefreshSaved] = useState(0);
   const [resume, setResume] = useState({
+    personalInfo: {
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+      linkedin: '',
+      github: ''
+    },
+    skills: [],
     experiences: [],
     education: [],
     projects: [],
@@ -88,6 +99,31 @@ function App() {
         console.log('🚀 Initializing mock data...');
         // Initialize master resume with comprehensive realistic mock data
         const mockMasterResume = {
+          personalInfo: {
+            firstName: 'Jane',
+            lastName: 'Doe',
+            email: 'jane.doe@example.com',
+            phone: '+1 (555) 123-4567',
+            linkedin: 'linkedin.com/in/janedoe',
+            github: 'github.com/janedoe'
+          },
+          skills: [
+            {
+              id: 'skill-1',
+              title: 'Languages',
+              skills: ['Python', 'JavaScript', 'Go', 'Java', 'SQL']
+            },
+            {
+              id: 'skill-2',
+              title: 'Frameworks & Libraries',
+              skills: ['React', 'Node.js', 'Django', 'Spring Boot', 'GraphQL']
+            },
+            {
+              id: 'skill-3',
+              title: 'Cloud & DevOps',
+              skills: ['AWS', 'Docker', 'Kubernetes', 'Terraform', 'CI/CD']
+            }
+          ],
           experiences: [
             {
               id: 'exp-1',
@@ -542,17 +578,31 @@ function App() {
       
       // Ensure all fields exist and calculate total bullets
       const normalizedData = {
+        personalInfo: data.personalInfo && typeof data.personalInfo === 'object'
+          ? {
+              firstName: typeof data.personalInfo.firstName === 'string' ? data.personalInfo.firstName : '',
+              lastName: typeof data.personalInfo.lastName === 'string' ? data.personalInfo.lastName : '',
+              email: typeof data.personalInfo.email === 'string' ? data.personalInfo.email : '',
+              phone: typeof data.personalInfo.phone === 'string' ? data.personalInfo.phone : '',
+              linkedin: typeof data.personalInfo.linkedin === 'string' ? data.personalInfo.linkedin : '',
+              github: typeof data.personalInfo.github === 'string' ? data.personalInfo.github : ''
+            }
+          : {
+              firstName: '',
+              lastName: '',
+              email: '',
+              phone: '',
+              linkedin: '',
+              github: ''
+            },
+        skills: Array.isArray(data.skills) ? data.skills : [],
         experiences: Array.isArray(data.experiences) ? data.experiences : [],
         education: Array.isArray(data.education) ? data.education : [],
         projects: Array.isArray(data.projects) ? data.projects : [],
-        customSections: Array.isArray(data.customSections) ? data.customSections : [],
-        totalBullets: calculateTotalBullets({
-          experiences: Array.isArray(data.experiences) ? data.experiences : [],
-          education: Array.isArray(data.education) ? data.education : [],
-          projects: Array.isArray(data.projects) ? data.projects : [],
-          customSections: Array.isArray(data.customSections) ? data.customSections : []
-        })
+        customSections: Array.isArray(data.customSections) ? data.customSections : []
       };
+
+      normalizedData.totalBullets = calculateTotalBullets(normalizedData);
       
       console.log('✅ Setting resume state:', {
         experiences: normalizedData.experiences.length,
@@ -567,6 +617,15 @@ function App() {
       console.error('❌ Error loading resume:', error);
       // Set default empty state on error
       setResume({
+        personalInfo: {
+          firstName: '',
+          lastName: '',
+          email: '',
+          phone: '',
+          linkedin: '',
+          github: ''
+        },
+        skills: [],
         experiences: [],
         education: [],
         projects: [],
@@ -599,8 +658,26 @@ function App() {
    */
   async function saveResumeData(updatedResume) {
     try {
-      await storageService.saveResume(updatedResume);
-      setResume(updatedResume);
+      const totalBullets = calculateTotalBullets(updatedResume);
+      const normalized = {
+        personalInfo: updatedResume.personalInfo || {
+          firstName: '',
+          lastName: '',
+          email: '',
+          phone: '',
+          linkedin: '',
+          github: ''
+        },
+        skills: Array.isArray(updatedResume.skills) ? updatedResume.skills : [],
+        experiences: Array.isArray(updatedResume.experiences) ? updatedResume.experiences : [],
+        education: Array.isArray(updatedResume.education) ? updatedResume.education : [],
+        projects: Array.isArray(updatedResume.projects) ? updatedResume.projects : [],
+        customSections: Array.isArray(updatedResume.customSections) ? updatedResume.customSections : [],
+        totalBullets
+      };
+
+      await storageService.saveResume(normalized);
+      setResume(normalized);
     } catch (error) {
       console.error('Error saving resume:', error);
     }
@@ -612,12 +689,14 @@ function App() {
   function calculateTotalBullets(resumeData) {
     if (!resumeData) return 0;
     
+    const skills = Array.isArray(resumeData.skills) ? resumeData.skills : [];
     const experiences = Array.isArray(resumeData.experiences) ? resumeData.experiences : [];
     const education = Array.isArray(resumeData.education) ? resumeData.education : [];
     const projects = Array.isArray(resumeData.projects) ? resumeData.projects : [];
     const customSections = Array.isArray(resumeData.customSections) ? resumeData.customSections : [];
     
     return (
+      skills.reduce((sum, group) => sum + (Array.isArray(group?.skills) ? group.skills.filter(Boolean).length : 0), 0) +
       experiences.reduce((sum, exp) => sum + (Array.isArray(exp?.bullets) ? exp.bullets.length : 0), 0) +
       education.reduce((sum, edu) => sum + (Array.isArray(edu?.bullets) ? edu.bullets.length : 0), 0) +
       projects.reduce((sum, proj) => sum + (Array.isArray(proj?.bullets) ? proj.bullets.length : 0), 0) +
@@ -671,6 +750,34 @@ function App() {
             <p className="section-subtitle">
               Total Bullets: {resume.totalBullets} • Add unlimited bullet points per experience
             </p>
+
+            {/* Personal Information */}
+            <div className="resume-section-group">
+              <h3 className="section-group-title">Personal Information</h3>
+              <PersonalInfoEditor
+                value={resume.personalInfo}
+                onChange={(updatedInfo) => {
+                  saveResumeData({
+                    ...resume,
+                    personalInfo: updatedInfo
+                  });
+                }}
+              />
+            </div>
+
+            {/* Skills Section */}
+            <div className="resume-section-group">
+              <h3 className="section-group-title">Skills</h3>
+              <SkillsEditor
+                skills={resume.skills}
+                onChange={(updatedSkills) => {
+                  saveResumeData({
+                    ...resume,
+                    skills: updatedSkills
+                  });
+                }}
+              />
+            </div>
 
           {/* Work Experience Section */}
           <div className="resume-section-group">
