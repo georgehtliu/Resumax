@@ -143,7 +143,17 @@ function App() {
                 { id: 'bullet-5', text: 'Designed and built RESTful and gRPC APIs serving 5M+ requests per day with sub-100ms latency, improving mobile app performance by 30%' },
                 { id: 'bullet-6', text: 'Collaborated with product managers and designers to define technical requirements, architecture, and success metrics for new features' },
                 { id: 'bullet-7', text: 'Mentored 2 junior engineers through code reviews, pair programming, and technical design discussions, improving team velocity by 20%' },
-                { id: 'bullet-8', text: 'Built real-time analytics dashboard using React and WebSockets, enabling product team to monitor user behavior and make data-driven decisions' }
+                { id: 'bullet-8', text: 'Built real-time analytics dashboard using React and WebSockets, enabling product team to monitor user behavior and make data-driven decisions' },
+                { id: 'bullet-52', text: 'Rolled out chaos engineering experiments with automated rollback policies, reducing production incident MTTR from 45 minutes to 12 minutes' },
+                { id: 'bullet-53', text: 'Implemented adaptive rate limiting and circuit breakers across 30+ services, eliminating cascading failures during seasonal traffic spikes' },
+                { id: 'bullet-54', text: 'Led migration from self-managed Kafka to Google Pub/Sub, cutting infrastructure costs by 18% and improving message durability SLAs' },
+                { id: 'bullet-55', text: 'Authored service level objectives (SLOs) and burn-rate alerts that drove a 35% reduction in customer-facing errors quarter over quarter' },
+                { id: 'bullet-56', text: 'Designed feature flag governance workflow integrating LaunchDarkly with automated integration tests, enabling safe canary releases to 5% of traffic' },
+                { id: 'bullet-57', text: 'Partnered with security to introduce mutual TLS and fine-grained IAM policies across internal APIs, passing SOC 2 audits with zero findings' },
+                { id: 'bullet-58', text: 'Optimized data pipeline by batching protobuf payloads and compressing over gRPC, lowering network throughput usage by 28%' },
+                { id: 'bullet-59', text: 'Created internal developer portal with service templates and golden paths, cutting new microservice bootstrap time from 2 weeks to 4 days' },
+                { id: 'bullet-60', text: 'Piloted on-call automation using incident triage bots, auto-resolving 40% of low-severity alerts without human intervention' },
+                { id: 'bullet-61', text: 'Coordinated cross-team load testing program simulating 5x peak traffic, validating capacity plans ahead of Black Friday launch' }
               ]
             },
             {
@@ -157,7 +167,17 @@ function App() {
                 { id: 'bullet-10', text: 'Implemented real-time notification system using WebSocket connections and Redis, reducing latency by 30% and improving user engagement' },
                 { id: 'bullet-11', text: 'Optimized GraphQL API endpoints and data fetching strategies, reducing server load by 25% and improving page load times' },
                 { id: 'bullet-12', text: 'Participated in code reviews and contributed to team best practices documentation, improving code quality and onboarding efficiency' },
-                { id: 'bullet-13', text: 'Developed A/B testing framework for feature rollouts, enabling data-driven product decisions and reducing risk of regressions' }
+                { id: 'bullet-13', text: 'Developed A/B testing framework for feature rollouts, enabling data-driven product decisions and reducing risk of regressions' },
+                { id: 'bullet-62', text: 'Redesigned image upload pipeline with client-side resizing and caching headers, shrinking payload sizes by 60% and lowering CDN egress fees' },
+                { id: 'bullet-63', text: 'Introduced storybook-driven development for shared UI modules, cutting regression bugs in consumer surfaces by 45%' },
+                { id: 'bullet-64', text: 'Collaborated with design to implement accessibility-first components meeting WCAG AA contrast and keyboard navigation standards' },
+                { id: 'bullet-65', text: 'Instrumented Marketplace funnels with analytics events and dashboards, uncovering a pricing entry friction that improved conversion 9%' },
+                { id: 'bullet-66', text: 'Automated screenshot diff testing for top flows, preventing visual regressions during weekly launches' },
+                { id: 'bullet-67', text: 'Built experiments service wrapper that reduced boilerplate by 70% and enforced consistent logging across teams' },
+                { id: 'bullet-68', text: 'Implemented optimistic UI updates with reconciliation to reduce perceived latency from 400ms to 120ms on key interactions' },
+                { id: 'bullet-69', text: 'Partnered with spam detection team to add client-side heuristics, preventing 15K fake listings per week before reaching backend filters' },
+                { id: 'bullet-70', text: 'Documented end-to-end developer setup and introduced npm workspaces, lowering onboarding time for interns from 3 days to 1 day' },
+                { id: 'bullet-71', text: 'Delivered weekly release readiness reviews ensuring experiment guardrails and logging were in place before ship' }
               ]
             },
             {
@@ -170,7 +190,17 @@ function App() {
                 { id: 'bullet-14', text: 'Developed internal tools using Java and Spring Boot to automate deployment processes, reducing manual work by 40 hours per week' },
                 { id: 'bullet-15', text: 'Built monitoring and alerting system for AWS services using CloudWatch and Lambda, improving incident detection time by 50%' },
                 { id: 'bullet-16', text: 'Optimized database queries and implemented caching layer using DynamoDB and ElastiCache, reducing query latency by 35%' },
-                { id: 'bullet-17', text: 'Collaborated with senior engineers on distributed systems design, learning best practices for scalability and reliability' }
+                { id: 'bullet-17', text: 'Collaborated with senior engineers on distributed systems design, learning best practices for scalability and reliability' },
+                { id: 'bullet-72', text: 'Containerized legacy batch jobs and deployed them on AWS Fargate, lowering infrastructure maintenance overhead for the ops team' },
+                { id: 'bullet-73', text: 'Implemented blue/green deployment strategy for internal APIs, eliminating downtime during release cycles' },
+                { id: 'bullet-74', text: 'Created CloudFormation templates and reusable modules, standardizing VPC and IAM provisioning across service teams' },
+                { id: 'bullet-75', text: 'Instrumented Lambda functions with structured logging and X-Ray traces, reducing root cause analysis time by 30%' },
+                { id: 'bullet-76', text: 'Automated compliance checks using AWS Config rules, ensuring 100% adherence to encryption and tagging policies' },
+                { id: 'bullet-77', text: 'Optimized S3 object lifecycle policies, cutting monthly storage spend by 12% without impacting retrieval SLAs' },
+                { id: 'bullet-78', text: 'Developed a resilience playbook with runbooks and dashboards, enabling L1 support to resolve 25% of incidents independently' },
+                { id: 'bullet-79', text: 'Added fine-grained CloudWatch alarms integrated with PagerDuty, improving signal-to-noise ratio of alerts by 50%' },
+                { id: 'bullet-80', text: 'Ran load tests simulating seasonal peaks and delivered capacity recommendations adopted by three partner services' },
+                { id: 'bullet-81', text: 'Collaborated with customer solutions architects to onboard two enterprise clients, ensuring deployments met security benchmarks' }
               ]
             }
           ],
