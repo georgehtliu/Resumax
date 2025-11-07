@@ -1,0 +1,226 @@
+.selected-resume-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.resume-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--surface-subtle, #f5f7fb);
+  border: 1px solid var(--border-light, #e1e7f5);
+  border-radius: 8px;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  min-width: 140px;
+}
+
+.summary-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--text-muted, #6f7d96);
+  letter-spacing: 0.04em;
+}
+
+.summary-value {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-top: 0.25rem;
+}
+
+.summary-good {
+  color: #107869;
+}
+
+.summary-warning {
+  color: #b54708;
+}
+
+.selected-section {
+  border: 1px solid var(--border-light, #e1e7f5);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  background: var(--surface, #ffffff);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.selected-section + .selected-section {
+  margin-top: 0.25rem;
+}
+
+.selected-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.selected-section-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.selected-section-empty {
+  padding: 1rem;
+  background: var(--surface-subtle, #f8f9ff);
+  border-radius: 8px;
+  color: var(--text-muted, #6f7d96);
+  font-size: 0.9rem;
+}
+
+.selected-section-empty.small {
+  padding: 0.75rem 0.9rem;
+  font-size: 0.85rem;
+}
+
+.selected-entry {
+  border: 1px solid var(--border-light, #e1e7f5);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: #fff;
+}
+
+.entry-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.entry-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.entry-field label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted, #66758c);
+}
+
+.entry-field input,
+.entry-field textarea {
+  width: 100%;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--border-light, #d8dfee);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  transition: border 0.15s ease;
+}
+
+.entry-field textarea {
+  resize: vertical;
+  min-height: 90px;
+}
+
+.entry-field input:focus,
+.entry-field textarea:focus {
+  border-color: var(--primary, #3b6aff);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 106, 255, 0.12);
+}
+
+.selected-bullets {
+  margin-top: 1rem;
+  border-top: 1px solid var(--border-light, #eceff8);
+  padding-top: 1rem;
+}
+
+.selected-bullets-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.selected-bullet-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--border-light, #f0f2f8);
+}
+
+.selected-bullet-row:last-child {
+  border-bottom: none;
+}
+
+.bullet-index {
+  font-weight: 600;
+  color: var(--text-muted, #6f7d96);
+}
+
+.bullet-text-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.bullet-text-group textarea {
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--border-light, #d8dfee);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  resize: vertical;
+}
+
+.bullet-text-group textarea.bullet-warning {
+  border-color: #f97316;
+  background: rgba(249, 115, 22, 0.05);
+}
+
+.line-indicator {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted, #6f7d96);
+}
+
+.line-indicator.warning {
+  color: #b54708;
+}
+
+.selected-entry-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}
+
+.btn-icon {
+  background: transparent;
+  border: none;
+  color: #a0aec0;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  transition: color 0.15s ease;
+}
+
+.btn-icon:hover {
+  color: #ef4444;
+}
+
+@media (max-width: 768px) {
+  .entry-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .selected-bullet-row {
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      "index text"
+      "spacer actions";
+  }
+}
+
+
