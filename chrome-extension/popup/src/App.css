@@ -4,8 +4,9 @@ body {
   height: 100%;
   margin: 0;
   padding: 0;
-  background: #f3f5ff;
+  background: #eef2f9;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #1e2a3b;
 }
 
 #root {
@@ -16,66 +17,67 @@ body {
 .app {
   width: 100%;
   min-height: 100vh;
-  background: #f3f5ff;
+  background: linear-gradient(180deg, #f6f8fc 0%, #eef2f9 100%);
   display: flex;
   flex-direction: column;
 }
 
 .app-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 20px;
+  background: linear-gradient(135deg, #5c7adf 0%, #7ea6f9 100%);
+  color: #ffffff;
+  padding: 28px 24px;
   text-align: center;
+  box-shadow: 0 18px 40px rgba(100, 128, 217, 0.35);
 }
 
 .app-header h1 {
-  font-size: 24px;
-  margin-bottom: 4px;
+  font-size: 26px;
+  margin-bottom: 6px;
 }
 
 .subtitle {
   font-size: 14px;
-  opacity: 0.9;
+  opacity: 0.92;
 }
 
 .app-main {
   flex: 1;
   width: 100%;
-  padding: 0;
+  padding: 16px 0 32px;
 }
 
 .section {
   margin: 20px auto 32px;
-  background: white;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  width: calc(100% - 40px);
-  max-width: 960px;
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 14px 42px rgba(73, 95, 166, 0.12);
+  width: calc(100% - 48px);
+  max-width: 980px;
 }
 
 .section h2 {
-  font-size: 18px;
-  margin-bottom: 8px;
-  color: #333;
+  font-size: 20px;
+  margin-bottom: 10px;
+  color: #243352;
 }
 
 .section-subtitle {
-  font-size: 12px;
-  color: #666;
-  margin-bottom: 16px;
+  font-size: 13px;
+  color: #5b6b8c;
+  margin-bottom: 18px;
 }
 
 .empty-state {
   text-align: center;
   padding: 40px 20px;
-  color: #999;
+  color: #98a4bb;
 }
 
 .btn {
   padding: 10px 20px;
   border: none;
-  border-radius: 6px;
+  border-radius: 10px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -83,28 +85,30 @@ body {
 }
 
 .btn-primary {
-  background: #667eea;
-  color: white;
+  background: linear-gradient(135deg, #5c7adf 0%, #7ea6f9 100%);
+  color: #ffffff;
+  box-shadow: 0 12px 32px rgba(102, 142, 234, 0.32);
 }
 
 .btn-primary:hover {
-  background: #5568d3;
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 16px 36px rgba(102, 142, 234, 0.4);
 }
 
 .btn-secondary {
-  background: #f0f0f0;
-  color: #333;
+  background: rgba(92, 122, 223, 0.1);
+  color: #42558a;
+  border: 1px solid rgba(92, 122, 223, 0.2);
 }
 
 .btn-secondary:hover {
-  background: #e0e0e0;
+  background: rgba(92, 122, 223, 0.16);
 }
 
 .btn:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 .btn-add {
@@ -115,7 +119,7 @@ body {
 .resume-section-group {
   margin-bottom: 32px;
   padding-bottom: 24px;
-  border-bottom: 2px solid #f0f0f0;
+  border-bottom: 2px solid #ecf0fb;
 }
 
 .resume-section-group:last-child {
@@ -127,17 +131,17 @@ body {
 .section-group-title {
   font-size: 16px;
   font-weight: 600;
-  color: #667eea;
+  color: #5c7adf;
   margin-bottom: 16px;
   padding-bottom: 8px;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid #e5ebfa;
 }
 
 .popup-container {
   width: 420px;
   min-height: 100%;
-  background: linear-gradient(180deg, #2b2f77 0%, #0c1230 100%);
-  color: #fff;
+  background: linear-gradient(180deg, #f1f4fc 0%, #dce4f4 100%);
+  color: #1e2a3b;
   display: flex;
   flex-direction: column;
 }
@@ -145,13 +149,14 @@ body {
 .popup-header {
   padding: 18px 16px;
   text-align: center;
-  background: rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 0.4);
+  box-shadow: inset 0 -1px 0 rgba(92, 122, 223, 0.1);
 }
 
 .popup-subtitle {
   margin: 8px 0 16px;
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.75);
+  color: #526184;
 }
 
 .popup-main {
@@ -161,38 +166,39 @@ body {
 }
 
 .popup-card {
-  background: #fff;
+  background: #ffffff;
   border-radius: 14px;
-  padding: 16px;
-  color: #141a3c;
-  box-shadow: 0 16px 30px rgba(10, 17, 54, 0.25);
+  padding: 18px;
+  color: #1f2c45;
+  box-shadow: 0 18px 38px rgba(82, 113, 180, 0.18);
 }
 
 .popup-loading {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.75);
   border-radius: 12px;
   padding: 16px;
   font-size: 13px;
   text-align: center;
+  color: #526184;
 }
 
 .app-manager {
-  background: #0f163f;
+  background: linear-gradient(180deg, #f0f3fb 0%, #e2e7f4 100%);
   min-height: 100vh;
 }
 
 .app-manager .app-header {
   width: 100%;
   border-radius: 0;
-  padding: 28px 32px;
-  background: linear-gradient(135deg, #4e54c8 0%, #8f94fb 100%);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+  padding: 32px 48px;
+  background: linear-gradient(135deg, #5b7ae0 0%, #87a4f3 100%);
+  box-shadow: 0 20px 40px rgba(92, 122, 223, 0.35);
 }
 
 .app-manager .app-main {
   flex: 1;
-  background: #0f163f;
-  padding: 32px;
+  background: transparent;
+  padding: 36px 48px 64px;
   margin: 0;
   width: 100%;
   box-shadow: none;
@@ -203,37 +209,39 @@ body {
   max-width: none;
   width: 100%;
   margin: 0 0 32px 0;
-  padding: 32px;
-  border-radius: 12px;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 22px 44px rgba(0, 0, 0, 0.28);
-  background: rgba(7, 11, 33, 0.92);
-  color: #f6f9ff;
+  padding: 32px 36px;
+  border-radius: 18px;
+  box-shadow: 0 20px 36px rgba(88, 114, 186, 0.16);
+  background: #ffffff;
+  color: #243352;
 }
 
 .app-manager .section h2,
 .app-manager .section .section-subtitle,
 .app-manager .section .section-group-title {
-  color: #f6f9ff;
+  color: #243352;
 }
 
 .app-manager .tabs {
   max-width: none;
-  margin: 0 0 24px 0;
+  margin: 0 0 28px 0;
 }
 
 .app-manager .tab-button {
-  background: rgba(255, 255, 255, 0.08);
-  color: #f6f9ff;
+  background: rgba(255, 255, 255, 0.65);
+  color: #42558a;
+  border: 1px solid rgba(103, 134, 216, 0.25);
 }
 
 .app-manager .tab-button.active {
-  background: linear-gradient(135deg, #ff9966 0%, #ff5e62 100%);
-  box-shadow: 0 18px 40px rgba(255, 94, 98, 0.35);
+  background: linear-gradient(135deg, #5c7adf 0%, #7ea6f9 100%);
+  color: #ffffff;
+  box-shadow: 0 18px 42px rgba(92, 122, 223, 0.32);
 }
 
 @media (max-width: 1024px) {
   .app-manager .app-main {
-    padding: 24px 16px 40px;
+    padding: 28px 24px 48px;
   }
 
   .app-manager .section {
@@ -243,11 +251,11 @@ body {
 
 @media (max-width: 768px) {
   .app-manager .app-header {
-    padding: 20px 16px;
+    padding: 24px 18px;
   }
 
   .app-manager .app-main {
-    padding: 16px 10px 32px;
+    padding: 20px 12px 40px;
   }
 
   .app-manager .section {
