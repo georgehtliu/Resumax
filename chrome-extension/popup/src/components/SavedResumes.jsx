@@ -1,15 +1,263 @@
 import React, { useState, useEffect } from 'react';
 import { storageService } from '../services/storage';
 import ExperienceEditor from './ExperienceEditor';
-import EducationEditor from './EducationEditor';
 import ProjectEditor from './ProjectEditor';
 import CustomSectionEditor from './CustomSectionEditor';
-import PersonalInfoEditor from './PersonalInfoEditor';
-import SkillsEditor from './SkillsEditor';
 import LatexPreviewModal from './LatexPreviewModal';
 import { renderLatex } from '../services/api';
 import { buildLatexDocument } from '../utils/latexTemplate';
 import './SavedResumes.css';
+
+const DEFAULT_PERSONAL_INFO = {
+  firstName: '',
+  lastName: '',
+  email: '',
+  phone: '',
+  linkedin: '',
+  github: ''
+};
+
+function normalizePersonalInfo(info) {
+  if (!info || typeof info !== 'object') {
+    return { ...DEFAULT_PERSONAL_INFO };
+  }
+
+  return {
+    firstName: typeof info.firstName === 'string' ? info.firstName : '',
+    lastName: typeof info.lastName === 'string' ? info.lastName : '',
+    email: typeof info.email === 'string' ? info.email : '',
+    phone: typeof info.phone === 'string' ? info.phone : '',
+    linkedin: typeof info.linkedin === 'string' ? info.linkedin : '',
+    github: typeof info.github === 'string' ? info.github : ''
+  };
+}
+
+function normalizeSkills(skills) {
+  if (!Array.isArray(skills)) {
+    return [];
+  }
+
+  return skills.map((group, index) => ({
+    id: typeof group?.id === 'string' && group.id.length > 0 ? group.id : `skill-${Date.now()}-${index}`,
+    title: typeof group?.title === 'string' ? group.title : '',
+    skills: Array.isArray(group?.skills)
+      ? group.skills.map(skill => (typeof skill === 'string' ? skill : '')).filter(Boolean)
+      : []
+  }));
+}
+
+function normalizeBullet(bullet, prefix, index) {
+  if (!bullet || typeof bullet !== 'object') {
+    return {
+      id: `${prefix}-${index}`,
+      text: typeof bullet === 'string' ? bullet : '',
+      original: typeof bullet === 'string' ? bullet : ''
+    };
+  }
+
+  const baseText = typeof bullet.text === 'string' && bullet.text.trim().length > 0
+    ? bullet.text
+    : typeof bullet.rewritten === 'string'
+      ? bullet.rewritten
+      : '';
+
+  return {
+    ...bullet,
+    id: bullet.id || `${prefix}-${index}`,
+    text: baseText,
+    original: bullet.original || baseText || bullet.text || ''
+  };
+}
+
+function normalizeSectionEntries(entries, sectionPrefix) {
+  if (!Array.isArray(entries)) {
+    return [];
+  }
+
+  return entries.map((entry, entryIndex) => {
+    const entryId = entry.id || `${sectionPrefix}-${entryIndex}-${Date.now()}`;
+    const candidateBullets = Array.isArray(entry.bullets) && entry.bullets.length > 0
+      ? entry.bullets
+      : Array.isArray(entry.selectedBullets)
+        ? entry.selectedBullets
+        : [];
+
+    const normalizedBullets = candidateBullets.map((bullet, bulletIndex) =>
+      normalizeBullet(bullet, `${entryId}-bullet`, bulletIndex)
+    );
+
+    const selectedBullets = Array.isArray(entry.selectedBullets) && entry.selectedBullets.length > 0
+      ? entry.selectedBullets.map((bullet, bulletIndex) =>
+          normalizeBullet(bullet, `${entryId}-selected`, bulletIndex)
+        )
+      : normalizedBullets;
+
+    return {
+      ...entry,
+      id: entryId,
+      bullets: normalizedBullets,
+      selectedBullets
+    };
+  });
+}
+
+function buildSelectedBullets(entry, prefix) {
+  const source = Array.isArray(entry.selectedBullets) && entry.selectedBullets.length > 0
+    ? entry.selectedBullets
+    : Array.isArray(entry.bullets)
+      ? entry.bullets
+      : [];
+
+  return source
+    .map((bullet, index) => {
+      const normalized = normalizeBullet(bullet, `${prefix}-selected`, index);
+      const text = typeof normalized.text === 'string' ? normalized.text.trim() : '';
+      if (!text) {
+        return null;
+      }
+      return {
+        id: normalized.id,
+        text,
+        relevanceScore: typeof bullet?.relevanceScore === 'number' ? bullet.relevanceScore : 0.0,
+        lineCount: typeof bullet?.lineCount === 'number' ? bullet.lineCount : undefined,
+        original: normalized.original || bullet?.original || undefined,
+        rewritten: bullet?.rewritten || undefined,
+        reasoning: bullet?.reasoning || undefined
+      };
+    })
+    .filter(Boolean);
+}
+
+function mapExperiencesForSelectedResume(entries = []) {
+  return normalizeSectionEntries(entries, 'experience')
+    .map((entry, index) => {
+      const entryId = entry.id || `experience-${index}`;
+      const selectedBullets = buildSelectedBullets(entry, entryId);
+      if (selectedBullets.length === 0 && !(entry.company || entry.role)) {
+        return null;
+      }
+      return {
+        id: entryId,
+        company: entry.company || '',
+        role: entry.role || '',
+        startDate: entry.startDate || null,
+        endDate: entry.endDate || null,
+        selectedBullets
+      };
+    })
+    .filter(Boolean);
+}
+
+function mapProjectsForSelectedResume(entries = []) {
+  return normalizeSectionEntries(entries, 'project')
+    .map((entry, index) => {
+      const entryId = entry.id || `project-${index}`;
+      const selectedBullets = buildSelectedBullets(entry, entryId);
+      return {
+        id: entryId,
+        name: entry.name || '',
+        description: entry.description || '',
+        technologies: entry.technologies || null,
+        startDate: entry.startDate || null,
+        endDate: entry.endDate || null,
+        selectedBullets
+      };
+    })
+    .filter(Boolean);
+}
+
+function mapCustomSectionsForSelectedResume(entries = []) {
+  return normalizeSectionEntries(entries, 'custom')
+    .map((entry, index) => {
+      const entryId = entry.id || `custom-${index}`;
+      const selectedBullets = buildSelectedBullets(entry, entryId);
+      if (selectedBullets.length === 0 && !entry.title) {
+        return null;
+      }
+      return {
+        id: entryId,
+        title: entry.title || '',
+        subtitle: entry.subtitle || null,
+        selectedBullets
+      };
+    })
+    .filter(Boolean);
+}
+
+function mapEducationForSelectedResume(masterEducation = []) {
+  return normalizeSectionEntries(masterEducation, 'education')
+    .map((entry, index) => {
+      const entryId = entry.id || `education-${index}`;
+      const selectedBullets = buildSelectedBullets(entry, entryId);
+      return {
+        id: entryId,
+        school: entry.school || '',
+        degree: entry.degree || '',
+        field: entry.field || '',
+        startDate: entry.startDate || null,
+        endDate: entry.endDate || null,
+        selectedBullets
+      };
+    });
+}
+
+function buildSelectedResumePayload(resume, masterResume) {
+  const baseResume = resume || {};
+  const master = masterResume || {};
+
+  return {
+    personalInfo: normalizePersonalInfo(master.personalInfo),
+    skills: normalizeSkills(master.skills),
+    experiences: mapExperiencesForSelectedResume(baseResume.experiences),
+    education: mapEducationForSelectedResume(master.education),
+    projects: mapProjectsForSelectedResume(baseResume.projects),
+    customSections: mapCustomSectionsForSelectedResume(baseResume.customSections)
+  };
+}
+
+function getStructuredBulletCount(data) {
+  if (!data) return 0;
+
+  const experiences = Array.isArray(data.experiences) ? data.experiences : [];
+  const education = Array.isArray(data.education) ? data.education : [];
+  const projects = Array.isArray(data.projects) ? data.projects : [];
+  const customSections = Array.isArray(data.customSections) ? data.customSections : [];
+  const skills = Array.isArray(data.skills) ? data.skills : [];
+
+  const fromSkills = skills.reduce((sum, group) => sum + (Array.isArray(group?.skills) ? group.skills.filter(Boolean).length : 0), 0);
+
+  const fromSections = (sections) => sections.reduce((sum, entry) => sum + (Array.isArray(entry?.bullets) ? entry.bullets.length : 0), 0);
+
+  return fromSkills + fromSections(experiences) + fromSections(education) + fromSections(projects) + fromSections(customSections);
+}
+
+function flattenStructuredResume(resume) {
+  if (!resume) return [];
+
+  const result = [];
+
+  const append = (entries = [], sectionType) => {
+    entries.forEach((entry) => {
+      (entry.bullets || entry.selectedBullets || []).forEach((bullet, index) => {
+        result.push({
+          id: bullet.id || `${sectionType}-${entry.id || index}-${index}`,
+          text: typeof bullet.text === 'string' ? bullet.text : '',
+          sectionType,
+          parentId: entry.id,
+          parentTitle: entry.company || entry.school || entry.name || entry.title || '',
+          parentRole: entry.role || entry.degree || entry.subtitle || ''
+        });
+      });
+    });
+  };
+
+  append(resume.experiences, 'experience');
+  append(resume.education, 'education');
+  append(resume.projects, 'project');
+  append(resume.customSections, 'custom');
+
+  return result;
+}
 
 /**
  * Saved Resumes Component
@@ -31,143 +279,6 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
   const [latexSource, setLatexSource] = useState('');
   const [latexPdfBase64, setLatexPdfBase64] = useState(null);
   const [renderingPdf, setRenderingPdf] = useState(false);
-
-  const DEFAULT_PERSONAL_INFO = {
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    linkedin: '',
-    github: ''
-  };
-
-  function normalizeBullet(bullet, prefix, index) {
-    if (!bullet || typeof bullet !== 'object') {
-      return {
-        id: `${prefix}-${index}`,
-        text: typeof bullet === 'string' ? bullet : '',
-        original: typeof bullet === 'string' ? bullet : ''
-      };
-    }
-
-    const baseText = typeof bullet.text === 'string' && bullet.text.trim().length > 0
-      ? bullet.text
-      : typeof bullet.rewritten === 'string'
-        ? bullet.rewritten
-        : '';
-
-    return {
-      ...bullet,
-      id: bullet.id || `${prefix}-${index}`,
-      text: baseText,
-      original: bullet.original || baseText || bullet.text || ''
-    };
-  }
-
-  function normalizeSectionEntries(entries, sectionPrefix) {
-    if (!Array.isArray(entries)) {
-      return [];
-    }
-
-    return entries.map((entry, entryIndex) => {
-      const entryId = entry.id || `${sectionPrefix}-${entryIndex}-${Date.now()}`;
-      const candidateBullets = Array.isArray(entry.bullets) && entry.bullets.length > 0
-        ? entry.bullets
-        : Array.isArray(entry.selectedBullets)
-          ? entry.selectedBullets
-          : [];
-
-      const normalizedBullets = candidateBullets.map((bullet, bulletIndex) =>
-        normalizeBullet(bullet, `${entryId}-bullet`, bulletIndex)
-      );
-
-      const selectedBullets = Array.isArray(entry.selectedBullets) && entry.selectedBullets.length > 0
-        ? entry.selectedBullets.map((bullet, bulletIndex) =>
-            normalizeBullet(bullet, `${entryId}-selected`, bulletIndex)
-          )
-        : normalizedBullets;
-
-      return {
-        ...entry,
-        id: entryId,
-        bullets: normalizedBullets,
-        selectedBullets
-      };
-    });
-  }
-
-  function normalizePersonalInfo(info) {
-    if (!info || typeof info !== 'object') {
-      return { ...DEFAULT_PERSONAL_INFO };
-    }
-
-    return {
-      firstName: typeof info.firstName === 'string' ? info.firstName : '',
-      lastName: typeof info.lastName === 'string' ? info.lastName : '',
-      email: typeof info.email === 'string' ? info.email : '',
-      phone: typeof info.phone === 'string' ? info.phone : '',
-      linkedin: typeof info.linkedin === 'string' ? info.linkedin : '',
-      github: typeof info.github === 'string' ? info.github : ''
-    };
-  }
-
-  function normalizeSkills(skills) {
-    if (!Array.isArray(skills)) {
-      return [];
-    }
-
-    return skills.map((group, index) => ({
-      id: typeof group?.id === 'string' && group.id.length > 0 ? group.id : `skill-${Date.now()}-${index}`,
-      title: typeof group?.title === 'string' ? group.title : '',
-      skills: Array.isArray(group?.skills)
-        ? group.skills.map(skill => (typeof skill === 'string' ? skill : '')).filter(Boolean)
-        : []
-    }));
-  }
-
-  function getStructuredBulletCount(data) {
-    if (!data) return 0;
-
-    const experiences = Array.isArray(data.experiences) ? data.experiences : [];
-    const education = Array.isArray(data.education) ? data.education : [];
-    const projects = Array.isArray(data.projects) ? data.projects : [];
-    const customSections = Array.isArray(data.customSections) ? data.customSections : [];
-    const skills = Array.isArray(data.skills) ? data.skills : [];
-
-    const fromSkills = skills.reduce((sum, group) => sum + (Array.isArray(group?.skills) ? group.skills.filter(Boolean).length : 0), 0);
-
-    const fromSections = (sections) => sections.reduce((sum, entry) => sum + (Array.isArray(entry?.bullets) ? entry.bullets.length : 0), 0);
-
-    return fromSkills + fromSections(experiences) + fromSections(education) + fromSections(projects) + fromSections(customSections);
-  }
-
-  function flattenStructuredResume(resume) {
-    if (!resume) return [];
-
-    const result = [];
-
-    const append = (entries = [], sectionType) => {
-      entries.forEach((entry) => {
-        (entry.bullets || entry.selectedBullets || []).forEach((bullet, index) => {
-          result.push({
-            id: bullet.id || `${sectionType}-${entry.id || index}-${index}`,
-            text: typeof bullet.text === 'string' ? bullet.text : '',
-            sectionType,
-            parentId: entry.id,
-            parentTitle: entry.company || entry.school || entry.name || entry.title || '',
-            parentRole: entry.role || entry.degree || entry.subtitle || ''
-          });
-        });
-      });
-    };
-
-    append(resume.experiences, 'experience');
-    append(resume.education, 'education');
-    append(resume.projects, 'project');
-    append(resume.customSections, 'custom');
-
-    return result;
-  }
 
   useEffect(() => {
     loadSavedResumes();
@@ -207,13 +318,17 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
       const savedData = selectedResume.data || {};
       
       // If it's in the old format (just selectedBullets), convert it
+      const sharedPersonalInfo = normalizePersonalInfo(masterResume?.personalInfo);
+      const sharedSkills = normalizeSkills(masterResume?.skills);
+      const sharedEducation = normalizeSectionEntries(masterResume?.education, 'education');
+
       if (savedData.selectedBullets && !savedData.experiences) {
         // Convert flat bullet list to structured format
         const structured = {
-          personalInfo: { ...DEFAULT_PERSONAL_INFO },
-          skills: [],
+          personalInfo: sharedPersonalInfo,
+          skills: sharedSkills,
           experiences: [],
-          education: [],
+          education: sharedEducation,
           projects: [],
           customSections: []
         };
@@ -236,16 +351,34 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
       } else {
         // Already in structured format
         setEditedResume({
-          personalInfo: normalizePersonalInfo(savedData.personalInfo),
-          skills: normalizeSkills(savedData.skills),
+          personalInfo: sharedPersonalInfo,
+          skills: sharedSkills,
           experiences: normalizeSectionEntries(savedData.experiences, 'experience'),
-          education: normalizeSectionEntries(savedData.education, 'education'),
+          education: sharedEducation,
           projects: normalizeSectionEntries(savedData.projects, 'project'),
           customSections: normalizeSectionEntries(savedData.customSections, 'custom')
         });
       }
     }
-  }, [selectedResume]);
+  }, [selectedResume, masterResume]);
+
+  useEffect(() => {
+    if (!editedResume || !selectedResume) {
+      return;
+    }
+
+    setEditedResume((prev) => ({
+      ...prev,
+      personalInfo: normalizePersonalInfo(masterResume?.personalInfo),
+      skills: normalizeSkills(masterResume?.skills),
+      education: normalizeSectionEntries(masterResume?.education, 'education')
+    }));
+  }, [
+    masterResume?.personalInfo,
+    masterResume?.skills,
+    masterResume?.education,
+    selectedResume?.id
+  ]);
 
   useEffect(() => {
     setShowLatexPreview(false);
@@ -377,7 +510,8 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
     }
 
     try {
-      const latex = buildLatexDocument(editedResume);
+      const selectedPayload = buildSelectedResumePayload(editedResume, masterResume);
+      const latex = buildLatexDocument(selectedPayload);
       setLatexSource(latex);
       setLatexPdfBase64(null);
       setShowLatexPreview(true);
@@ -422,7 +556,8 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
     setRenderingPdf(true);
     setLatexPdfBase64(null);
     try {
-      const response = await renderLatex(editedResume);
+      const selectedPayload = buildSelectedResumePayload(editedResume, masterResume);
+      const response = await renderLatex(selectedPayload);
       if (response?.pdf_base64) {
         setLatexPdfBase64(response.pdf_base64);
       } else {
@@ -637,32 +772,6 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
               {/* Structured Resume Editor */}
               {editedResume && (
                 <div className="resume-editor">
-                  <div className="resume-section-group">
-                    <h3 className="section-group-title">Personal Information</h3>
-                    <PersonalInfoEditor
-                      value={editedResume.personalInfo}
-                      onChange={(updatedInfo) =>
-                        setEditedResume((prev) => ({
-                          ...prev,
-                          personalInfo: updatedInfo
-                        }))
-                      }
-                      variant="compact"
-                    />
-                  </div>
-
-                  <div className="resume-section-group">
-                    <SkillsEditor
-                      skills={editedResume.skills}
-                      onChange={(updatedSkills) =>
-                        setEditedResume((prev) => ({
-                          ...prev,
-                          skills: updatedSkills
-                        }))
-                      }
-                    />
-                  </div>
-
                   {/* Work Experience Section */}
                   <div className="resume-section-group">
                     <div className="section-group-header">
@@ -687,35 +796,6 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
                           onUpdate={(updatedExp) => handleUpdateEntry('experiences', updatedExp)}
                           onDelete={(expId) => handleDeleteEntry('experiences', expId)}
                           onAddBulletFromMaster={() => handleAddBulletToEntry('experiences', experience.id)}
-                        />
-                      ))
-                    )}
-                  </div>
-
-                  {/* Education Section */}
-                  <div className="resume-section-group">
-                    <div className="section-group-header">
-                      <h3 className="section-group-title">Education</h3>
-                      <button
-                        className="btn btn-small btn-primary"
-                        onClick={() => handleAddEntry('education')}
-                      >
-                        + Add Education
-                      </button>
-                    </div>
-                    
-                    {(!editedResume.education || editedResume.education.length === 0) ? (
-                      <div className="empty-state">
-                        <p>No education entries yet. Add your first education!</p>
-                      </div>
-                    ) : (
-                      editedResume.education.map(edu => (
-                        <EducationEditor
-                          key={edu.id}
-                          education={edu}
-                          onUpdate={(updatedEdu) => handleUpdateEntry('education', updatedEdu)}
-                          onDelete={(eduId) => handleDeleteEntry('education', eduId)}
-                          onAddBulletFromMaster={() => handleAddBulletToEntry('education', edu.id)}
                         />
                       ))
                     )}

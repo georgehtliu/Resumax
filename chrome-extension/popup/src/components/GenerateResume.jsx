@@ -401,6 +401,9 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete }) {
             <SelectedResumeEditor
               resume={customizedResume || optimizationResult.selectedResume}
               onUpdate={handleResumeUpdate}
+                showPersonalInfo={false}
+                showSkills={false}
+                showEducation={false}
               summary={{
                 fitsOnePage: optimizationResult.fitsOnePage,
                 totalLineCount: optimizationResult.totalLineCount,

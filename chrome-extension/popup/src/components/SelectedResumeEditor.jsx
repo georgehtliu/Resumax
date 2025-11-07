@@ -64,7 +64,14 @@ const SECTION_CONFIG = [
   }
 ];
 
-function SelectedResumeEditor({ resume, onUpdate, summary }) {
+function SelectedResumeEditor({
+  resume,
+  onUpdate,
+  summary,
+  showPersonalInfo = true,
+  showSkills = true,
+  showEducation = true
+}) {
   const [localResume, setLocalResume] = useState(() => normalizeResume(resume));
 
   const lineTotals = useMemo(() => calculateTotalLines(localResume), [localResume]);
@@ -152,6 +159,15 @@ function SelectedResumeEditor({ resume, onUpdate, summary }) {
     });
   }
 
+  const visibleSections = useMemo(() => {
+    return SECTION_CONFIG.filter((section) => {
+      if (section.key === 'education' && !showEducation) {
+        return false;
+      }
+      return true;
+    });
+  }, [showEducation]);
+
   return (
     <div className="selected-resume-editor">
       {summary && (
@@ -177,27 +193,31 @@ function SelectedResumeEditor({ resume, onUpdate, summary }) {
         </div>
       )}
 
-      <div className="selected-section">
-        <h3>Personal Information</h3>
-        <PersonalInfoEditor
-          value={localResume.personalInfo}
-          onChange={(info) => updateResume((draft) => {
-            draft.personalInfo = info;
-          })}
-          variant="compact"
-        />
-      </div>
+      {showPersonalInfo && (
+        <div className="selected-section">
+          <h3>Personal Information</h3>
+          <PersonalInfoEditor
+            value={localResume.personalInfo}
+            onChange={(info) => updateResume((draft) => {
+              draft.personalInfo = info;
+            })}
+            variant="compact"
+          />
+        </div>
+      )}
 
-      <div className="selected-section">
-        <SkillsEditor
-          skills={localResume.skills}
-          onChange={(updatedSkills) => updateResume((draft) => {
-            draft.skills = updatedSkills;
-          })}
-        />
-      </div>
+      {showSkills && (
+        <div className="selected-section">
+          <SkillsEditor
+            skills={localResume.skills}
+            onChange={(updatedSkills) => updateResume((draft) => {
+              draft.skills = updatedSkills;
+            })}
+          />
+        </div>
+      )}
 
-      {SECTION_CONFIG.map((section) => (
+      {visibleSections.map((section) => (
         <SectionEditor
           key={section.key}
           config={section}
