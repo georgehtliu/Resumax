@@ -75,9 +75,15 @@ function GenerateResume({ masterResume, onSave }) {
         return;
       }
 
+      const sectionCaps = computeSectionCaps(structuredResume);
+
       const apiResponse = await selectResume({
         jobDescription: trimmedDescription,
         resume: structuredResume,
+        bulletsPerExperience: sectionCaps.experience,
+        bulletsPerEducation: sectionCaps.education,
+        bulletsPerProject: sectionCaps.project,
+        bulletsPerCustom: sectionCaps.custom,
       });
 
       const selectedResume = cloneStructuredResume(apiResponse?.selectedResume);
@@ -96,6 +102,7 @@ function GenerateResume({ masterResume, onSave }) {
           ? apiResponse.processing_time
           : undefined,
         rawResponse: apiResponse,
+        sectionCaps,
       });
 
       setCustomizedResume(selectedResume);
@@ -413,6 +420,113 @@ function flattenSelectedResume(selectedResume) {
   appendBullets(selectedResume.customSections, 'custom');
 
   return resultBullets;
+}
+
+const LINE_BUDGET = 46;
+
+function estimateBulletLines(text = '') {
+  const effectiveLength = (text?.length || 0) + 4;
+  if (effectiveLength <= 95) return 1;
+  if (effectiveLength <= 190) return 2;
+  return 3;
+}
+
+function estimateEntryLines(entries = [], cap = 0, headingLines = 2) {
+  if (!cap || cap <= 0 || !Array.isArray(entries) || entries.length === 0) {
+    return 0;
+  }
+
+  let total = 0;
+
+  entries.forEach((entry) => {
+    const bulletLines = (entry.bullets || [])
+      .map((bullet) => estimateBulletLines(bullet.text))
+      .sort((a, b) => b - a);
+
+    const limit = Math.min(cap, bulletLines.length);
+    if (limit > 0) {
+      total += headingLines;
+      for (let i = 0; i < limit; i += 1) {
+        total += bulletLines[i];
+      }
+    }
+  });
+
+  return total;
+}
+
+function estimateSkillsLines(skillGroups = []) {
+  if (!Array.isArray(skillGroups) || skillGroups.length === 0) {
+    return 0;
+  }
+
+  let total = 2; // section header + spacing
+  skillGroups.forEach((group) => {
+    const text = (group.skills || []).join(', ');
+    total += Math.max(1, Math.ceil((text.length || 0) / 90));
+  });
+  return total;
+}
+
+function estimatePersonalInfoLines(personalInfo) {
+  if (!personalInfo) {
+    return 2; // minimal heading even if blank
+  }
+  return 3;
+}
+
+function estimateTotalLines(resume, caps) {
+  if (!resume) return 0;
+
+  let total = 0;
+  total += estimatePersonalInfoLines(resume.personalInfo);
+  total += estimateSkillsLines(resume.skills);
+  total += estimateEntryLines(resume.experiences, caps.experience, 2);
+  total += estimateEntryLines(resume.projects, caps.project, 2);
+  total += estimateEntryLines(resume.education, caps.education, 2);
+  total += estimateEntryLines(resume.customSections, caps.custom, 2);
+  return total;
+}
+
+function computeSectionCaps(resume) {
+  const experiences = resume.experiences || [];
+  const education = resume.education || [];
+  const projects = resume.projects || [];
+  const custom = resume.customSections || [];
+
+  const caps = {
+    experience: experiences.length === 0 ? 0 : experiences.length <= 2 ? 5 : 3,
+    education: education.length === 0 ? 0 : Math.min(2, (education[0].bullets || []).length || 1),
+    project: projects.length === 0 ? 0 : projects.length <= 1 ? 3 : 2,
+    custom: custom.length === 0 ? 0 : 2,
+  };
+
+  const minCaps = {
+    experience: experiences.length === 0 ? 0 : Math.min(2, Math.max(1, Math.min(3, (experiences[0].bullets || []).length || 1))),
+    education: education.length === 0 ? 0 : 1,
+    project: projects.length === 0 ? 0 : 1,
+    custom: custom.length === 0 ? 0 : 1,
+  };
+
+  const reductionOrder = ['experience', 'project', 'education', 'custom'];
+
+  let estimated = estimateTotalLines(resume, caps);
+  while (estimated > LINE_BUDGET) {
+    let reduced = false;
+    for (const key of reductionOrder) {
+      if (caps[key] > minCaps[key]) {
+        caps[key] -= 1;
+        reduced = true;
+        break;
+      }
+    }
+    if (!reduced) {
+      break;
+    }
+    estimated = estimateTotalLines(resume, caps);
+  }
+
+  return caps;
 }
 
 function cloneStructuredResume(resume) {

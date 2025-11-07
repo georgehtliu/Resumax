@@ -6,6 +6,7 @@ and selects the top N bullets per section without any LLM rewriting.
 """
 
 from typing import List, Optional
+import math
 import numpy as np
 from app.core.search import VectorSearch
 from app.schemas.rag import (
@@ -13,7 +14,7 @@ from app.schemas.rag import (
     SelectedProject, SelectedCustomSection, SelectedBullet, Bullet
 )
 
-def estimate_latex_lines(text: str, chars_per_line: int = 70) -> int:
+def estimate_latex_lines(text: str, chars_per_line: int = 95) -> int:
     """
     Estimate how many lines a bullet point will take in LaTeX.
     
@@ -30,9 +31,14 @@ def estimate_latex_lines(text: str, chars_per_line: int = 70) -> int:
         return 0
     
     # Account for bullet point indentation
-    effective_length = len(text) + 4  # Add space for bullet
-    
-    lines = max(1, (effective_length // chars_per_line) + 1)
+    effective_length = len(text or "") + 4  # Add space for bullet
+
+    if effective_length <= 0:
+        return 0
+
+    lines = max(1, math.ceil(effective_length / chars_per_line))
+    if chars_per_line >= 80:
+        return min(lines, 3)
     return lines
 
 class SelectionService:
