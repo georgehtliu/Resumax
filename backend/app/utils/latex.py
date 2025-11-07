@@ -23,7 +23,6 @@ LATEX_HEADER = r"""
 \usepackage{fancyhdr}
 \usepackage[english]{babel}
 \usepackage{tabularx}
-\input{glyphtounicode}
 
 \pagestyle{fancy}
 \fancyhf{}
@@ -40,7 +39,6 @@ LATEX_HEADER = r"""
 \raggedright
 \setlength{\tabcolsep}{0in}
 \titleformat{\section}{\vspace{-4pt}\scshape\raggedright\large}{}{0em}{}[\color{black}\titlerule \vspace{-5pt}]
-\pdfgentounicode=1
 \newcommand{\resumeItem}[1]{\item\small{#1 \vspace{-2pt}}}
 \newcommand{\resumeSubheading}[4]{\vspace{-2pt}\item
   \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
@@ -154,13 +152,15 @@ def _build_projects(projects: list) -> str:
         return ""
     sections = []
     for entry in projects:
-        name = _escape_latex(entry.name or '')
+        name = _escape_latex(getattr(entry, "name", "") or "")
         heading = f"\\textbf{{{name}}}"
-        if entry.url:
-            url = _escape_latex(entry.url)
+        url_value = getattr(entry, "url", None)
+        if url_value:
+            url = _escape_latex(url_value)
             heading = f"\\href{{{url}}}{{{heading}}}"
-        tech = f" \\emph{{{_escape_latex(entry.technologies)}}}" if entry.technologies else ''
-        bullets = _format_bullets(entry.selectedBullets or [])
+        tech_value = getattr(entry, "technologies", None)
+        tech = f" \\emph{{{_escape_latex(tech_value)}}}" if tech_value else ''
+        bullets = _format_bullets(getattr(entry, "selectedBullets", None) or [])
         line = "  \\resumeProjectHeading\n    {" + heading + tech + "}{}\n"
         sections.append(line + ("\n" + bullets if bullets else ""))
     return "\\section{Projects}\n\\resumeSubHeadingListStart\n" + "\n\n".join(sections) + "\n\\resumeSubHeadingListEnd\n"
@@ -235,6 +235,7 @@ def render_pdf_from_latex(latex_source: str) -> bytes:
             capture_output=True,
             text=True,
             check=False,
+            cwd=tmpdir,
         )
 
         if result.returncode != 0:

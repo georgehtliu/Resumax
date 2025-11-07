@@ -4,7 +4,7 @@ import OptimizationPanel from './OptimizationPanel';
 import SelectedResumeEditor from './SelectedResumeEditor';
 import LatexPreviewModal from './LatexPreviewModal';
 import { storageService } from '../services/storage';
-import { buildStructuredResume, selectResume } from '../services/api';
+import { buildStructuredResume, selectResume, renderLatex } from '../services/api';
 import { buildLatexDocument } from '../utils/latexTemplate';
 import './GenerateResume.css';
 
@@ -25,6 +25,8 @@ function GenerateResume({ masterResume, onSave }) {
   const [optimizationMode, setOptimizationMode] = useState('select'); // 'select' or 'optimize'
   const [showLatexPreview, setShowLatexPreview] = useState(false);
   const [latexSource, setLatexSource] = useState('');
+  const [latexPdfBase64, setLatexPdfBase64] = useState(null);
+  const [renderingPdf, setRenderingPdf] = useState(false);
 
   /**
    * Extract job description from current tab
@@ -184,6 +186,7 @@ function GenerateResume({ masterResume, onSave }) {
       const latex = buildLatexDocument(resumeSource);
       setLatexSource(latex);
       setShowLatexPreview(true);
+      setLatexPdfBase64(null);
     } catch (error) {
       console.error('Error building LaTeX preview:', error);
       alert('Could not generate LaTeX preview. Please try again.');
@@ -210,6 +213,27 @@ function GenerateResume({ masterResume, onSave }) {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+  }
+
+  async function renderPdfPreview() {
+    const resumeSource = customizedResume || optimizationResult?.selectedResume;
+    if (!resumeSource) return;
+
+    setRenderingPdf(true);
+    setLatexPdfBase64(null);
+    try {
+      const response = await renderLatex(resumeSource);
+      if (response?.pdf_base64) {
+        setLatexPdfBase64(response.pdf_base64);
+      } else {
+        alert('LaTeX render did not return a PDF.');
+      }
+    } catch (error) {
+      console.error('Render PDF failed:', error);
+      alert(error?.message || 'Failed to render PDF preview.');
+    } finally {
+      setRenderingPdf(false);
+    }
   }
 
   /**
@@ -438,7 +462,10 @@ function GenerateResume({ masterResume, onSave }) {
         latexSource={latexSource}
         onClose={() => setShowLatexPreview(false)}
         onCopy={copyLatexToClipboard}
-        onDownload={downloadLatex}
+        onDownloadTex={downloadLatex}
+        onRefreshPdf={renderPdfPreview}
+        pdfBase64={latexPdfBase64}
+        loadingPdf={renderingPdf}
       />
     </div>
   );
