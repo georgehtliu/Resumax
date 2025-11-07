@@ -20,8 +20,12 @@ import './App.css';
  * - Optimization results
  */
 function App() {
-  const [activeTab, setActiveTab] = useState('master');
+  const queryParams = new URLSearchParams(window.location.search);
+  const isManagerView = queryParams.get('view') === 'manager';
+
+  const [activeTab, setActiveTab] = useState(() => (isManagerView ? 'master' : 'generate'));
   const [refreshSaved, setRefreshSaved] = useState(0);
+  const [loading, setLoading] = useState(true);
   const [resume, setResume] = useState({
     personalInfo: {
       firstName: '',
@@ -566,6 +570,7 @@ function App() {
    * Load resume from Chrome storage
    */
   async function loadResumeData() {
+    setLoading(true);
     try {
       console.log('📥 Loading resume data...');
       const data = await storageService.getResume();
@@ -632,6 +637,8 @@ function App() {
         customSections: [],
         totalBullets: 0
       });
+    } finally {
+      setLoading(false);
     }
   }
   
@@ -710,6 +717,25 @@ function App() {
   function handleResumeSaved() {
     // Trigger refresh by updating refresh trigger
     setRefreshSaved(prev => prev + 1);
+    // Reload master resume so totals stay current
+    loadResumeData();
+  }
+
+  function openManagerPage() {
+    const managerUrl =
+      typeof chrome !== 'undefined' && chrome.runtime?.getURL
+        ? chrome.runtime.getURL('popup-build/index.html?view=manager')
+        : `${window.location.origin}${window.location.pathname}?view=manager`;
+
+    if (typeof chrome !== 'undefined' && chrome.tabs?.create) {
+      chrome.tabs.create({ url: managerUrl });
+    } else {
+      window.open(managerUrl, '_blank', 'noopener');
+    }
+  }
+
+  function handleSelectionComplete() {
+    openManagerPage();
   }
 
   const tabs = [
@@ -718,8 +744,35 @@ function App() {
     { id: 'saved', label: 'Saved Resumes' }
   ];
 
+  if (!isManagerView) {
+    return (
+      <div className="popup-container">
+        <header className="popup-header">
+          <h1>AI Resume Optimizer</h1>
+          <p className="popup-subtitle">Extract or paste a job description and pick the best bullets fast.</p>
+          <button className="btn btn-secondary popup-btn" onClick={openManagerPage}>
+            Open Resume Manager
+          </button>
+        </header>
+        <main className="popup-main">
+          {loading ? (
+            <div className="popup-loading">Loading master resume...</div>
+          ) : (
+            <div className="popup-card">
+              <GenerateResume
+                masterResume={resume}
+                onSave={handleResumeSaved}
+                onSelectionComplete={handleSelectionComplete}
+              />
+            </div>
+          )}
+        </main>
+      </div>
+    );
+  }
+
   return (
-    <div className="app">
+    <div className={`app ${isManagerView ? 'app-manager' : ''}`}>
       <header className="app-header">
         <h1>AI Resume Optimizer</h1>
         <p className="subtitle">Match your resume to any job description</p>

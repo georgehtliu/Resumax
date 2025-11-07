@@ -13,7 +13,7 @@ import './GenerateResume.css';
  * 
  * Tab 2: Generate optimized resume from job description
  */
-function GenerateResume({ masterResume, onSave }) {
+function GenerateResume({ masterResume, onSave, onSelectionComplete }) {
   const [currentJob, setCurrentJob] = useState(null);
   const [optimizationResult, setOptimizationResult] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -117,6 +117,14 @@ function GenerateResume({ masterResume, onSave }) {
         description: trimmedDescription,
         source: prev?.source || 'manual',
       }));
+
+      if (typeof onSelectionComplete === 'function') {
+        onSelectionComplete({
+          selectedResume,
+          response: apiResponse,
+          jobDescription: trimmedDescription
+        });
+      }
     } catch (error) {
       console.error('Error selecting bullets:', error);
       alert(error?.message || 'Unable to select bullets. Please try again.');
