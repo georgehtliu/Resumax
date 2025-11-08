@@ -69,7 +69,7 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete }) {
     setCustomizedResume(null);
 
     try {
-      const structuredResume = buildStructuredResume(masterResume);
+      const structuredResume = applySectionPriorities(buildStructuredResume(masterResume));
 
       if (
         structuredResume.experiences.length === 0 &&
@@ -583,27 +583,67 @@ function estimateTotalLines(resume, caps) {
   return total;
 }
 
+function applySectionPriorities(resume) {
+  if (!resume) {
+    return resume;
+  }
+
+  const projects = Array.isArray(resume.projects) ? [...resume.projects] : [];
+  const experiences = Array.isArray(resume.experiences) ? resume.experiences : [];
+
+  if (projects.length > 0) {
+    const experienceLines = estimateEntryLines(experiences, 4, 2);
+    const desiredProjectEntries = experienceLines > (LINE_BUDGET * 0.5) || experiences.length >= 3
+      ? 1
+      : Math.min(2, projects.length);
+
+    if (projects.length > desiredProjectEntries) {
+      const rankedProjects = [...projects].sort((a, b) => {
+        const aBullets = Array.isArray(a?.bullets) ? a.bullets.length : 0;
+        const bBullets = Array.isArray(b?.bullets) ? b.bullets.length : 0;
+        return bBullets - aBullets;
+      });
+      resume.projects = rankedProjects.slice(0, desiredProjectEntries);
+    }
+  }
+
+  return resume;
+}
+
 function computeSectionCaps(resume) {
   const experiences = resume.experiences || [];
   const education = resume.education || [];
   const projects = resume.projects || [];
   const custom = resume.customSections || [];
 
+  const getMaxAvailable = (entries) => Math.max(
+    0,
+    ...entries.map((entry) => Array.isArray(entry?.bullets) ? entry.bullets.length : 0),
+  );
+
+  const projectBaseFloor = projects.length <= 1 ? 1 : 2;
+
   const caps = {
-    experience: experiences.length === 0 ? 0 : experiences.length <= 2 ? 5 : 3,
-    education: education.length === 0 ? 0 : Math.min(2, (education[0].bullets || []).length || 1),
-    project: projects.length === 0 ? 0 : projects.length <= 1 ? 3 : 2,
-    custom: custom.length === 0 ? 0 : 2,
+    experience: experiences.length === 0 ? 0 : Math.min(4, Math.max(3, getMaxAvailable(experiences))),
+    education: education.length === 0 ? 0 : Math.min(2, Math.max(1, getMaxAvailable(education))),
+    project: projects.length === 0 ? 0 : Math.min(3, Math.max(projectBaseFloor, getMaxAvailable(projects))),
+    custom: custom.length === 0 ? 0 : Math.min(2, Math.max(1, getMaxAvailable(custom))),
   };
 
   const minCaps = {
-    experience: experiences.length === 0 ? 0 : Math.min(2, Math.max(1, Math.min(3, (experiences[0].bullets || []).length || 1))),
-    education: education.length === 0 ? 0 : 1,
+    experience: experiences.length === 0 ? 0 : Math.min(2, Math.max(1, getMaxAvailable(experiences))),
+    education: education.length === 0 ? 0 : Math.max(1, Math.min(2, getMaxAvailable(education) || 1)),
     project: projects.length === 0 ? 0 : 1,
-    custom: custom.length === 0 ? 0 : 1,
+    custom: 0,
   };
 
-  const reductionOrder = ['experience', 'project', 'education', 'custom'];
+  Object.keys(caps).forEach((key) => {
+    if (caps[key] < minCaps[key]) {
+      caps[key] = minCaps[key];
+    }
+  });
+
+  const reductionOrder = ['custom', 'education', 'project', 'experience'];
 
   let estimated = estimateTotalLines(resume, caps);
   while (estimated > LINE_BUDGET) {
