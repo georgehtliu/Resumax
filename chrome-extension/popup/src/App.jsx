@@ -280,20 +280,6 @@ function App() {
           ],
           customSections: [
             {
-              id: 'custom-1',
-              title: 'Technical Skills',
-              subtitle: '',
-              bullets: [
-                { id: 'bullet-38', text: 'Languages: Python, JavaScript, TypeScript, Go, Java, C++, SQL, Bash' },
-                { id: 'bullet-39', text: 'Frontend: React, Redux, Next.js, HTML5, CSS3, WebSocket, WebRTC' },
-                { id: 'bullet-40', text: 'Backend: Node.js, Express, Django, Spring Boot, GraphQL, gRPC, REST APIs' },
-                { id: 'bullet-41', text: 'Databases: PostgreSQL, MongoDB, Redis, DynamoDB, Elasticsearch' },
-                { id: 'bullet-42', text: 'DevOps: Docker, Kubernetes, Jenkins, AWS (EC2, S3, RDS, Lambda), CI/CD, Terraform' },
-                { id: 'bullet-43', text: 'Tools: Git, GitHub, Jira, Confluence, Prometheus, Grafana, Splunk' },
-                { id: 'bullet-44', text: 'Concepts: Microservices, Distributed Systems, System Design, Machine Learning, Data Structures & Algorithms' }
-              ]
-            },
-            {
               id: 'custom-2',
               title: 'Awards & Recognition',
               subtitle: '',
