@@ -121,11 +121,20 @@ def _build_education(education: list) -> str:
         return ""
     sections = []
     for entry in education:
+        degree_text = _escape_latex(entry.degree or "")
+        field_text = _escape_latex(entry.field or "") if entry.field else ""
+        if degree_text and field_text:
+            degree_line = f"{degree_text}, {field_text}"
+        elif field_text:
+            degree_line = field_text
+        else:
+            degree_line = degree_text
+        end_date = _escape_latex(entry.endDate or "")
+        grad_line = f"Expected Graduation: {end_date}" if end_date else ""
         line = (
             "  \\resumeSubheading\n"
-            f"    {{{_escape_latex(entry.school or '')}}}{{{_escape_latex(entry.endDate or '')}}}\n"
-            f"    {{{_escape_latex(entry.degree or '')}{(', ' + _escape_latex(entry.field)) if entry.field else ''}}}"
-            f"{{{_escape_latex(entry.startDate or '')}}}\n"
+            f"    {{{_escape_latex(entry.school or '')}}}{{{grad_line}}}\n"
+            f"    {{{degree_line}}}{{}}\n"
         )
         bullets = _format_bullets(entry.selectedBullets or [])
         sections.append(line + ("\n" + bullets if bullets else ""))
@@ -137,10 +146,13 @@ def _build_experience(experiences: list) -> str:
         return ""
     sections = []
     for entry in experiences:
+        start = _escape_latex(entry.startDate or "")
+        end = _escape_latex(entry.endDate or "") or "Present"
+        date_range = f"{start} -- {end}" if start else end
         line = (
             "  \\resumeSubheading\n"
-            f"    {{{_escape_latex(entry.company or '')}}}{{{_escape_latex(entry.endDate or '')}}}\n"
-            f"    {{{_escape_latex(entry.role or '')}}}{{{_escape_latex(entry.startDate or '')}}}\n"
+            f"    {{{_escape_latex(entry.company or '')}}}{{{date_range}}}\n"
+            f"    {{{_escape_latex(entry.role or '')}}}{{}}\n"
         )
         bullets = _format_bullets(entry.selectedBullets or [])
         sections.append(line + ("\n" + bullets if bullets else ""))
@@ -179,10 +191,10 @@ def _build_skills(skills: list) -> str:
         return ""
     formatted_lines = []
     for idx, line in enumerate(lines):
-        spacer = "" if idx == len(lines) - 1 else "\\\\[6pt]"
+        spacer = "" if idx == len(lines) - 1 else "\\\\[2pt]"
         formatted_lines.append(f"{line}{spacer}")
     body = "\n".join(formatted_lines)
-    return f"\\section{{Skills}}\n{body}\n"
+    return f"\\section{{Skills}}\n{{\\small\n{body}\n}}\n"
 
 
 def _build_custom_sections(sections: list) -> str:

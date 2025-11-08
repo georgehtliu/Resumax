@@ -517,13 +517,12 @@ function flattenSelectedResume(selectedResume) {
   return resultBullets;
 }
 
-const LINE_BUDGET = 46;
+const LINE_BUDGET = 42;
 
 function estimateBulletLines(text = '') {
-  const effectiveLength = (text?.length || 0) + 4;
-  if (effectiveLength <= 95) return 1;
-  if (effectiveLength <= 190) return 2;
-  return 3;
+  const effectiveLength = (text?.length || 0) + 2;
+  const lines = Math.max(1, Math.ceil(effectiveLength / 140));
+  return Math.min(lines, 3);
 }
 
 function estimateEntryLines(entries = [], cap = 0, headingLines = 2) {

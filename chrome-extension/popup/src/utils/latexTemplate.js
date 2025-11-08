@@ -112,12 +112,17 @@ function buildEducationSection(entries = []) {
   }
 
   const sectionBody = entries.map((entry) => {
+    const endDate = entry.endDate ? escapeLatex(entry.endDate) : '';
+    const gradLine = endDate ? `Expected Graduation: ${endDate}` : '';
+    const degreeText = escapeLatex(entry.degree || '');
+    const fieldText = entry.field ? escapeLatex(entry.field) : '';
+    const degreeLine = degreeText && fieldText ? `${degreeText}, ${fieldText}` : (degreeText || fieldText);
     const bullets = (entry.selectedBullets || entry.bullets || []).map((bullet) => `  \\resumeItem{${escapeLatex(bullet.text || '')}}`).join('\n');
     const list = bullets ? `\\resumeItemListStart\n${bullets}\n\\resumeItemListEnd` : '';
 
     return `  \\resumeSubheading
-      {${escapeLatex(entry.school || '')}}{${escapeLatex(entry.endDate || '')}}
-      {${escapeLatex(entry.degree || '')}${entry.field ? `, ${escapeLatex(entry.field)}` : ''}}{${escapeLatex(entry.startDate || '')}}
+      {${escapeLatex(entry.school || '')}}{${gradLine}}
+      {${degreeLine}}{}
 ${list}`;
   }).join('\n\n');
 
@@ -134,12 +139,15 @@ function buildExperienceSection(entries = []) {
   }
 
   const sectionBody = entries.map((entry) => {
+    const start = entry.startDate ? escapeLatex(entry.startDate) : '';
+    const end = entry.endDate ? escapeLatex(entry.endDate) : 'Present';
+    const dateRange = start ? `${start} -- ${end}` : end;
     const bullets = (entry.selectedBullets || []).map((bullet) => `  \\resumeItem{${escapeLatex(bullet.text || '')}}`).join('\n');
     const list = bullets ? `\\resumeItemListStart\n${bullets}\n\\resumeItemListEnd` : '';
 
     return `  \\resumeSubheading
-      {${escapeLatex(entry.company || '')}}{${escapeLatex(entry.endDate || '')}}
-      {${escapeLatex(entry.role || '')}}{${escapeLatex(entry.startDate || '')}}
+      {${escapeLatex(entry.company || '')}}{${dateRange}}
+      {${escapeLatex(entry.role || '')}}{}
 ${list}`;
   }).join('\n\n');
 
@@ -190,13 +198,15 @@ function buildSkillsSection(skillGroups = []) {
 
   const formattedLines = lines
     .map((line, idx) => {
-      const spacer = idx === lines.length - 1 ? '' : '\\\\[6pt]';
+      const spacer = idx === lines.length - 1 ? '' : '\\\\[2pt]';
       return `${line}${spacer}`;
     })
     .join('\n');
 
   return `\\section{Skills}
+{\\small
 ${formattedLines}
+}
 `;
 }
 

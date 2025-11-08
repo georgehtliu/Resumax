@@ -18,12 +18,10 @@ export function estimateLatexLines(text) {
     return 0;
   }
 
-  // Average characters per line in Jake's Resume template (conservative estimate)
-  // Adjust based on actual template testing if needed
-  const CHARS_PER_LINE = 65;
-  
-  const lineCount = Math.ceil(text.length / CHARS_PER_LINE);
-  return lineCount;
+  const CHARS_PER_LINE = 110;
+  const effectiveLength = text.trim().length + 2;
+  const lineCount = Math.max(1, Math.ceil(effectiveLength / CHARS_PER_LINE));
+  return Math.min(lineCount, 3);
 }
 
 /**

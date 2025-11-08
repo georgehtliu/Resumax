@@ -14,7 +14,7 @@ from app.schemas.rag import (
     SelectedProject, SelectedCustomSection, SelectedBullet, Bullet
 )
 
-def estimate_latex_lines(text: str, chars_per_line: int = 95) -> int:
+def estimate_latex_lines(text: str, chars_per_line: int = 110) -> int:
     """
     Estimate how many lines a bullet point will take in LaTeX.
     
@@ -31,7 +31,7 @@ def estimate_latex_lines(text: str, chars_per_line: int = 95) -> int:
         return 0
     
     # Account for bullet point indentation
-    effective_length = len(text or "") + 4  # Add space for bullet
+    effective_length = len(text or "") + 2  # Small bias for bullet indent
 
     if effective_length <= 0:
         return 0

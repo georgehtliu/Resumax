@@ -136,24 +136,24 @@ function App() {
               startDate: 'Jun 2022',
               endDate: 'Present',
               bullets: [
-                { id: 'bullet-1', text: 'Developed and maintained microservices handling 10M+ daily requests using Python, Go, and Kubernetes, ensuring 99.9% uptime' },
-                { id: 'bullet-2', text: 'Optimized database queries and caching strategies, reducing API response time by 40% and saving $50K annually in infrastructure costs' },
-                { id: 'bullet-3', text: 'Led a team of 3 engineers to ship a new recommendation feature that increased user engagement by 25% and generated $2M in additional revenue' },
-                { id: 'bullet-4', text: 'Implemented comprehensive CI/CD pipelines using Jenkins, Docker, and Kubernetes, reducing deployment time by 60% and enabling daily releases' },
-                { id: 'bullet-5', text: 'Designed and built RESTful and gRPC APIs serving 5M+ requests per day with sub-100ms latency, improving mobile app performance by 30%' },
-                { id: 'bullet-6', text: 'Collaborated with product managers and designers to define technical requirements, architecture, and success metrics for new features' },
-                { id: 'bullet-7', text: 'Mentored 2 junior engineers through code reviews, pair programming, and technical design discussions, improving team velocity by 20%' },
-                { id: 'bullet-8', text: 'Built real-time analytics dashboard using React and WebSockets, enabling product team to monitor user behavior and make data-driven decisions' },
-                { id: 'bullet-52', text: 'Rolled out chaos engineering experiments with automated rollback policies, reducing production incident MTTR from 45 minutes to 12 minutes' },
-                { id: 'bullet-53', text: 'Implemented adaptive rate limiting and circuit breakers across 30+ services, eliminating cascading failures during seasonal traffic spikes' },
-                { id: 'bullet-54', text: 'Led migration from self-managed Kafka to Google Pub/Sub, cutting infrastructure costs by 18% and improving message durability SLAs' },
-                { id: 'bullet-55', text: 'Authored service level objectives (SLOs) and burn-rate alerts that drove a 35% reduction in customer-facing errors quarter over quarter' },
-                { id: 'bullet-56', text: 'Designed feature flag governance workflow integrating LaunchDarkly with automated integration tests, enabling safe canary releases to 5% of traffic' },
-                { id: 'bullet-57', text: 'Partnered with security to introduce mutual TLS and fine-grained IAM policies across internal APIs, passing SOC 2 audits with zero findings' },
-                { id: 'bullet-58', text: 'Optimized data pipeline by batching protobuf payloads and compressing over gRPC, lowering network throughput usage by 28%' },
-                { id: 'bullet-59', text: 'Created internal developer portal with service templates and golden paths, cutting new microservice bootstrap time from 2 weeks to 4 days' },
-                { id: 'bullet-60', text: 'Piloted on-call automation using incident triage bots, auto-resolving 40% of low-severity alerts without human intervention' },
-                { id: 'bullet-61', text: 'Coordinated cross-team load testing program simulating 5x peak traffic, validating capacity plans ahead of Black Friday launch' }
+                { id: 'bullet-1', text: 'Scaled Go/Python microservices for 10M+ daily requests while keeping uptime at 99.9%' },
+                { id: 'bullet-2', text: 'Cut API latency 40% by tuning SQL and cache layers, saving $50K in annual infra costs' },
+                { id: 'bullet-3', text: 'Led three engineers to launch recommendations that raised engagement 25% and revenue $2M' },
+                { id: 'bullet-4', text: 'Automated Jenkins and Docker pipelines enabling daily releases and trimming deploy time 60%' },
+                { id: 'bullet-5', text: 'Built REST and gRPC services for 5M+ calls with sub-100ms latency to speed the mobile app' },
+                { id: 'bullet-6', text: 'Partnered with PM and design to lock in technical specs, architecture, and success metrics' },
+                { id: 'bullet-7', text: 'Mentored two junior engineers through reviews and design sessions, boosting velocity 20%' },
+                { id: 'bullet-8', text: 'Created React WebSocket analytics dashboards so product could monitor live user behavior' },
+                { id: 'bullet-52', text: 'Ran chaos drills with auto rollback, slashing MTTR from 45 minutes down to 12 minutes' },
+                { id: 'bullet-53', text: 'Added adaptive rate limits and circuit breakers to prevent cascading failures at peak load' },
+                { id: 'bullet-54', text: 'Migrated messaging from self-hosted Kafka to Pub/Sub, reducing cost 18% and improving SLAs' },
+                { id: 'bullet-55', text: 'Published SLO dashboards with burn alerts that lowered customer-facing errors by 35%' },
+                { id: 'bullet-56', text: 'Built LaunchDarkly feature flag workflows with automated tests to protect 5% canaries' },
+                { id: 'bullet-57', text: 'Enforced mutual TLS and fine-grained IAM to pass SOC 2 audits with zero security findings' },
+                { id: 'bullet-58', text: 'Batched protobuf payloads over gRPC to cut pipeline network usage by 28%' },
+                { id: 'bullet-59', text: 'Built service templates and golden paths that cut new microservice bootstrap time to four days' },
+                { id: 'bullet-60', text: 'Deployed incident triage bots that auto-resolved 40% of low severity alerts without humans' },
+                { id: 'bullet-61', text: 'Led cross-team load tests simulating 5x peak to validate capacity for Black Friday traffic' }
               ]
             },
             {
@@ -163,21 +163,21 @@ function App() {
               startDate: 'Jun 2021',
               endDate: 'Aug 2021',
               bullets: [
-                { id: 'bullet-9', text: 'Built React components for Facebook Marketplace improving user interface accessibility and mobile responsiveness, increasing conversion rate by 15%' },
-                { id: 'bullet-10', text: 'Implemented real-time notification system using WebSocket connections and Redis, reducing latency by 30% and improving user engagement' },
-                { id: 'bullet-11', text: 'Optimized GraphQL API endpoints and data fetching strategies, reducing server load by 25% and improving page load times' },
-                { id: 'bullet-12', text: 'Participated in code reviews and contributed to team best practices documentation, improving code quality and onboarding efficiency' },
-                { id: 'bullet-13', text: 'Developed A/B testing framework for feature rollouts, enabling data-driven product decisions and reducing risk of regressions' },
-                { id: 'bullet-62', text: 'Redesigned image upload pipeline with client-side resizing and caching headers, shrinking payload sizes by 60% and lowering CDN egress fees' },
-                { id: 'bullet-63', text: 'Introduced storybook-driven development for shared UI modules, cutting regression bugs in consumer surfaces by 45%' },
-                { id: 'bullet-64', text: 'Collaborated with design to implement accessibility-first components meeting WCAG AA contrast and keyboard navigation standards' },
-                { id: 'bullet-65', text: 'Instrumented Marketplace funnels with analytics events and dashboards, uncovering a pricing entry friction that improved conversion 9%' },
-                { id: 'bullet-66', text: 'Automated screenshot diff testing for top flows, preventing visual regressions during weekly launches' },
-                { id: 'bullet-67', text: 'Built experiments service wrapper that reduced boilerplate by 70% and enforced consistent logging across teams' },
-                { id: 'bullet-68', text: 'Implemented optimistic UI updates with reconciliation to reduce perceived latency from 400ms to 120ms on key interactions' },
-                { id: 'bullet-69', text: 'Partnered with spam detection team to add client-side heuristics, preventing 15K fake listings per week before reaching backend filters' },
-                { id: 'bullet-70', text: 'Documented end-to-end developer setup and introduced npm workspaces, lowering onboarding time for interns from 3 days to 1 day' },
-                { id: 'bullet-71', text: 'Delivered weekly release readiness reviews ensuring experiment guardrails and logging were in place before ship' }
+                { id: 'bullet-9', text: 'Shipped accessible Marketplace UI components that lifted conversion by 15%' },
+                { id: 'bullet-10', text: 'Built WebSocket plus Redis alerts trimming latency 30% and boosting engagement' },
+                { id: 'bullet-11', text: 'Optimized GraphQL queries to cut server load 25% and speed page renders' },
+                { id: 'bullet-12', text: 'Drove reviews and docs that raised code quality and quickened onboarding' },
+                { id: 'bullet-13', text: 'Launched A/B framework enabling data-led releases and reducing regression risk' },
+                { id: 'bullet-62', text: 'Shrank upload payloads 60% with client resizing and cache headers to lower CDN cost' },
+                { id: 'bullet-63', text: 'Adopted Storybook for shared UI kits, cutting regression bugs in consumer surfaces 45%' },
+                { id: 'bullet-64', text: 'Delivered WCAG AA compliant flows with full keyboard navigation support' },
+                { id: 'bullet-65', text: 'Instrumented funnels, fixing pricing friction and growing conversion by 9%' },
+                { id: 'bullet-66', text: 'Automated screenshot diff testing to protect weekly launch quality' },
+                { id: 'bullet-67', text: 'Wrapped experiment APIs to cut launch boilerplate 70% and speed team delivery' },
+                { id: 'bullet-68', text: 'Implemented optimistic UI patterns to drop perceived latency from 400ms to 120ms' },
+                { id: 'bullet-69', text: 'Added client spam heuristics blocking 15K fake listings each week before backend' },
+                { id: 'bullet-70', text: 'Documented setup and npm workspaces, reducing intern onboarding from three days to one' },
+                { id: 'bullet-71', text: 'Ran weekly launch reviews ensuring guardrails and logging were ready before ship' }
               ]
             },
             {
@@ -187,20 +187,20 @@ function App() {
               startDate: 'Jun 2020',
               endDate: 'Aug 2020',
               bullets: [
-                { id: 'bullet-14', text: 'Developed internal tools using Java and Spring Boot to automate deployment processes, reducing manual work by 40 hours per week' },
-                { id: 'bullet-15', text: 'Built monitoring and alerting system for AWS services using CloudWatch and Lambda, improving incident detection time by 50%' },
-                { id: 'bullet-16', text: 'Optimized database queries and implemented caching layer using DynamoDB and ElastiCache, reducing query latency by 35%' },
-                { id: 'bullet-17', text: 'Collaborated with senior engineers on distributed systems design, learning best practices for scalability and reliability' },
-                { id: 'bullet-72', text: 'Containerized legacy batch jobs and deployed them on AWS Fargate, lowering infrastructure maintenance overhead for the ops team' },
-                { id: 'bullet-73', text: 'Implemented blue/green deployment strategy for internal APIs, eliminating downtime during release cycles' },
-                { id: 'bullet-74', text: 'Created CloudFormation templates and reusable modules, standardizing VPC and IAM provisioning across service teams' },
-                { id: 'bullet-75', text: 'Instrumented Lambda functions with structured logging and X-Ray traces, reducing root cause analysis time by 30%' },
-                { id: 'bullet-76', text: 'Automated compliance checks using AWS Config rules, ensuring 100% adherence to encryption and tagging policies' },
-                { id: 'bullet-77', text: 'Optimized S3 object lifecycle policies, cutting monthly storage spend by 12% without impacting retrieval SLAs' },
-                { id: 'bullet-78', text: 'Developed a resilience playbook with runbooks and dashboards, enabling L1 support to resolve 25% of incidents independently' },
-                { id: 'bullet-79', text: 'Added fine-grained CloudWatch alarms integrated with PagerDuty, improving signal-to-noise ratio of alerts by 50%' },
-                { id: 'bullet-80', text: 'Ran load tests simulating seasonal peaks and delivered capacity recommendations adopted by three partner services' },
-                { id: 'bullet-81', text: 'Collaborated with customer solutions architects to onboard two enterprise clients, ensuring deployments met security benchmarks' }
+                { id: 'bullet-14', text: 'Automated Java Spring tooling that saved 40 weekly hours on deployment prep' },
+                { id: 'bullet-15', text: 'Built CloudWatch and Lambda alerts that halved incident detection time' },
+                { id: 'bullet-16', text: 'Tuned DynamoDB and ElastiCache to cut query latency by 35%' },
+                { id: 'bullet-17', text: 'Partnered with senior engineers on resilient distributed system designs' },
+                { id: 'bullet-72', text: 'Containerized legacy batch jobs onto Fargate to lower ops overhead' },
+                { id: 'bullet-73', text: 'Implemented blue/green deployment strategy to eliminate release downtime' },
+                { id: 'bullet-74', text: 'Published CloudFormation modules standardizing VPC and IAM provisioning' },
+                { id: 'bullet-75', text: 'Instrumented Lambda logging and X-Ray traces to trim RCA time by 30%' },
+                { id: 'bullet-76', text: 'Automated AWS Config checks to keep 100% tagging and encryption compliance' },
+                { id: 'bullet-77', text: 'Optimized S3 lifecycle rules to reduce monthly storage spend by 12%' },
+                { id: 'bullet-78', text: 'Authored resilience runbooks so L1 support could resolve 25% of incidents' },
+                { id: 'bullet-79', text: 'Integrated PagerDuty alerts and thresholds that improved signal-to-noise 50%' },
+                { id: 'bullet-80', text: 'Stress tested services and delivered capacity plans adopted by three partner teams' },
+                { id: 'bullet-81', text: 'Onboarded two enterprise clients while meeting internal security benchmarks' }
               ]
             }
           ],
@@ -213,10 +213,10 @@ function App() {
               startDate: 'Sep 2018',
               endDate: 'Jun 2022',
               bullets: [
-                { id: 'bullet-18', text: 'GPA: 3.9/4.0, Magna Cum Laude, Dean\'s List all semesters' },
-                { id: 'bullet-19', text: 'Relevant Coursework: Algorithms & Data Structures, Machine Learning, Distributed Systems, Database Systems, Computer Networks' },
-                { id: 'bullet-20', text: 'Teaching Assistant for CS161 (Design and Analysis of Algorithms) - graded assignments and held office hours for 50+ students' },
-                { id: 'bullet-21', text: 'Research Assistant in Machine Learning Lab - worked on deep learning models for computer vision applications' }
+                { id: 'bullet-18', text: 'GPA 3.9/4.0, Magna Cum Laude, Dean\'s List in every term' },
+                { id: 'bullet-19', text: 'Core courses: Algorithms, Machine Learning, Distributed Systems, Databases' },
+                { id: 'bullet-20', text: 'Teaching assistant for CS161 supporting 50+ students with labs and grading' },
+                { id: 'bullet-21', text: 'ML lab researcher building computer vision models for real-world datasets' }
               ]
             }
           ],
@@ -229,10 +229,10 @@ function App() {
               startDate: 'Jan 2022',
               endDate: 'May 2022',
               bullets: [
-                { id: 'bullet-22', text: 'Built scalable task scheduler handling 100K+ concurrent tasks using Go and Kubernetes, achieving 99.95% reliability' },
-                { id: 'bullet-23', text: 'Implemented distributed consensus algorithm using Raft protocol for leader election and task coordination across nodes' },
-                { id: 'bullet-24', text: 'Designed fault-tolerant architecture with automatic failover and task replication, ensuring zero data loss during node failures' },
-                { id: 'bullet-25', text: 'Created monitoring dashboard using Prometheus and Grafana, enabling real-time visibility into system performance and health' }
+                { id: 'bullet-22', text: 'Built Go + Kubernetes scheduler processing 100K concurrent jobs at 99.95% uptime' },
+                { id: 'bullet-23', text: 'Implemented Raft-based leader election to coordinate task execution' },
+                { id: 'bullet-24', text: 'Designed failover with replication to prevent task loss during node outages' },
+                { id: 'bullet-25', text: 'Delivered Prometheus and Grafana dashboards for real-time system health' }
               ]
             },
             {
@@ -243,11 +243,11 @@ function App() {
               startDate: 'Sep 2020',
               endDate: 'Dec 2021',
               bullets: [
-                { id: 'bullet-26', text: 'Built scalable web application supporting 1000+ concurrent users with real-time inventory updates and order processing' },
-                { id: 'bullet-27', text: 'Integrated Stripe payment processing handling $50K+ in transactions with PCI compliance and fraud detection' },
-                { id: 'bullet-28', text: 'Implemented JWT-based authentication and authorization with role-based access control for admin and customer roles' },
-                { id: 'bullet-29', text: 'Deployed on AWS using EC2, RDS, S3, and CloudFront with automated backup, monitoring, and auto-scaling capabilities' },
-                { id: 'bullet-30', text: 'Optimized database schema and queries, reducing page load time by 45% and improving user experience metrics' }
+                { id: 'bullet-26', text: 'Shipped commerce app for 1000+ users with live inventory updates and order tracking' },
+                { id: 'bullet-27', text: 'Integrated Stripe payments processing $50K+ with PCI-safe fraud checks' },
+                { id: 'bullet-28', text: 'Implemented JWT RBAC to secure both admin and customer flows' },
+                { id: 'bullet-29', text: 'Deployed on AWS EC2, RDS, S3, and CloudFront with backups and auto scaling' },
+                { id: 'bullet-30', text: 'Tuned Postgres schema and queries to cut page load times by 45%' }
               ]
             },
             {
@@ -258,10 +258,10 @@ function App() {
               startDate: 'Jan 2021',
               endDate: 'May 2021',
               bullets: [
-                { id: 'bullet-31', text: 'Trained neural network model achieving 85% accuracy in content recommendations using collaborative and content-based filtering' },
-                { id: 'bullet-32', text: 'Processed and cleaned dataset of 1M+ user interactions using pandas and numpy, implementing feature engineering pipeline' },
-                { id: 'bullet-33', text: 'Created REST API serving recommendations with average response time of 50ms, handling 10K+ requests per minute' },
-                { id: 'bullet-34', text: 'Implemented caching layer using Redis to reduce model inference time by 70% and improve user experience' }
+                { id: 'bullet-31', text: 'Trained hybrid recommendation model reaching 85% accuracy on streaming content' },
+                { id: 'bullet-32', text: 'Processed 1M+ interactions with pandas pipelines and feature engineering' },
+                { id: 'bullet-33', text: 'Hosted Flask API serving 10K requests per minute at 50ms latency' },
+                { id: 'bullet-34', text: 'Added Redis caching to drop inference time 70% for returning users' }
               ]
             },
             {
@@ -272,9 +272,9 @@ function App() {
               startDate: 'Jun 2020',
               endDate: 'Aug 2020',
               bullets: [
-                { id: 'bullet-35', text: 'Developed real-time messaging application supporting 500+ concurrent users with WebSocket connections and message persistence' },
-                { id: 'bullet-36', text: 'Implemented end-to-end encryption using Web Crypto API, ensuring user privacy and data security' },
-                { id: 'bullet-37', text: 'Built scalable backend using Node.js and MongoDB with Redis caching, achieving sub-100ms message delivery latency' }
+                { id: 'bullet-35', text: 'Built WebSocket chat supporting 500 users with persistent message storage' },
+                { id: 'bullet-36', text: 'Implemented end-to-end encrypted messaging using the Web Crypto API' },
+                { id: 'bullet-37', text: 'Scaled Node.js and MongoDB backend with Redis caching under 100ms latency' }
               ]
             }
           ],
@@ -284,10 +284,10 @@ function App() {
               title: 'Awards & Recognition',
               subtitle: '',
               bullets: [
-                { id: 'bullet-45', text: 'Google Hackathon Winner - Best Technical Implementation (2022) - Built AI-powered code review tool' },
-                { id: 'bullet-46', text: 'Stanford Engineering Excellence Award (2021) - Top 5% of Computer Science graduating class' },
-                { id: 'bullet-47', text: 'Published research paper on distributed consensus algorithms in ACM Conference on Distributed Computing (2021)' },
-                { id: 'bullet-48', text: 'Meta Intern Hackathon - First Place (2021) - Developed accessibility tool for visually impaired users' }
+                { id: 'bullet-45', text: 'Won Google Hackathon 2022 with an AI-powered code review companion' },
+                { id: 'bullet-46', text: 'Received Stanford Engineering Excellence Award 2021 for top 5% GPA' },
+                { id: 'bullet-47', text: 'Published consensus research at ACM Distributed Computing 2021' },
+                { id: 'bullet-48', text: 'Won Meta intern hackathon with an accessibility helper for visually impaired users' }
               ]
             },
             {
@@ -295,7 +295,7 @@ function App() {
               title: 'Certifications',
               subtitle: '',
               bullets: [
-                { id: 'bullet-49', text: 'AWS Certified Solutions Architect - Associate (2022)' },
+                { id: 'bullet-49', text: 'AWS Certified Solutions Architect – Associate (2022)' },
                 { id: 'bullet-50', text: 'Kubernetes Certified Application Developer (CKAD) (2023)' },
                 { id: 'bullet-51', text: 'Google Cloud Professional Cloud Architect (2023)' }
               ]
@@ -325,10 +325,10 @@ function App() {
                   startDate: 'Jun 2022',
                   endDate: 'Present',
                   bullets: [
-                    { id: 'bullet-saved-1', text: 'Developed and maintained microservices handling 10M+ daily requests using Python, Go, and Kubernetes, ensuring 99.9% uptime' },
-                    { id: 'bullet-saved-2', text: 'Optimized database queries and caching strategies, reducing API response time by 40% and saving $50K annually in infrastructure costs' },
-                    { id: 'bullet-saved-3', text: 'Implemented comprehensive CI/CD pipelines using Jenkins, Docker, and Kubernetes, reducing deployment time by 60% and enabling daily releases' },
-                    { id: 'bullet-saved-4', text: 'Designed and built RESTful and gRPC APIs serving 5M+ requests per day with sub-100ms latency, improving mobile app performance by 30%' }
+                    { id: 'bullet-saved-1', text: 'Scaled Go/Python microservices for 10M+ daily requests while keeping uptime at 99.9%' },
+                    { id: 'bullet-saved-2', text: 'Cut API latency 40% by tuning SQL and cache layers, saving $50K in annual infra costs' },
+                    { id: 'bullet-saved-3', text: 'Automated Jenkins and Docker pipelines enabling daily releases and trimming deploy time 60%' },
+                    { id: 'bullet-saved-4', text: 'Built REST and gRPC services for 5M+ calls with sub-100ms latency to speed the mobile app' }
                   ]
                 },
                 {
@@ -338,8 +338,8 @@ function App() {
                   startDate: 'Jun 2020',
                   endDate: 'Aug 2020',
                   bullets: [
-                    { id: 'bullet-saved-5', text: 'Developed internal tools using Java and Spring Boot to automate deployment processes, reducing manual work by 40 hours per week' },
-                    { id: 'bullet-saved-6', text: 'Built monitoring and alerting system for AWS services using CloudWatch and Lambda, improving incident detection time by 50%' }
+                    { id: 'bullet-saved-5', text: 'Automated Java Spring tooling that saved 40 weekly hours on deployment prep' },
+                    { id: 'bullet-saved-6', text: 'Built CloudWatch and Lambda alerts that halved incident detection time' }
                   ]
                 }
               ],
@@ -352,8 +352,8 @@ function App() {
                   startDate: 'Sep 2018',
                   endDate: 'Jun 2022',
                   bullets: [
-                    { id: 'bullet-saved-7', text: 'GPA: 3.9/4.0, Magna Cum Laude, Dean\'s List all semesters' },
-                    { id: 'bullet-saved-8', text: 'Relevant Coursework: Algorithms & Data Structures, Distributed Systems, Database Systems, Computer Networks' }
+                    { id: 'bullet-saved-7', text: 'GPA 3.9/4.0, Magna Cum Laude, Dean\'s List in every term' },
+                    { id: 'bullet-saved-8', text: 'Core courses: Algorithms, Machine Learning, Distributed Systems, Databases' }
                   ]
                 }
               ],
@@ -366,21 +366,19 @@ function App() {
                   startDate: 'Jan 2022',
                   endDate: 'May 2022',
                   bullets: [
-                    { id: 'bullet-saved-9', text: 'Built scalable task scheduler handling 100K+ concurrent tasks using Go and Kubernetes, achieving 99.95% reliability' },
-                    { id: 'bullet-saved-10', text: 'Implemented distributed consensus algorithm using Raft protocol for leader election and task coordination across nodes' }
+                    { id: 'bullet-saved-9', text: 'Built Go + Kubernetes scheduler processing 100K concurrent jobs at 99.95% uptime' },
+                    { id: 'bullet-saved-10', text: 'Implemented Raft-based leader election to coordinate task execution' }
                   ]
                 }
               ],
               customSections: [
                 {
                   id: 'custom-saved-1',
-                  title: 'Technical Skills',
+                  title: 'Awards & Recognition',
                   subtitle: '',
                   bullets: [
-                    { id: 'bullet-saved-11', text: 'Languages: Python, Go, Java, C++, SQL' },
-                    { id: 'bullet-saved-12', text: 'Backend: Node.js, Django, Spring Boot, GraphQL, gRPC, REST APIs' },
-                    { id: 'bullet-saved-13', text: 'DevOps: Docker, Kubernetes, Jenkins, AWS (EC2, S3, RDS, Lambda), CI/CD' },
-                    { id: 'bullet-saved-14', text: 'Concepts: Microservices, Distributed Systems, System Design' }
+                    { id: 'bullet-saved-11', text: 'Won Google Hackathon 2022 with an AI-powered code review companion' },
+                    { id: 'bullet-saved-12', text: 'Published consensus research at ACM Distributed Computing 2021' }
                   ]
                 }
               ],
@@ -401,9 +399,9 @@ function App() {
                   startDate: 'Jun 2021',
                   endDate: 'Aug 2021',
                   bullets: [
-                    { id: 'bullet-saved-15', text: 'Built React components for Facebook Marketplace improving user interface accessibility and mobile responsiveness, increasing conversion rate by 15%' },
-                    { id: 'bullet-saved-16', text: 'Implemented real-time notification system using WebSocket connections and Redis, reducing latency by 30% and improving user engagement' },
-                    { id: 'bullet-saved-17', text: 'Optimized GraphQL API endpoints and data fetching strategies, reducing server load by 25% and improving page load times' }
+                    { id: 'bullet-saved-15', text: 'Shipped accessible Marketplace UI components that lifted conversion by 15%' },
+                    { id: 'bullet-saved-16', text: 'Built WebSocket plus Redis alerts trimming latency 30% and boosting engagement' },
+                    { id: 'bullet-saved-17', text: 'Optimized GraphQL queries to cut server load 25% and speed page renders' }
                   ]
                 }
               ],
@@ -416,7 +414,7 @@ function App() {
                   startDate: 'Sep 2018',
                   endDate: 'Jun 2022',
                   bullets: [
-                    { id: 'bullet-saved-18', text: 'GPA: 3.9/4.0, Magna Cum Laude' }
+                    { id: 'bullet-saved-18', text: 'GPA 3.9/4.0, Magna Cum Laude, Dean\'s List in every term' }
                   ]
                 }
               ],
@@ -429,9 +427,9 @@ function App() {
                   startDate: 'Sep 2020',
                   endDate: 'Dec 2021',
                   bullets: [
-                    { id: 'bullet-saved-19', text: 'Built scalable web application supporting 1000+ concurrent users with real-time inventory updates and order processing' },
-                    { id: 'bullet-saved-20', text: 'Integrated Stripe payment processing handling $50K+ in transactions with PCI compliance and fraud detection' },
-                    { id: 'bullet-saved-21', text: 'Optimized database schema and queries, reducing page load time by 45% and improving user experience metrics' }
+                    { id: 'bullet-saved-19', text: 'Shipped commerce app for 1000+ users with live inventory updates and order tracking' },
+                    { id: 'bullet-saved-20', text: 'Integrated Stripe payments processing $50K+ with PCI-safe fraud checks' },
+                    { id: 'bullet-saved-21', text: 'Tuned Postgres schema and queries to cut page load times by 45%' }
                   ]
                 },
                 {
@@ -442,21 +440,18 @@ function App() {
                   startDate: 'Jun 2020',
                   endDate: 'Aug 2020',
                   bullets: [
-                    { id: 'bullet-saved-22', text: 'Developed real-time messaging application supporting 500+ concurrent users with WebSocket connections and message persistence' },
-                    { id: 'bullet-saved-23', text: 'Implemented end-to-end encryption using Web Crypto API, ensuring user privacy and data security' }
+                    { id: 'bullet-saved-22', text: 'Built WebSocket chat supporting 500 users with persistent message storage' },
+                    { id: 'bullet-saved-23', text: 'Implemented end-to-end encrypted messaging using the Web Crypto API' }
                   ]
                 }
               ],
               customSections: [
                 {
                   id: 'custom-saved-2',
-                  title: 'Technical Skills',
+                  title: 'Awards & Recognition',
                   subtitle: '',
                   bullets: [
-                    { id: 'bullet-saved-24', text: 'Languages: JavaScript, TypeScript, Python, SQL' },
-                    { id: 'bullet-saved-25', text: 'Frontend: React, Redux, Next.js, HTML5, CSS3, WebSocket' },
-                    { id: 'bullet-saved-26', text: 'Backend: Node.js, Express, GraphQL, REST APIs' },
-                    { id: 'bullet-saved-27', text: 'Tools: Git, Docker, AWS, Jest, React Testing Library' }
+                    { id: 'bullet-saved-24', text: 'Won Meta intern hackathon with an accessibility helper for visually impaired users' }
                   ]
                 }
               ],
@@ -477,9 +472,9 @@ function App() {
                   startDate: 'Jun 2022',
                   endDate: 'Present',
                   bullets: [
-                    { id: 'bullet-saved-28', text: 'Developed and maintained microservices handling 10M+ daily requests using Python, Go, and Kubernetes, ensuring 99.9% uptime' },
-                    { id: 'bullet-saved-29', text: 'Optimized database queries and caching strategies, reducing API response time by 40% and saving $50K annually in infrastructure costs' },
-                    { id: 'bullet-saved-30', text: 'Built real-time analytics dashboard using React and WebSockets, enabling product team to monitor user behavior and make data-driven decisions' }
+                    { id: 'bullet-saved-28', text: 'Scaled Go/Python microservices for 10M+ daily requests while keeping uptime at 99.9%' },
+                    { id: 'bullet-saved-29', text: 'Cut API latency 40% by tuning SQL and cache layers, saving $50K in annual infra costs' },
+                    { id: 'bullet-saved-30', text: 'Created React WebSocket analytics dashboards so product could monitor live user behavior' }
                   ]
                 },
                 {
@@ -489,9 +484,9 @@ function App() {
                   startDate: 'Jun 2020',
                   endDate: 'Aug 2020',
                   bullets: [
-                    { id: 'bullet-saved-31', text: 'Developed internal tools using Java and Spring Boot to automate deployment processes, reducing manual work by 40 hours per week' },
-                    { id: 'bullet-saved-32', text: 'Built monitoring and alerting system for AWS services using CloudWatch and Lambda, improving incident detection time by 50%' },
-                    { id: 'bullet-saved-33', text: 'Optimized database queries and implemented caching layer using DynamoDB and ElastiCache, reducing query latency by 35%' }
+                    { id: 'bullet-saved-31', text: 'Automated Java Spring tooling that saved 40 weekly hours on deployment prep' },
+                    { id: 'bullet-saved-32', text: 'Built CloudWatch and Lambda alerts that halved incident detection time' },
+                    { id: 'bullet-saved-33', text: 'Tuned DynamoDB and ElastiCache to cut query latency by 35%' }
                   ]
                 }
               ],
@@ -504,8 +499,8 @@ function App() {
                   startDate: 'Sep 2018',
                   endDate: 'Jun 2022',
                   bullets: [
-                    { id: 'bullet-saved-34', text: 'GPA: 3.9/4.0, Magna Cum Laude' },
-                    { id: 'bullet-saved-35', text: 'Relevant Coursework: Algorithms & Data Structures, Distributed Systems, Database Systems' }
+                    { id: 'bullet-saved-34', text: 'GPA 3.9/4.0, Magna Cum Laude, Dean\'s List in every term' },
+                    { id: 'bullet-saved-35', text: 'Core courses: Algorithms, Machine Learning, Distributed Systems, Databases' }
                   ]
                 }
               ],
@@ -518,22 +513,20 @@ function App() {
                   startDate: 'Sep 2020',
                   endDate: 'Dec 2021',
                   bullets: [
-                    { id: 'bullet-saved-36', text: 'Built scalable web application supporting 1000+ concurrent users with real-time inventory updates and order processing' },
-                    { id: 'bullet-saved-37', text: 'Implemented JWT-based authentication and authorization with role-based access control for admin and customer roles' },
-                    { id: 'bullet-saved-38', text: 'Deployed on AWS using EC2, RDS, S3, and CloudFront with automated backup, monitoring, and auto-scaling capabilities' }
+                    { id: 'bullet-saved-36', text: 'Shipped commerce app for 1000+ users with live inventory updates and order tracking' },
+                    { id: 'bullet-saved-37', text: 'Implemented JWT RBAC to secure both admin and customer flows' },
+                    { id: 'bullet-saved-38', text: 'Deployed on AWS EC2, RDS, S3, and CloudFront with backups and auto scaling' }
                   ]
                 }
               ],
               customSections: [
                 {
                   id: 'custom-saved-3',
-                  title: 'Technical Skills',
+                  title: 'Certifications',
                   subtitle: '',
                   bullets: [
-                    { id: 'bullet-saved-39', text: 'Languages: Python, JavaScript, TypeScript, Java, SQL' },
-                    { id: 'bullet-saved-40', text: 'Frontend: React, Redux, Next.js' },
-                    { id: 'bullet-saved-41', text: 'Backend: Node.js, Express, Django, Spring Boot, REST APIs' },
-                    { id: 'bullet-saved-42', text: 'Cloud: AWS (EC2, S3, RDS, Lambda, DynamoDB), Docker, Kubernetes' }
+                    { id: 'bullet-saved-39', text: 'AWS Certified Solutions Architect – Associate (2022)' },
+                    { id: 'bullet-saved-40', text: 'Kubernetes Certified Application Developer (CKAD) (2023)' }
                   ]
                 },
                 {
@@ -541,7 +534,7 @@ function App() {
                   title: 'Certifications',
                   subtitle: '',
                   bullets: [
-                    { id: 'bullet-saved-43', text: 'AWS Certified Solutions Architect - Associate (2022)' }
+                    { id: 'bullet-saved-43', text: 'Google Cloud Professional Cloud Architect (2023)' }
                   ]
                 }
               ],
