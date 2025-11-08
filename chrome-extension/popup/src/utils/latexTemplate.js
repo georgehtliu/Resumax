@@ -182,18 +182,21 @@ function buildSkillsSection(skillGroups = []) {
 
   const lines = skillGroups
     .filter((group) => group && (group.title || (group.skills && group.skills.length)))
-    .map((group) => `     \\textbf{${escapeLatex(group.title || 'Skills')}} {: ${escapeLatex((group.skills || []).join(', '))}}\\vspace{2pt}`);
+    .map((group) => `\\textbf{${escapeLatex(group.title || 'Skills')}}: ${escapeLatex((group.skills || []).join(', '))}`);
 
   if (lines.length === 0) {
     return '';
   }
 
+  const formattedLines = lines
+    .map((line, idx) => {
+      const spacer = idx === lines.length - 1 ? '' : '\\\\[6pt]';
+      return `${line}${spacer}`;
+    })
+    .join('\n');
+
   return `\\section{Skills}
- \\begin{itemize}[leftmargin=0in, label={}]
-    \\small{\\item{
-${lines.join(' \\ \\n')}
-    }}
- \\end{itemize}
+${formattedLines}
 `;
 }
 

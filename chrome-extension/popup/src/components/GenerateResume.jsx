@@ -86,10 +86,10 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete }) {
       const apiResponse = await selectResume({
         jobDescription: trimmedDescription,
         resume: structuredResume,
-        bulletsPerExperience: sectionCaps.experience,
-        bulletsPerEducation: sectionCaps.education,
-        bulletsPerProject: sectionCaps.project,
-        bulletsPerCustom: sectionCaps.custom,
+        bulletsPerExperience: Math.max(1, sectionCaps.experience || 0),
+        bulletsPerEducation: Math.max(1, sectionCaps.education || 0),
+        bulletsPerProject: Math.max(1, sectionCaps.project || 0),
+        bulletsPerCustom: Math.max(1, sectionCaps.custom || 0),
       });
 
       const selectedResume = cloneStructuredResume(apiResponse?.selectedResume);

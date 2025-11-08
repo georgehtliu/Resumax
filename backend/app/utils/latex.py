@@ -174,18 +174,15 @@ def _build_skills(skills: list) -> str:
         title = _escape_latex(group.title or 'Skills')
         skill_text = _escape_latex(", ".join(group.skills or []))
         if skill_text:
-            lines.append(f"     \\textbf{{{title}}} {{: {skill_text}}}\\vspace{{2pt}}");
+            lines.append(f"\\textbf{{{title}}}: {skill_text}")
     if not lines:
         return ""
-    body = " \\ \\\n".join(lines)
-    return (
-        "\\section{Skills}\n"
-        " \\begin{itemize}[leftmargin=0in, label={}]\n"
-        "    \\small{\\item{\n"
-        f"{body}\n"
-        "    }}\n"
-        " \\end{itemize}\n"
-    )
+    formatted_lines = []
+    for idx, line in enumerate(lines):
+        spacer = "" if idx == len(lines) - 1 else "\\\\[6pt]"
+        formatted_lines.append(f"{line}{spacer}")
+    body = "\n".join(formatted_lines)
+    return f"\\section{{Skills}}\n{body}\n"
 
 
 def _build_custom_sections(sections: list) -> str:
