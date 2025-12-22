@@ -141,3 +141,4 @@ This allows tests to run without actual API calls or complex vector operations.
 5. **Score weight adjustment tests** (different weight configurations)
 6. **Squeeze iteration limit tests** (verify max_iterations safety)
 7. **Revive threshold tests** (verify 5-line threshold behavior)
+

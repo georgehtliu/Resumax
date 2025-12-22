@@ -13,7 +13,7 @@ import './GenerateResume.css';
  * 
  * Tab 2: Generate optimized resume from job description
  */
-function GenerateResume({ masterResume, onSave, onSelectionComplete }) {
+function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract = false }) {
   const [currentJob, setCurrentJob] = useState(null);
   const [optimizationResult, setOptimizationResult] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -317,7 +317,9 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete }) {
       <div className="section">
         <h2>Match to Job Description</h2>
         <p className="section-description">
-          Extract or paste a job description, then select the best resume points.
+          {hideExtract 
+            ? 'Paste a job description, then select the best resume points.'
+            : 'Extract or paste a job description, then select the best resume points.'}
         </p>
         
         {/* Mode Selection */}
@@ -365,7 +367,7 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete }) {
         
         <JobMatcher
           jobDescription={currentJob?.description || ''}
-          onExtract={handleExtractJobDescription}
+          onExtract={hideExtract ? undefined : handleExtractJobDescription}
           onSelect={handleSelect}
           onOptimize={handleOptimize}
           optimizationMode={optimizationMode}

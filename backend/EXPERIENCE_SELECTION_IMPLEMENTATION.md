@@ -174,3 +174,4 @@ PHASE 4: Revive (Fill Underutilized Space)
 4. **User preferences** - Allow users to prioritize certain experiences
 5. **Two-page mode** - Support for two-page resumes
 6. **Section balancing** - Optimize all sections together (not just experiences)
+

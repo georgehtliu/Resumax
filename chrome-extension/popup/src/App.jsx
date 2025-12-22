@@ -1104,6 +1104,7 @@ function App() {
           <GenerateResume
             masterResume={resume}
             onSave={handleResumeSaved}
+            hideExtract={true}
           />
         )}
 
