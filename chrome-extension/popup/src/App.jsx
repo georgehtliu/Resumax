@@ -8,6 +8,7 @@ import SkillsEditor from './components/SkillsEditor';
 import Tabs from './components/Tabs';
 import GenerateResume from './components/GenerateResume';
 import SavedResumes from './components/SavedResumes';
+import SignIn from './components/SignIn';
 import { storageService } from './services/storage';
 import './App.css';
 
@@ -26,6 +27,13 @@ function App() {
   const [activeTab, setActiveTab] = useState(() => (isManagerView ? 'master' : 'generate'));
   const [refreshSaved, setRefreshSaved] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [isSignedIn, setIsSignedIn] = useState(() => {
+    // Check localStorage for sign-in status
+    if (typeof window !== 'undefined' && window.localStorage) {
+      return localStorage.getItem('resumax_signed_in') === 'true';
+    }
+    return false;
+  });
   const [resume, setResume] = useState({
     personalInfo: {
       firstName: '',
@@ -747,6 +755,40 @@ function App() {
     openManagerPage();
   }
 
+  async function handleSignIn(userData) {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.setItem('resumax_signed_in', 'true');
+      if (userData?.email) {
+        localStorage.setItem('resumax_user_email', userData.email);
+      }
+    }
+    
+    // Force initialize mock data on sign-in
+    setLoading(true);
+    try {
+      console.log('🔄 Initializing mock data after sign-in...');
+      // Set flag to force initialization (will clear existing data and reinitialize)
+      localStorage.setItem('forceInitMockData', 'true');
+      await initializeMockData();
+      await loadResumeData();
+      console.log('✅ Mock data initialized after sign-in');
+    } catch (error) {
+      console.error('❌ Error initializing mock data after sign-in:', error);
+    } finally {
+      setLoading(false);
+    }
+    
+    setIsSignedIn(true);
+  }
+
+  function handleSignOut() {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.removeItem('resumax_signed_in');
+      localStorage.removeItem('resumax_user_email');
+    }
+    setIsSignedIn(false);
+  }
+
   const tabs = [
     { id: 'master', label: 'Master Resume' },
     { id: 'generate', label: 'Generate New Resume' },
@@ -780,11 +822,46 @@ function App() {
     );
   }
 
+  // Show sign-in page if not signed in and in manager view
+  if (isManagerView && !isSignedIn) {
+    return (
+      <div className="app app-manager">
+        <SignIn onSignIn={handleSignIn} />
+      </div>
+    );
+  }
+
   return (
     <div className={`app ${isManagerView ? 'app-manager' : ''}`}>
       <header className="app-header">
-        <h1>AI Resume Optimizer</h1>
-        <p className="subtitle">Match your resume to any job description</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+          <div>
+            <h1>AI Resume Optimizer</h1>
+            <p className="subtitle">Match your resume to any job description</p>
+          </div>
+          {isManagerView && isSignedIn && (
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <span style={{ fontSize: '13px', opacity: 0.9 }}>
+                {localStorage.getItem('resumax_user_email') || 'User'}
+              </span>
+              <button
+                onClick={handleSignOut}
+                style={{
+                  padding: '6px 12px',
+                  fontSize: '12px',
+                  background: 'rgba(255,255,255,0.2)',
+                  color: '#fff',
+                  border: '1px solid rgba(255,255,255,0.3)',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontWeight: '500'
+                }}
+              >
+                Sign Out
+              </button>
+            </div>
+          )}
+        </div>
         <button
           onClick={forceInitializeMockData}
           style={{
