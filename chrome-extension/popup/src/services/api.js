@@ -228,10 +228,39 @@ export async function renderLatex(resume) {
   return response.json();
 }
 
+/**
+ * Parse resume from uploaded file
+ * TODO: Implement backend API endpoint for resume parsing
+ */
+export async function parseResume(fileData) {
+  const baseUrl = getApiBaseUrl();
+  
+  // For now, return null to indicate parsing is not yet implemented
+  // When backend is ready, uncomment and implement:
+  /*
+  const formData = new FormData();
+  formData.append('file', fileData.file);
+  
+  const response = await fetch(`${baseUrl.replace(/\/$/, '')}/parse-resume`, {
+    method: 'POST',
+    body: formData,
+  });
+  
+  if (!response.ok) {
+    throw new Error('Failed to parse resume');
+  }
+  
+  return response.json();
+  */
+  
+  return null;
+}
+
 export const apiService = {
   buildStructuredResume,
   selectResume,
   renderLatex,
+  parseResume,
 };
 
 

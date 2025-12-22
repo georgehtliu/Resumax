@@ -12,4 +12,6 @@ export { default as Tabs } from './Tabs';
 export { default as GenerateResume } from './GenerateResume';
 export { default as SavedResumes } from './SavedResumes';
 export { default as SignIn } from './SignIn';
+export { default as Onboarding } from './Onboarding';
+export { default as ResumeUpload } from './ResumeUpload';
 
