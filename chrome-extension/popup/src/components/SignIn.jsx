@@ -23,7 +23,7 @@ function SignIn({ onSignIn }) {
       // Small delay for UX
       await new Promise(resolve => setTimeout(resolve, 600));
       if (onSignIn) {
-        await onSignIn({ email });
+        await onSignIn({ email, password });
       }
     } catch (error) {
       console.error('Sign-in error:', error);
@@ -140,3 +140,4 @@ function SignIn({ onSignIn }) {
 }
 
 export default SignIn;
+

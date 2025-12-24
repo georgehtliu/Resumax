@@ -36,6 +36,14 @@ function App() {
     }
     return false;
   });
+  
+  // Check if current user is the test user
+  const isTestUser = () => {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      return localStorage.getItem('resumax_is_test_user') === 'true';
+    }
+    return false;
+  };
   const [resume, setResume] = useState({
     personalInfo: {
       firstName: '',
@@ -80,7 +88,17 @@ function App() {
   // Check if user has data and show onboarding if needed
   useEffect(() => {
     async function checkDataAndShowOnboarding() {
+      const testUser = isTestUser();
+      
       if (isSignedIn && isManagerView) {
+        // For test user, always load mock data
+        if (testUser) {
+          await initializeMockData();
+          await loadResumeData();
+          setLoading(false);
+          return;
+        }
+        
         const existingResume = await storageService.getResume();
         const savedResumes = await storageService.getSavedResumes();
         
@@ -105,7 +123,12 @@ function App() {
         // Load data normally if signed in but not showing onboarding
         async function init() {
           console.log('🔄 Starting initialization...');
-          await initializeMockData();
+          // For test user, always initialize mock data
+          if (testUser) {
+            await initializeMockData();
+          } else {
+            await initializeMockData();
+          }
           await loadResumeData();
           console.log('✅ Initialization complete');
           setLoading(false);
@@ -144,14 +167,15 @@ function App() {
       
       console.log('Has master data?', hasMasterData);
       
-      // FOR TESTING: Force initialization if localStorage has a flag
-      const forceInit = localStorage.getItem('forceInitMockData') === 'true';
-      if (forceInit) {
+      // FOR TESTING: Force initialization if localStorage has a flag OR if test user
+      const forceInit = localStorage.getItem('forceInitMockData') === 'true' || isTestUser();
+      if (forceInit && localStorage.getItem('forceInitMockData') === 'true') {
         console.log('🔧 FORCE INITIALIZATION MODE - Clearing existing data...');
         localStorage.removeItem('forceInitMockData');
       }
       
-      // Only initialize if no data exists OR force init is enabled
+      // For test user, always initialize mock data
+      // For other users, only initialize if no data exists OR force init is enabled
       if ((!hasMasterData && savedResumes.length === 0) || forceInit) {
         if (forceInit) {
           // Clear existing data first
@@ -802,6 +826,14 @@ function App() {
       if (userData?.email) {
         localStorage.setItem('resumax_user_email', userData.email);
       }
+      
+      // Check if this is the test user (123@test.com with password 123@)
+      const isTest = userData?.email === '123@test.com' && userData?.password === '123@';
+      if (isTest) {
+        localStorage.setItem('resumax_is_test_user', 'true');
+      } else {
+        localStorage.removeItem('resumax_is_test_user');
+      }
     }
     
     setIsSignedIn(true);
@@ -817,6 +849,16 @@ function App() {
         (existingResume.education && existingResume.education.length > 0) ||
         (existingResume.projects && existingResume.projects.length > 0) ||
         (existingResume.customSections && existingResume.customSections.length > 0);
+      
+      // For test user, always initialize mock data
+      const isTest = userData?.email === '123@test.com' && userData?.password === '123@';
+      if (isTest) {
+        // Auto-load mock data for test user
+        await initializeMockData();
+        await loadResumeData();
+        setLoading(false);
+        return;
+      }
       
       // Show onboarding if no data exists
       if (!hasMasterData && savedResumes.length === 0) {
@@ -866,6 +908,7 @@ function App() {
     if (typeof window !== 'undefined' && window.localStorage) {
       localStorage.removeItem('resumax_signed_in');
       localStorage.removeItem('resumax_user_email');
+      localStorage.removeItem('resumax_is_test_user');
     }
     setIsSignedIn(false);
   }
@@ -970,21 +1013,23 @@ function App() {
             </div>
           )}
         </div>
-        <button
-          onClick={forceInitializeMockData}
-          style={{
-            marginTop: '8px',
-            padding: '6px 12px',
-            fontSize: '11px',
-            background: 'rgba(255,255,255,0.2)',
-            color: '#fff',
-            border: '1px solid rgba(255,255,255,0.3)',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}
-        >
-          🔄 Force Load Mock Data
-        </button>
+        {isTestUser() && (
+          <button
+            onClick={forceInitializeMockData}
+            style={{
+              marginTop: '8px',
+              padding: '6px 12px',
+              fontSize: '11px',
+              background: 'rgba(255,255,255,0.2)',
+              color: '#fff',
+              border: '1px solid rgba(255,255,255,0.3)',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            🔄 Force Load Mock Data
+          </button>
+        )}
       </header>
 
       <main className="app-main">
