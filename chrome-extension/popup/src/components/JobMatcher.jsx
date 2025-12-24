@@ -61,27 +61,31 @@ function JobMatcher({ jobDescription, onExtract, onSelect, onOptimize, optimizat
 
   return (
     <div className="job-matcher">
-      <div className="job-matcher-section">
-        <h3>Option 1: Extract from Current Tab</h3>
-        <p className="section-description">
-          Navigate to a job posting (LinkedIn, Indeed, etc.) and click Extract.
-        </p>
-        <button
-          className="btn btn-primary"
-          onClick={handleExtract}
-          disabled={loading}
-        >
-          📄 Extract Job Description
-        </button>
-        {extractionStatus && (
-          <p className="status-message">{extractionStatus}</p>
-        )}
-      </div>
+      {onExtract && (
+        <>
+          <div className="job-matcher-section">
+            <h3>Option 1: Extract from Current Tab</h3>
+            <p className="section-description">
+              Navigate to a job posting (LinkedIn, Indeed, etc.) and click Extract.
+            </p>
+            <button
+              className="btn btn-primary"
+              onClick={handleExtract}
+              disabled={loading}
+            >
+              📄 Extract Job Description
+            </button>
+            {extractionStatus && (
+              <p className="status-message">{extractionStatus}</p>
+            )}
+          </div>
 
-      <div className="divider">OR</div>
+          <div className="divider">OR</div>
+        </>
+      )}
 
       <div className="job-matcher-section">
-        <h3>Option 2: Paste Job Description</h3>
+        <h3>{onExtract ? 'Option 2: Paste Job Description' : 'Paste Job Description'}</h3>
         <p className="section-description">
           Copy and paste the job description manually.
         </p>

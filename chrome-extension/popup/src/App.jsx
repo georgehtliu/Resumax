@@ -8,6 +8,8 @@ import SkillsEditor from './components/SkillsEditor';
 import Tabs from './components/Tabs';
 import GenerateResume from './components/GenerateResume';
 import SavedResumes from './components/SavedResumes';
+import SignIn from './components/SignIn';
+import Onboarding from './components/Onboarding';
 import { storageService } from './services/storage';
 import './App.css';
 
@@ -26,6 +28,14 @@ function App() {
   const [activeTab, setActiveTab] = useState(() => (isManagerView ? 'master' : 'generate'));
   const [refreshSaved, setRefreshSaved] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [isSignedIn, setIsSignedIn] = useState(() => {
+    // Check localStorage for sign-in status
+    if (typeof window !== 'undefined' && window.localStorage) {
+      return localStorage.getItem('resumax_signed_in') === 'true';
+    }
+    return false;
+  });
   const [resume, setResume] = useState({
     personalInfo: {
       firstName: '',
@@ -43,17 +53,69 @@ function App() {
     totalBullets: 0
   });
 
-  // Load resume data on mount and initialize mock data if needed
-  useEffect(() => {
-    async function init() {
-      console.log('🔄 Starting initialization...');
-      await initializeMockData();
-      // Always load after initialization check
-      await loadResumeData();
-      console.log('✅ Initialization complete');
+  function openManagerPage() {
+    const managerUrl =
+      typeof chrome !== 'undefined' && chrome.runtime?.getURL
+        ? chrome.runtime.getURL('popup-build/index.html?view=manager')
+        : `${window.location.origin}${window.location.pathname}?view=manager`;
+
+    if (typeof chrome !== 'undefined' && chrome.tabs?.create) {
+      chrome.tabs.create({ url: managerUrl });
+    } else {
+      window.open(managerUrl, '_blank', 'noopener');
     }
-    init();
-  }, []);
+  }
+
+  // Redirect to manager sign-in if not signed in and in popup view
+  useEffect(() => {
+    if (!isManagerView && !isSignedIn) {
+      // Small delay to show the loading message, then redirect
+      const timer = setTimeout(() => {
+        openManagerPage();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isManagerView, isSignedIn]);
+
+  // Check if user has data and show onboarding if needed
+  useEffect(() => {
+    async function checkDataAndShowOnboarding() {
+      if (isSignedIn && isManagerView) {
+        const existingResume = await storageService.getResume();
+        const savedResumes = await storageService.getSavedResumes();
+        
+        const hasMasterData = 
+          (existingResume.experiences && existingResume.experiences.length > 0) ||
+          (existingResume.education && existingResume.education.length > 0) ||
+          (existingResume.projects && existingResume.projects.length > 0) ||
+          (existingResume.customSections && existingResume.customSections.length > 0);
+        
+        // Show onboarding if no data exists
+        if (!hasMasterData && savedResumes.length === 0) {
+          setShowOnboarding(true);
+          setLoading(false);
+        } else {
+          setShowOnboarding(false);
+          // Load data normally
+          await initializeMockData();
+          await loadResumeData();
+          setLoading(false);
+        }
+      } else if (isSignedIn || isManagerView) {
+        // Load data normally if signed in but not showing onboarding
+        async function init() {
+          console.log('🔄 Starting initialization...');
+          await initializeMockData();
+          await loadResumeData();
+          console.log('✅ Initialization complete');
+          setLoading(false);
+        }
+        init();
+      }
+    }
+    
+    checkDataAndShowOnboarding();
+  }, [isSignedIn, isManagerView]);
 
   /**
    * Initialize mock data if no data exists
@@ -730,21 +792,82 @@ function App() {
     loadResumeData();
   }
 
-  function openManagerPage() {
-    const managerUrl =
-      typeof chrome !== 'undefined' && chrome.runtime?.getURL
-        ? chrome.runtime.getURL('popup-build/index.html?view=manager')
-        : `${window.location.origin}${window.location.pathname}?view=manager`;
+  function handleSelectionComplete() {
+    openManagerPage();
+  }
 
-    if (typeof chrome !== 'undefined' && chrome.tabs?.create) {
-      chrome.tabs.create({ url: managerUrl });
-    } else {
-      window.open(managerUrl, '_blank', 'noopener');
+  async function handleSignIn(userData) {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.setItem('resumax_signed_in', 'true');
+      if (userData?.email) {
+        localStorage.setItem('resumax_user_email', userData.email);
+      }
+    }
+    
+    setIsSignedIn(true);
+    setLoading(true);
+    
+    // Check if user has existing data
+    try {
+      const existingResume = await storageService.getResume();
+      const savedResumes = await storageService.getSavedResumes();
+      
+      const hasMasterData = 
+        (existingResume.experiences && existingResume.experiences.length > 0) ||
+        (existingResume.education && existingResume.education.length > 0) ||
+        (existingResume.projects && existingResume.projects.length > 0) ||
+        (existingResume.customSections && existingResume.customSections.length > 0);
+      
+      // Show onboarding if no data exists
+      if (!hasMasterData && savedResumes.length === 0) {
+        setShowOnboarding(true);
+        setLoading(false);
+      } else {
+        // User has data, load it normally
+        await loadResumeData();
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error('❌ Error checking data after sign-in:', error);
+      setLoading(false);
     }
   }
 
-  function handleSelectionComplete() {
-    openManagerPage();
+  async function handleOnboardingUpload(parsedResume, fileData) {
+    try {
+      setLoading(true);
+      
+      // Save the parsed resume data
+      const resumeToSave = {
+        ...parsedResume,
+        totalBullets: calculateTotalBullets(parsedResume)
+      };
+      
+      await storageService.saveResume(resumeToSave);
+      await loadResumeData();
+      
+      setShowOnboarding(false);
+      setLoading(false);
+    } catch (error) {
+      console.error('❌ Error saving uploaded resume:', error);
+      alert('Failed to save uploaded resume. Please try again.');
+      setLoading(false);
+    }
+  }
+
+  function handleOnboardingSkip() {
+    // User chose to enter manually - initialize with empty data
+    setShowOnboarding(false);
+    setLoading(false);
+    // Data will be empty, user can start filling it in manually
+  }
+
+  function handleSignOut() {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.removeItem('resumax_signed_in');
+      localStorage.removeItem('resumax_user_email');
+    }
+    setIsSignedIn(false);
   }
 
   const tabs = [
@@ -754,6 +877,21 @@ function App() {
   ];
 
   if (!isManagerView) {
+    // If not signed in, show loading while redirecting
+    if (!isSignedIn) {
+      return (
+        <div className="popup-container">
+          <header className="popup-header">
+            <h1>AI Resume Optimizer</h1>
+            <p className="popup-subtitle">Redirecting to sign in...</p>
+          </header>
+          <main className="popup-main">
+            <div className="popup-loading">Please sign in to continue</div>
+          </main>
+        </div>
+      );
+    }
+
     return (
       <div className="popup-container">
         <header className="popup-header">
@@ -780,11 +918,58 @@ function App() {
     );
   }
 
+  // Show sign-in page if not signed in and in manager view
+  if (isManagerView && !isSignedIn) {
+    return (
+      <div className="app app-manager">
+        <SignIn onSignIn={handleSignIn} />
+      </div>
+    );
+  }
+
+  // Show onboarding if user just signed in and has no data
+  if (isManagerView && isSignedIn && showOnboarding) {
+    return (
+      <div className="app app-manager">
+        <Onboarding
+          onUploadComplete={handleOnboardingUpload}
+          onSkip={handleOnboardingSkip}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className={`app ${isManagerView ? 'app-manager' : ''}`}>
       <header className="app-header">
-        <h1>AI Resume Optimizer</h1>
-        <p className="subtitle">Match your resume to any job description</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+          <div>
+            <h1>AI Resume Optimizer</h1>
+            <p className="subtitle">Match your resume to any job description</p>
+          </div>
+          {isManagerView && isSignedIn && (
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <span style={{ fontSize: '13px', opacity: 0.9 }}>
+                {localStorage.getItem('resumax_user_email') || 'User'}
+              </span>
+              <button
+                onClick={handleSignOut}
+                style={{
+                  padding: '6px 12px',
+                  fontSize: '12px',
+                  background: 'rgba(255,255,255,0.2)',
+                  color: '#fff',
+                  border: '1px solid rgba(255,255,255,0.3)',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontWeight: '500'
+                }}
+              >
+                Sign Out
+              </button>
+            </div>
+          )}
+        </div>
         <button
           onClick={forceInitializeMockData}
           style={{
@@ -1104,6 +1289,7 @@ function App() {
           <GenerateResume
             masterResume={resume}
             onSave={handleResumeSaved}
+            hideExtract={true}
           />
         )}
 

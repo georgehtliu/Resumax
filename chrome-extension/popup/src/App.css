@@ -26,13 +26,22 @@ body {
   background: linear-gradient(135deg, #5c7adf 0%, #7ea6f9 100%);
   color: #ffffff;
   padding: 28px 24px;
-  text-align: center;
   box-shadow: 0 18px 40px rgba(100, 128, 217, 0.35);
+}
+
+.app-header > div {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.app-header > div > div:first-child {
+  text-align: center;
 }
 
 .app-header h1 {
   font-size: 26px;
   margin-bottom: 6px;
+  text-align: center;
 }
 
 .subtitle {
@@ -252,6 +261,16 @@ body {
 @media (max-width: 768px) {
   .app-manager .app-header {
     padding: 24px 18px;
+  }
+
+  .app-manager .app-header > div {
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .app-manager .app-header > div > div:first-child {
+    width: 100%;
   }
 
   .app-manager .app-main {

@@ -20,25 +20,31 @@ class VectorSearch:
     Supports both semantic-only and hybrid search (semantic + keyword matching).
     """
     
-    def __init__(self, collection_name: str = "resume_points"):
+    def __init__(self, collection_name: str = "resume_points", persist_directory: str = None):
         """
         Initialize the vector search system.
         
         Args:
             collection_name: Name of the ChromaDB collection to use
+            persist_directory: Directory to persist ChromaDB data (defaults to ./chroma_db or CHROMA_DB_PATH env var)
         """
+        # Get persist directory from env var or use default
+        if persist_directory is None:
+            persist_directory = os.getenv("CHROMA_DB_PATH", "chroma_db")
+        
         # Use a local DuckDB+Parquet persistent client (no HTTP, no proxies)
-        # Data will be stored under ./chroma_db
-        os.makedirs("chroma_db", exist_ok=True)
+        # Data will be stored in the specified directory (or ./chroma_db by default)
+        os.makedirs(persist_directory, exist_ok=True)
         try:
             settings = Settings(
                 chroma_db_impl="duckdb+parquet",
-                persist_directory="chroma_db",
+                persist_directory=persist_directory,
                 anonymized_telemetry=False
             )
             self.client = chromadb.Client(settings)
         except Exception:
             # Fallback to in-memory client
+            print(f"⚠️ Warning: Failed to initialize persistent ChromaDB, using in-memory client")
             self.client = chromadb.Client(Settings(anonymized_telemetry=False))
         self.collection_name = collection_name
         self.embedding_generator = EmbeddingGenerator()
