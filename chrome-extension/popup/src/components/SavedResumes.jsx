@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { storageService } from '../services/storage';
+import { supabase } from '../config/supabase';
 import ExperienceEditor from './ExperienceEditor';
 import ProjectEditor from './ProjectEditor';
 import CustomSectionEditor from './CustomSectionEditor';
 import LatexPreviewModal from './LatexPreviewModal';
+import ShareResumeButton from './ShareResumeButton';
 import { renderLatex } from '../services/api';
 import { buildLatexDocument } from '../utils/latexTemplate';
 import './SavedResumes.css';
@@ -287,10 +289,42 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
   async function loadSavedResumes() {
     setLoading(true);
     try {
-      const resumes = await storageService.getSavedResumes();
-      setSavedResumes(resumes);
+      // Get current session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setSavedResumes([]);
+        setLoading(false);
+        return;
+      }
+
+      // Load from Supabase
+      const { data, error } = await supabase
+        .from('saved_resumes')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Transform Supabase data to match expected format
+      const transformedResumes = (data || []).map(resume => ({
+        id: resume.id,
+        name: resume.name,
+        data: resume.resume_data,
+        createdAt: resume.created_at ? new Date(resume.created_at).getTime() : Date.now(),
+        updatedAt: resume.updated_at ? new Date(resume.updated_at).getTime() : Date.now()
+      }));
+
+      setSavedResumes(transformedResumes);
     } catch (error) {
       console.error('Error loading saved resumes:', error);
+      // Fallback to Chrome Storage if Supabase fails
+      try {
+        const resumes = await storageService.getSavedResumes();
+        setSavedResumes(resumes);
+      } catch (fallbackError) {
+        console.error('Fallback to Chrome Storage also failed:', fallbackError);
+      }
     } finally {
       setLoading(false);
     }
@@ -298,7 +332,28 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
 
   async function handleDelete(resumeId) {
     try {
-      await storageService.deleteSavedResume(resumeId);
+      // Check if it's a UUID (Supabase) or Chrome Storage ID
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(resumeId);
+      
+      if (isUUID) {
+        // Delete from Supabase
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          throw new Error('Not signed in');
+        }
+
+        const { error } = await supabase
+          .from('saved_resumes')
+          .delete()
+          .eq('id', resumeId)
+          .eq('user_id', session.user.id);
+
+        if (error) throw error;
+      } else {
+        // Delete from Chrome Storage (fallback)
+        await storageService.deleteSavedResume(resumeId);
+      }
+
       await loadSavedResumes();
       if (selectedResume?.id === resumeId) {
         setSelectedResume(null);
@@ -307,7 +362,7 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
       setShowDeleteConfirm(null);
     } catch (error) {
       console.error('Error deleting resume:', error);
-      alert('Error deleting resume');
+      alert('Error deleting resume: ' + error.message);
     }
   }
 
@@ -638,7 +693,22 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
         selectedBullets: flattenStructuredResume(editedResume)
       };
 
-      await storageService.saveGeneratedResume(newResumeName.trim(), resumeData);
+      // Save to Supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const { error } = await supabase
+          .from('saved_resumes')
+          .insert({
+            user_id: session.user.id,
+            name: newResumeName.trim(),
+            resume_data: resumeData
+          });
+
+        if (error) throw error;
+      } else {
+        // Fallback to Chrome Storage if not signed in
+        await storageService.saveGeneratedResume(newResumeName.trim(), resumeData);
+      }
       
       // Reset state
       setShowSaveDialog(false);
@@ -707,6 +777,10 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
                     </p>
                   </div>
                   <div className="resume-item-actions">
+                    <ShareResumeButton 
+                      resumeId={resume.id}
+                      resumeName={resume.name}
+                    />
                     <button
                       className="btn-icon-small"
                       onClick={(e) => {
