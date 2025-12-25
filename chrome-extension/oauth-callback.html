@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>OAuth Callback</title>
+</head>
+<body>
+  <script>
+    // Extract tokens from URL hash
+    const hash = window.location.hash.substring(1);
+    const params = new URLSearchParams(hash);
+    const accessToken = params.get('access_token');
+    const refreshToken = params.get('refresh_token');
+    const error = params.get('error');
+
+    if (error) {
+      // Send error to extension
+      if (chrome && chrome.runtime) {
+        chrome.runtime.sendMessage({
+          type: 'OAUTH_ERROR',
+          error: error
+        });
+      }
+      document.body.innerHTML = '<h1>OAuth Error</h1><p>' + error + '</p>';
+    } else if (accessToken) {
+      // Send tokens to extension
+      if (chrome && chrome.runtime) {
+        chrome.runtime.sendMessage({
+          type: 'OAUTH_SUCCESS',
+          accessToken: accessToken,
+          refreshToken: refreshToken
+        }, (response) => {
+          if (chrome.runtime.lastError) {
+            console.error('Error sending message:', chrome.runtime.lastError);
+          } else {
+            document.body.innerHTML = '<h1>Success!</h1><p>You can close this window.</p>';
+            // Close window after a moment
+            setTimeout(() => {
+              window.close();
+            }, 2000);
+          }
+        });
+      } else {
+        document.body.innerHTML = '<h1>Processing...</h1>';
+      }
+    } else {
+      document.body.innerHTML = '<h1>No tokens found</h1>';
+    }
+  </script>
+</body>
+</html>
+
