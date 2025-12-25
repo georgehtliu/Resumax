@@ -1,0 +1,62 @@
+.community-page {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px;
+}
+
+.community-header {
+  margin-bottom: 32px;
+}
+
+.community-header h1 {
+  font-size: 32px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.5px;
+}
+
+.community-subtitle {
+  font-size: 16px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.community-content {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  padding: 64px 32px;
+  text-align: center;
+}
+
+.community-placeholder {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.placeholder-icon {
+  font-size: 64px;
+  margin-bottom: 24px;
+}
+
+.community-placeholder h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 12px 0;
+}
+
+.community-placeholder p {
+  font-size: 16px;
+  color: #6b7280;
+  margin: 0 0 16px 0;
+  line-height: 1.6;
+}
+
+.placeholder-subtext {
+  font-size: 14px !important;
+  color: #9ca3af !important;
+}
+

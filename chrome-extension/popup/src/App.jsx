@@ -11,6 +11,12 @@ import SavedResumes from './components/SavedResumes';
 import SignIn from './components/SignIn';
 import SignUp from './components/SignUp';
 import Onboarding from './components/Onboarding';
+import SideNav from './components/SideNav';
+import Profile from './components/Profile';
+import ResumeCoaching from './components/ResumeCoaching';
+import About from './components/About';
+import ResumeTips from './components/ResumeTips';
+import Community from './components/Community';
 import { supabase } from './config/supabase';
 import { storageService } from './services/storage';
 import './App.css';
@@ -27,7 +33,8 @@ function App() {
   const queryParams = new URLSearchParams(window.location.search);
   const isManagerView = queryParams.get('view') === 'manager';
 
-  const [activeTab, setActiveTab] = useState(() => (isManagerView ? 'master' : 'generate'));
+  const [activeTab, setActiveTab] = useState(() => (isManagerView ? 'generate' : 'generate'));
+  const [activeView, setActiveView] = useState(() => (isManagerView ? 'about' : 'generate'));
   const [refreshSaved, setRefreshSaved] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -1037,59 +1044,141 @@ function App() {
 
   return (
     <div className={`app ${isManagerView ? 'app-manager' : ''}`}>
-      <header className="app-header">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-          <div>
-            <h1>AI Resume Optimizer</h1>
-            <p className="subtitle">Match your resume to any job description</p>
+      {isManagerView && isSignedIn && (
+        <SideNav
+          activeView={activeView}
+          onViewChange={setActiveView}
+          userEmail={localStorage.getItem('resumax_user_email') || ''}
+          onSignOut={handleSignOut}
+        />
+      )}
+      
+      <div className={`app-content ${isManagerView && isSignedIn ? 'with-sidebar' : ''}`}>
+        {isManagerView && isSignedIn && isTestUser() && (
+          <div style={{ padding: '16px', background: '#fef3c7', borderBottom: '1px solid #fde68a' }}>
+            <button
+              onClick={forceInitializeMockData}
+              style={{
+                padding: '6px 12px',
+                fontSize: '11px',
+                background: '#f59e0b',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontWeight: '500'
+              }}
+            >
+              🔄 Force Load Mock Data
+            </button>
           </div>
-          {isManagerView && isSignedIn && (
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <span style={{ fontSize: '13px', opacity: 0.9 }}>
-                {localStorage.getItem('resumax_user_email') || 'User'}
-              </span>
-              <button
-                onClick={handleSignOut}
-                style={{
-                  padding: '6px 12px',
-                  fontSize: '12px',
-                  background: 'rgba(255,255,255,0.2)',
-                  color: '#fff',
-                  border: '1px solid rgba(255,255,255,0.3)',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontWeight: '500'
-                }}
-              >
-                Sign Out
-              </button>
+        )}
+
+        <main className="app-main">
+          {activeView === 'about' && (
+            <About />
+          )}
+
+          {activeView === 'tips' && (
+            <ResumeTips />
+          )}
+
+          {activeView === 'profile' && (
+            <Profile
+              resume={resume}
+              onResumeUpdate={saveResumeData}
+              calculateTotalBullets={calculateTotalBullets}
+            />
+          )}
+
+          {activeView === 'generate' && (
+            <div className="view-container">
+              <div className="view-header">
+                <h1>Generate Resume</h1>
+                <p className="view-subtitle">Create a tailored resume for any job description</p>
+              </div>
+              <div className="view-content">
+                <GenerateResume
+                  masterResume={resume}
+                  onSave={handleResumeSaved}
+                  onSelectionComplete={handleSelectionComplete}
+                  hideExtract={true}
+                />
+              </div>
             </div>
           )}
-        </div>
-        {isTestUser() && (
-          <button
-            onClick={forceInitializeMockData}
-            style={{
-              marginTop: '8px',
-              padding: '6px 12px',
-              fontSize: '11px',
-              background: 'rgba(255,255,255,0.2)',
-              color: '#fff',
-              border: '1px solid rgba(255,255,255,0.3)',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
-          >
-            🔄 Force Load Mock Data
-          </button>
-        )}
-      </header>
 
-      <main className="app-main">
-        <Tabs activeTab={activeTab} onTabChange={setActiveTab} tabs={tabs} />
+          {activeView === 'saved' && (
+            <div className="view-container">
+              <div className="view-header">
+                <h1>Saved Resumes</h1>
+                <p className="view-subtitle">View and manage your saved resumes</p>
+              </div>
+              <div className="view-content">
+                <SavedResumes
+                  onLoadResume={handleResumeSaved}
+                  refreshTrigger={refreshSaved}
+                  masterResume={resume}
+                />
+              </div>
+            </div>
+          )}
 
-        {/* Tab 1: Master Resume */}
-        {activeTab === 'master' && (
+          {activeView === 'community' && (
+            <Community />
+          )}
+
+          {activeView === 'coaching' && (
+            <ResumeCoaching />
+          )}
+
+          {activeView === 'coaching-ai' && (
+            <div className="view-container">
+              <div className="view-header">
+                <h1>AI Coach</h1>
+                <p className="view-subtitle">Get AI-powered feedback and suggestions for your resume</p>
+              </div>
+              <div className="view-content">
+                <div className="coaching-placeholder">
+                  <div className="placeholder-icon">🤖</div>
+                  <h2>AI Coach Coming Soon</h2>
+                  <p>AI-powered resume coaching features will be available here soon.</p>
+                  <p className="placeholder-subtext">
+                    Get instant feedback, improvement suggestions, and personalized recommendations
+                    powered by advanced AI.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeView === 'coaching-human' && (
+            <div className="view-container">
+              <div className="view-header">
+                <h1>Critique with Human</h1>
+                <p className="view-subtitle">Get personalized feedback from experienced professionals</p>
+              </div>
+              <div className="view-content">
+                <div className="coaching-placeholder">
+                  <div className="placeholder-icon">👥</div>
+                  <h2>Human Critique Coming Soon</h2>
+                  <p>Connect with professional resume reviewers for personalized feedback.</p>
+                  <p className="placeholder-subtext">
+                    Get detailed critiques from experienced recruiters and career coaches
+                    to make your resume stand out.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Legacy tab-based view for non-manager */}
+          {!isManagerView && (
+            <>
+              <Tabs activeTab={activeTab} onTabChange={setActiveTab} tabs={tabs} />
+
+              {/* Tab 1: Master Resume */}
+              {activeTab === 'master' && (
           <section className="section">
             <h2>Master Resume</h2>
             <p className="section-subtitle">
@@ -1382,24 +1471,26 @@ function App() {
         </section>
         )}
 
-        {/* Tab 2: Generate New Resume */}
-        {activeTab === 'generate' && (
-          <GenerateResume
-            masterResume={resume}
-            onSave={handleResumeSaved}
-            hideExtract={true}
-          />
-        )}
+              {/* Tab 2: Generate New Resume */}
+              {activeTab === 'generate' && (
+                <GenerateResume
+                  masterResume={resume}
+                  onSave={handleResumeSaved}
+                />
+              )}
 
-        {/* Tab 3: Saved Resumes */}
-        {activeTab === 'saved' && (
-          <SavedResumes 
-            onLoadResume={handleResumeSaved} 
-            refreshTrigger={refreshSaved}
-            masterResume={resume}
-          />
-        )}
-      </main>
+              {/* Tab 3: Saved Resumes */}
+              {activeTab === 'saved' && (
+                <SavedResumes 
+                  onLoadResume={handleResumeSaved} 
+                  refreshTrigger={refreshSaved}
+                  masterResume={resume}
+                />
+              )}
+            </>
+          )}
+        </main>
+      </div>
     </div>
   );
 }
