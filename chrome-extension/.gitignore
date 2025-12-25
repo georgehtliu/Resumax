@@ -23,6 +23,12 @@ npm-debug.log*
 # Environment
 .env
 .env.local
+.env.*.local
+.env.development
+.env.production
+.env.test
+# But allow .env.example to be committed
+!.env.example
 
 # Chrome extension store files
 *.pem

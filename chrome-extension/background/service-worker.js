@@ -6,6 +6,7 @@
  * - Chrome Debugger API for advanced page inspection
  * - Resume data synchronization
  * - Job description extraction coordination
+ * - OAuth flow handling
  */
 
 // ============================================================================
@@ -16,8 +17,6 @@
  * Initialize extension on install
  */
 chrome.runtime.onInstalled.addListener((details) => {
-  console.log('AI Resume Optimizer installed', details);
-  
   // Initialize default storage
   chrome.storage.local.set({
     resume: {
@@ -34,9 +33,68 @@ chrome.runtime.onInstalled.addListener((details) => {
  * Handle messages from popup and content scripts
  */
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log('Background received message:', message);
+  if (!message) {
+    sendResponse({ error: 'Message is null or undefined' });
+    return false;
+  }
   
-  switch (message.type) {
+  if (!message.type) {
+    sendResponse({ error: 'Message missing type field' });
+    return false;
+  }
+  
+  // Normalize message type (remove any whitespace)
+  const messageType = String(message.type).trim();
+  
+  switch (messageType) {
+    case 'LAUNCH_OAUTH':
+      if (!message.oauthUrl) {
+        sendResponse({ success: false, error: 'Missing oauthUrl' });
+        return false;
+      }
+      
+      // Handle OAuth flow in background script (persists longer than popup)
+      launchOAuthFlow(message.oauthUrl, message.redirectUrl)
+        .then(({ accessToken, refreshToken }) => {
+          const response = { success: true, accessToken, refreshToken };
+          sendResponse(response);
+          // Also broadcast to any listening popups
+          chrome.runtime.sendMessage({
+            type: 'OAUTH_CALLBACK',
+            accessToken,
+            refreshToken
+          }).catch(() => {}); // Ignore if no listeners
+        })
+        .catch((error) => {
+          const response = { success: false, error: error.message };
+          sendResponse(response);
+          // Also broadcast error
+          chrome.runtime.sendMessage({
+            type: 'OAUTH_CALLBACK_ERROR',
+            error: error.message
+          }).catch(() => {}); // Ignore if no listeners
+        });
+      return true; // Keep channel open for async response
+      
+    case 'OAUTH_SUCCESS':
+      // Forward OAuth success to popup
+      chrome.runtime.sendMessage({
+        type: 'OAUTH_CALLBACK',
+        accessToken: message.accessToken,
+        refreshToken: message.refreshToken
+      }).catch(() => {}); // Ignore if no listeners
+      sendResponse({ success: true });
+      return false;
+      
+    case 'OAUTH_ERROR':
+      // Forward OAuth error to popup
+      chrome.runtime.sendMessage({
+        type: 'OAUTH_CALLBACK_ERROR',
+        error: message.error
+      }).catch(() => {}); // Ignore if no listeners
+      sendResponse({ success: true });
+      return false;
+      
     case 'EXTRACT_JOB_DESCRIPTION':
       handleExtractJobDescription(message.url, sendResponse);
       return true; // Keep channel open for async response
@@ -58,9 +116,75 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       return true;
       
     default:
-      sendResponse({ error: 'Unknown message type' });
+      sendResponse({ error: `Unknown message type: "${messageType}"` });
   }
 });
+
+// ============================================================================
+// OAUTH HANDLING
+// ============================================================================
+
+/**
+ * Launch OAuth flow and handle callback
+ * Background script handles OAuth to persist even if popup closes
+ */
+async function launchOAuthFlow(oauthUrl, redirectUrl) {
+  return new Promise((resolve, reject) => {
+    if (!chrome.identity) {
+      reject(new Error('chrome.identity is not available. Check manifest permissions.'));
+      return;
+    }
+    
+    chrome.identity.launchWebAuthFlow({
+      url: oauthUrl,
+      interactive: true
+    }, async (callbackUrl) => {
+      if (chrome.runtime.lastError) {
+        const errorMsg = chrome.runtime.lastError.message;
+        
+        if (errorMsg.includes('canceled') || errorMsg.includes('The user did not approve')) {
+          reject(new Error('User cancelled'));
+          return;
+        }
+        
+        reject(new Error(errorMsg));
+        return;
+      }
+      
+      if (callbackUrl) {
+        try {
+          const url = new URL(callbackUrl);
+          let accessToken = null;
+          let refreshToken = null;
+          
+          // Try hash first
+          if (url.hash) {
+            const hash = url.hash.substring(1);
+            const hashParams = new URLSearchParams(hash);
+            accessToken = hashParams.get('access_token');
+            refreshToken = hashParams.get('refresh_token');
+          }
+          
+          // Try query params
+          if (!accessToken && url.searchParams) {
+            accessToken = url.searchParams.get('access_token');
+            refreshToken = url.searchParams.get('refresh_token');
+          }
+          
+          if (accessToken) {
+            resolve({ accessToken, refreshToken });
+          } else {
+            reject(new Error('No access token in callback URL'));
+          }
+        } catch (parseError) {
+          reject(parseError);
+        }
+      } else {
+        reject(new Error('No callback URL'));
+      }
+    });
+  });
+}
 
 // ============================================================================
 // JOB DESCRIPTION EXTRACTION
@@ -95,7 +219,6 @@ async function handleExtractJobDescription(url, sendResponse) {
     });
     
   } catch (error) {
-    console.error('Error extracting job description:', error);
     sendResponse({ error: error.message });
   }
 }
@@ -156,7 +279,6 @@ async function extractWithDebugger(tabId, sendResponse) {
     );
     
   } catch (error) {
-    console.error('Debugger API error:', error);
     sendResponse({ error: error.message });
   }
 }
@@ -173,7 +295,6 @@ async function handleSaveResumeData(data, sendResponse) {
     await chrome.storage.local.set({ resume: data });
     sendResponse({ success: true });
   } catch (error) {
-    console.error('Error saving resume data:', error);
     sendResponse({ error: error.message });
   }
 }
@@ -189,7 +310,6 @@ async function handleGetResumeData(sendResponse) {
       data: result.resume || { experiences: [], totalBullets: 0 }
     });
   } catch (error) {
-    console.error('Error getting resume data:', error);
     sendResponse({ error: error.message });
   }
 }
@@ -218,8 +338,6 @@ async function handleStartDebugger(tabId, sendResponse) {
     
     // Listen for debugger events (network, DOM, etc.)
     chrome.debugger.onEvent.addListener((source, method, params) => {
-      console.log('Debugger event:', method, params);
-      
       // You can intercept network requests, DOM changes, etc.
       if (method === 'Network.responseReceived') {
         // Could extract job description from network responses
@@ -229,7 +347,6 @@ async function handleStartDebugger(tabId, sendResponse) {
     sendResponse({ success: true });
     
   } catch (error) {
-    console.error('Error starting debugger:', error);
     sendResponse({ error: error.message });
   }
 }
@@ -251,7 +368,6 @@ async function handleStopDebugger(sendResponse) {
     sendResponse({ success: true });
     
   } catch (error) {
-    console.error('Error stopping debugger:', error);
     sendResponse({ error: error.message });
   }
 }
@@ -262,5 +378,3 @@ chrome.runtime.onSuspend.addListener(() => {
     chrome.debugger.detach({ tabId: debuggerTabId });
   }
 });
-
-

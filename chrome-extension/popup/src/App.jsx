@@ -9,7 +9,9 @@ import Tabs from './components/Tabs';
 import GenerateResume from './components/GenerateResume';
 import SavedResumes from './components/SavedResumes';
 import SignIn from './components/SignIn';
+import SignUp from './components/SignUp';
 import Onboarding from './components/Onboarding';
+import { supabase } from './config/supabase';
 import { storageService } from './services/storage';
 import './App.css';
 
@@ -29,6 +31,7 @@ function App() {
   const [refreshSaved, setRefreshSaved] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showSignUp, setShowSignUp] = useState(false);
   const [isSignedIn, setIsSignedIn] = useState(() => {
     // Check localStorage for sign-in status
     if (typeof window !== 'undefined' && window.localStorage) {
@@ -73,6 +76,77 @@ function App() {
       window.open(managerUrl, '_blank', 'noopener');
     }
   }
+
+  // Check for OAuth callback and handle auth state changes
+  useEffect(() => {
+    // Check for OAuth callback in URL hash
+    const hash = window.location.hash.substring(1);
+    if (hash) {
+      const hashParams = new URLSearchParams(hash);
+      const accessToken = hashParams.get('access_token');
+      const error = hashParams.get('error');
+      
+      if (error) {
+        console.error('OAuth error:', error);
+        // Clean up URL
+        const cleanUrl = window.location.pathname + (window.location.search || '');
+        window.history.replaceState({}, document.title, cleanUrl);
+        return;
+      }
+      
+      if (accessToken) {
+        // User just came back from OAuth
+        // Supabase will handle the session automatically via the hash
+        supabase.auth.getSession().then(({ data: { session }, error: sessionError }) => {
+          if (session && !sessionError) {
+            setIsSignedIn(true);
+            if (typeof window !== 'undefined' && window.localStorage) {
+              localStorage.setItem('resumax_signed_in', 'true');
+              localStorage.setItem('resumax_user_email', session.user.email || '');
+            }
+            // Clean up URL hash
+            const cleanUrl = window.location.pathname + (window.location.search || '?view=manager');
+            window.history.replaceState({}, document.title, cleanUrl);
+          } else if (sessionError) {
+            console.error('Session error:', sessionError);
+          }
+        });
+      }
+    }
+
+    // Listen for auth state changes (including OAuth callbacks)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      
+      if (event === 'SIGNED_IN' && session) {
+        setIsSignedIn(true);
+        if (typeof window !== 'undefined' && window.localStorage) {
+          localStorage.setItem('resumax_signed_in', 'true');
+          localStorage.setItem('resumax_user_email', session.user.email || '');
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setIsSignedIn(false);
+        if (typeof window !== 'undefined' && window.localStorage) {
+          localStorage.removeItem('resumax_signed_in');
+          localStorage.removeItem('resumax_user_email');
+        }
+      }
+    });
+
+    // Check current session on mount
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setIsSignedIn(true);
+        if (typeof window !== 'undefined' && window.localStorage) {
+          localStorage.setItem('resumax_signed_in', 'true');
+          localStorage.setItem('resumax_user_email', session.user.email || '');
+        }
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   // Redirect to manager sign-in if not signed in and in popup view
   useEffect(() => {
@@ -122,7 +196,6 @@ function App() {
       } else if (isSignedIn || isManagerView) {
         // Load data normally if signed in but not showing onboarding
         async function init() {
-          console.log('🔄 Starting initialization...');
           // For test user, always initialize mock data
           if (testUser) {
             await initializeMockData();
@@ -130,7 +203,6 @@ function App() {
             await initializeMockData();
           }
           await loadResumeData();
-          console.log('✅ Initialization complete');
           setLoading(false);
         }
         init();
@@ -145,18 +217,8 @@ function App() {
    */
   async function initializeMockData() {
     try {
-      console.log('📋 Checking for existing data...');
       const existingResume = await storageService.getResume();
       const savedResumes = await storageService.getSavedResumes();
-      
-      console.log('Existing resume:', {
-        experiences: existingResume.experiences?.length || 0,
-        education: existingResume.education?.length || 0,
-        projects: existingResume.projects?.length || 0,
-        customSections: existingResume.customSections?.length || 0,
-        totalBullets: existingResume.totalBullets
-      });
-      console.log('Saved resumes count:', savedResumes.length);
       
       // Check if there's actual data (not just totalBullets, but actual bullets)
       const hasMasterData = 
@@ -165,12 +227,10 @@ function App() {
         (existingResume.projects && existingResume.projects.length > 0) ||
         (existingResume.customSections && existingResume.customSections.length > 0);
       
-      console.log('Has master data?', hasMasterData);
       
       // FOR TESTING: Force initialization if localStorage has a flag OR if test user
       const forceInit = localStorage.getItem('forceInitMockData') === 'true' || isTestUser();
       if (forceInit && localStorage.getItem('forceInitMockData') === 'true') {
-        console.log('🔧 FORCE INITIALIZATION MODE - Clearing existing data...');
         localStorage.removeItem('forceInitMockData');
       }
       
@@ -186,7 +246,6 @@ function App() {
             await storageService.deleteSavedResume(resume.id);
           }
         }
-        console.log('🚀 Initializing mock data...');
         // Initialize master resume with comprehensive realistic mock data
         const mockMasterResume = {
           personalInfo: {
@@ -391,9 +450,7 @@ function App() {
         };
         
         mockMasterResume.totalBullets = calculateTotalBullets(mockMasterResume);
-        console.log('Saving master resume with', mockMasterResume.totalBullets, 'total bullets');
         await storageService.saveResume(mockMasterResume);
-        console.log('Master resume saved successfully');
         
         // Initialize saved resumes with realistic structured data
         const mockSavedResumes = [
@@ -632,29 +689,13 @@ function App() {
         // Save mock resumes with their original timestamps
         for (const resume of mockSavedResumes) {
           await storageService.saveGeneratedResume(resume.name, resume.data, resume.createdAt);
-          console.log('Saved resume:', resume.name);
         }
         
-        console.log('✅ Mock data initialized successfully!');
-        console.log('Master resume:', mockMasterResume.totalBullets, 'bullets');
-        console.log('Saved resumes:', mockSavedResumes.length);
         
         // Reload the data to ensure it's displayed
         await loadResumeData();
       } else {
-        console.log('Mock data already exists, skipping initialization');
-        console.log('Has master data:', hasMasterData);
-        console.log('Saved resumes count:', savedResumes.length);
-        if (!hasMasterData) {
-          console.log('⚠️ No master data found but condition prevented initialization');
-          console.log('Existing resume structure:', {
-            experiences: existingResume.experiences?.length || 0,
-            education: existingResume.education?.length || 0,
-            projects: existingResume.projects?.length || 0,
-            customSections: existingResume.customSections?.length || 0,
-            totalBullets: existingResume.totalBullets
-          });
-        }
+        // Data already exists, skip initialization
       }
     } catch (error) {
       console.error('❌ Error initializing mock data:', error);
@@ -667,14 +708,7 @@ function App() {
   async function loadResumeData() {
     setLoading(true);
     try {
-      console.log('📥 Loading resume data...');
       const data = await storageService.getResume();
-      console.log('Raw data from storage:', {
-        experiences: data.experiences?.length || 0,
-        education: data.education?.length || 0,
-        projects: data.projects?.length || 0,
-        customSections: data.customSections?.length || 0
-      });
       
       // Ensure all fields exist and calculate total bullets
       const normalizedData = {
@@ -704,13 +738,6 @@ function App() {
 
       normalizedData.totalBullets = calculateTotalBullets(normalizedData);
       
-      console.log('✅ Setting resume state:', {
-        experiences: normalizedData.experiences.length,
-        education: normalizedData.education.length,
-        projects: normalizedData.projects.length,
-        customSections: normalizedData.customSections.length,
-        totalBullets: normalizedData.totalBullets
-      });
       
       setResume(normalizedData);
     } catch (error) {
@@ -740,7 +767,6 @@ function App() {
   // Force initialization function (for testing)
   async function forceInitializeMockData() {
     try {
-      console.log('🔧 FORCE INITIALIZING MOCK DATA...');
       await storageService.clearResume();
       const existingSaved = await storageService.getSavedResumes();
       for (const resume of existingSaved) {
@@ -818,6 +844,17 @@ function App() {
 
   function handleSelectionComplete() {
     openManagerPage();
+  }
+
+  async function handleSignUp(userData) {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.setItem('resumax_signed_in', 'true');
+      if (userData?.email) {
+        localStorage.setItem('resumax_user_email', userData.email);
+      }
+      setIsSignedIn(true);
+      setShowSignUp(false);
+    }
   }
 
   async function handleSignIn(userData) {
@@ -904,7 +941,10 @@ function App() {
     // Data will be empty, user can start filling it in manually
   }
 
-  function handleSignOut() {
+  async function handleSignOut() {
+    // Sign out from Supabase
+    await supabase.auth.signOut();
+    
     if (typeof window !== 'undefined' && window.localStorage) {
       localStorage.removeItem('resumax_signed_in');
       localStorage.removeItem('resumax_user_email');
@@ -961,11 +1001,24 @@ function App() {
     );
   }
 
-  // Show sign-in page if not signed in and in manager view
+  // Show sign-in or sign-up page if not signed in and in manager view
   if (isManagerView && !isSignedIn) {
+    if (showSignUp) {
+      return (
+        <div className="app app-manager">
+          <SignUp 
+            onSignUp={handleSignUp} 
+            onSwitchToSignIn={() => setShowSignUp(false)}
+          />
+        </div>
+      );
+    }
     return (
       <div className="app app-manager">
-        <SignIn onSignIn={handleSignIn} />
+        <SignIn 
+          onSignIn={handleSignIn} 
+          onSwitchToSignUp={() => setShowSignUp(true)}
+        />
       </div>
     );
   }
