@@ -14,6 +14,9 @@ import Onboarding from './components/Onboarding';
 import SideNav from './components/SideNav';
 import Profile from './components/Profile';
 import ResumeCoaching from './components/ResumeCoaching';
+import About from './components/About';
+import ResumeTips from './components/ResumeTips';
+import Community from './components/Community';
 import { supabase } from './config/supabase';
 import { storageService } from './services/storage';
 import './App.css';
@@ -31,7 +34,7 @@ function App() {
   const isManagerView = queryParams.get('view') === 'manager';
 
   const [activeTab, setActiveTab] = useState(() => (isManagerView ? 'generate' : 'generate'));
-  const [activeView, setActiveView] = useState(() => (isManagerView ? 'profile' : 'generate'));
+  const [activeView, setActiveView] = useState(() => (isManagerView ? 'about' : 'generate'));
   const [refreshSaved, setRefreshSaved] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -1072,6 +1075,14 @@ function App() {
         )}
 
         <main className="app-main">
+          {activeView === 'about' && (
+            <About />
+          )}
+
+          {activeView === 'tips' && (
+            <ResumeTips />
+          )}
+
           {activeView === 'profile' && (
             <Profile
               resume={resume}
@@ -1091,6 +1102,7 @@ function App() {
                   masterResume={resume}
                   onSave={handleResumeSaved}
                   onSelectionComplete={handleSelectionComplete}
+                  hideExtract={true}
                 />
               </div>
             </div>
@@ -1112,8 +1124,52 @@ function App() {
             </div>
           )}
 
+          {activeView === 'community' && (
+            <Community />
+          )}
+
           {activeView === 'coaching' && (
             <ResumeCoaching />
+          )}
+
+          {activeView === 'coaching-ai' && (
+            <div className="view-container">
+              <div className="view-header">
+                <h1>AI Coach</h1>
+                <p className="view-subtitle">Get AI-powered feedback and suggestions for your resume</p>
+              </div>
+              <div className="view-content">
+                <div className="coaching-placeholder">
+                  <div className="placeholder-icon">🤖</div>
+                  <h2>AI Coach Coming Soon</h2>
+                  <p>AI-powered resume coaching features will be available here soon.</p>
+                  <p className="placeholder-subtext">
+                    Get instant feedback, improvement suggestions, and personalized recommendations
+                    powered by advanced AI.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeView === 'coaching-human' && (
+            <div className="view-container">
+              <div className="view-header">
+                <h1>Critique with Human</h1>
+                <p className="view-subtitle">Get personalized feedback from experienced professionals</p>
+              </div>
+              <div className="view-content">
+                <div className="coaching-placeholder">
+                  <div className="placeholder-icon">👥</div>
+                  <h2>Human Critique Coming Soon</h2>
+                  <p>Connect with professional resume reviewers for personalized feedback.</p>
+                  <p className="placeholder-subtext">
+                    Get detailed critiques from experienced recruiters and career coaches
+                    to make your resume stand out.
+                  </p>
+                </div>
+              </div>
+            </div>
           )}
 
           {/* Legacy tab-based view for non-manager */}
@@ -1420,7 +1476,6 @@ function App() {
                 <GenerateResume
                   masterResume={resume}
                   onSave={handleResumeSaved}
-                  hideExtract={true}
                 />
               )}
 

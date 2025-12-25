@@ -24,11 +24,28 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
 
   const [activeTab, setActiveTab] = React.useState('personal');
 
+  const handleImportResume = () => {
+    // TODO: Implement resume import functionality
+    alert('Resume import feature coming soon!');
+  };
+
   return (
     <div className="profile-page">
       <div className="profile-header">
-        <h1>Profile</h1>
-        <p className="profile-subtitle">Manage your master resume points</p>
+        <div className="profile-header-content">
+          <div>
+            <h1>Profile</h1>
+            <p className="profile-subtitle">Manage your master resume points</p>
+          </div>
+          <button 
+            className="btn-import-resume"
+            onClick={handleImportResume}
+            title="Import from existing resume"
+          >
+            <span className="import-icon">📥</span>
+            Import from Resume
+          </button>
+        </div>
       </div>
 
       <div className="profile-content">
