@@ -456,8 +456,19 @@ function SharedResumeView({ shareToken }) {
 
       if (resumeError) throw resumeError;
 
+      // Ensure resume_data is parsed if it's a string
+      let parsedResumeData = resumeData.resume_data;
+      if (typeof parsedResumeData === 'string') {
+        try {
+          parsedResumeData = JSON.parse(parsedResumeData);
+        } catch (e) {
+          console.error('Failed to parse resume_data:', e);
+        }
+      }
+
       setResume({
         ...resumeData,
+        resume_data: parsedResumeData,
         shareLink: linkData
       });
     } catch (err) {
@@ -705,54 +716,73 @@ function SharedResumeView({ shareToken }) {
     if (!resume || !resume.resume_data) return null;
 
     const data = resume.resume_data;
+    
+    // Get personal info with fallbacks for different data structures
+    const personalInfo = data.personalInfo || data.personal_info || {};
+    const firstName = (personalInfo.firstName || personalInfo.first_name || '').trim();
+    const lastName = (personalInfo.lastName || personalInfo.last_name || '').trim();
+    const name = firstName || lastName 
+      ? `${firstName} ${lastName}`.trim() 
+      : (personalInfo.name || '').trim();
+    
+    // Check if we have any personal info to display
+    const hasName = name.length > 0;
+    const hasContactInfo = !!(personalInfo.phone || personalInfo.email || personalInfo.linkedin || personalInfo.github);
+    const shouldShowPersonalInfo = hasName || hasContactInfo;
 
     return (
       <>
         {/* Personal Info Header - Always at top */}
-        {data.personalInfo && (
+        {shouldShowPersonalInfo && (
           <div className="resume-header-section">
-            <h1 className="resume-name">
-              {data.personalInfo.firstName} {data.personalInfo.lastName}
-            </h1>
-            <div className="resume-contact-info">
-              {data.personalInfo.email && (
-                <span className="contact-item">{data.personalInfo.email}</span>
-              )}
-              {data.personalInfo.phone && (
-                <span className="contact-item">{data.personalInfo.phone}</span>
-              )}
-              {data.personalInfo.linkedin && (
-                <span className="contact-item">
-                  <a href={data.personalInfo.linkedin} target="_blank" rel="noopener noreferrer">
-                    LinkedIn
-                  </a>
-                </span>
-              )}
-              {data.personalInfo.github && (
-                <span className="contact-item">
-                  <a href={data.personalInfo.github} target="_blank" rel="noopener noreferrer">
-                    GitHub
-                  </a>
-                </span>
-              )}
-            </div>
+            {hasName && (
+              <h1 className="resume-name">{name}</h1>
+            )}
+            {hasContactInfo && (
+              <div className="resume-contact-info">
+                {personalInfo.phone && (
+                  <span className="contact-item">{personalInfo.phone}</span>
+                )}
+                {personalInfo.email && (
+                  <span className="contact-item">
+                    {personalInfo.email}
+                  </span>
+                )}
+                {personalInfo.linkedin && (
+                  <span className="contact-item">
+                    <a href={personalInfo.linkedin} target="_blank" rel="noopener noreferrer">
+                      {personalInfo.linkedin.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/^linkedin\.com\/in\//, 'linkedin.com/in/')}
+                    </a>
+                  </span>
+                )}
+                {personalInfo.github && (
+                  <span className="contact-item">
+                    <a href={personalInfo.github} target="_blank" rel="noopener noreferrer">
+                      {personalInfo.github.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/^github\.com\//, 'github.com/')}
+                    </a>
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         )}
 
         <div className="resume-content" id="resume-content">
 
         {renderResumeSection(
-          'Experience',
+          'EXPERIENCE',
           data.experiences,
           (entry, sectionType) => {
             // Get bullets from selectedBullets or bullets (fallback)
             const bullets = entry.selectedBullets || entry.bullets || [];
+            const location = entry.location || (entry.city && entry.state ? `${entry.city}, ${entry.state}` : entry.city || entry.state || '');
             return (
               <div className="resume-entry">
                 <div className="entry-header-row">
                   <div className="entry-title">
                     <strong className="entry-role">{entry.role}</strong>
-                    {entry.company && <span className="entry-company">, {entry.company}</span>}
+                    {entry.company && <span className="entry-company"> ({entry.company})</span>}
+                    {location && <span className="entry-location"> {location}</span>}
                   </div>
                   {(entry.startDate || entry.endDate) && (
                     <span className="entry-dates">
@@ -780,19 +810,23 @@ function SharedResumeView({ shareToken }) {
           (entry, sectionType) => {
             // Get bullets from selectedBullets or bullets (fallback)
             const bullets = entry.selectedBullets || entry.bullets || [];
+            // Check if endDate is in the future for "Expected Graduation"
+            const endDate = entry.endDate;
+            const isFutureDate = endDate && new Date(endDate) > new Date();
+            const dateLabel = isFutureDate ? 'Expected Graduation: ' : '';
             return (
               <div className="resume-entry">
                 <div className="entry-header-row">
                   <div className="entry-title">
                     <strong className="entry-school">{entry.school}</strong>
+                    {(entry.startDate || entry.endDate) && (
+                      <span className="entry-dates-inline">
+                        {' '}{dateLabel}{entry.endDate || entry.startDate || ''}
+                      </span>
+                    )}
                     {entry.degree && <span className="entry-degree">, {entry.degree}</span>}
-                    {entry.field && <span className="entry-field"> in {entry.field}</span>}
+                    {entry.field && <span className="entry-field">, {entry.field}</span>}
                   </div>
-                  {(entry.startDate || entry.endDate) && (
-                    <span className="entry-dates">
-                      {entry.startDate || ''} {entry.startDate && entry.endDate ? '–' : ''} {entry.endDate || 'Present'}
-                    </span>
-                  )}
                 </div>
                 {bullets.length > 0 && (
                   <ul className="entry-bullets">
@@ -809,24 +843,24 @@ function SharedResumeView({ shareToken }) {
         )}
 
         {renderResumeSection(
-          'Projects',
+          'PROJECTS',
           data.projects,
           (entry, sectionType) => {
             // Get bullets from selectedBullets or bullets (fallback)
             const bullets = entry.selectedBullets || entry.bullets || [];
+            // Ensure technologies is always an array
+            const technologiesRaw = entry.technologies || entry.tech || entry.skills;
+            const technologies = Array.isArray(technologiesRaw) ? technologiesRaw : (technologiesRaw ? [technologiesRaw] : []);
             return (
               <div className="resume-entry">
                 <div className="entry-header-row">
                   <div className="entry-title">
                     <strong className="entry-project-name">{entry.name}</strong>
+                    {technologies.length > 0 && (
+                      <span className="entry-technologies">— {technologies.join(', ')}</span>
+                    )}
                   </div>
-                  {(entry.startDate || entry.endDate) && (
-                    <span className="entry-dates">
-                      {entry.startDate || ''} {entry.startDate && entry.endDate ? '–' : ''} {entry.endDate || 'Present'}
-                    </span>
-                  )}
                 </div>
-                {entry.description && <p className="entry-description">{entry.description}</p>}
                 {bullets.length > 0 && (
                   <ul className="entry-bullets">
                     {bullets.map((bullet, idx) => {
@@ -843,14 +877,18 @@ function SharedResumeView({ shareToken }) {
 
         {data.skills && data.skills.length > 0 && (
           <div className="resume-section">
-            <h3 className="section-title">Skills</h3>
+            <h3 className="section-title">SKILLS</h3>
             <div className="skills-list">
-              {data.skills.map((group, idx) => (
-                <div key={group.id || idx} className="skill-group">
-                  {group.title && <strong className="skill-category">{group.title}: </strong>}
-                  <span className="skill-items">{group.skills?.join(', ') || ''}</span>
-                </div>
-              ))}
+              {data.skills.map((group, idx) => {
+                // Ensure skills is always an array
+                const skillsArray = Array.isArray(group.skills) ? group.skills : (group.skills ? [group.skills] : []);
+                return (
+                  <div key={group.id || idx} className="skill-group">
+                    {group.title && <strong className="skill-category">{group.title}: </strong>}
+                    <span className="skill-items">{skillsArray.length > 0 ? skillsArray.join(', ') : ''}</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

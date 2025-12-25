@@ -4,6 +4,7 @@ import OptimizationPanel from './OptimizationPanel';
 import SelectedResumeEditor from './SelectedResumeEditor';
 import LatexPreviewModal from './LatexPreviewModal';
 import { storageService } from '../services/storage';
+import { supabase } from '../config/supabase';
 import { buildStructuredResume, selectResume, renderLatex } from '../services/api';
 import { buildLatexDocument } from '../utils/latexTemplate';
 import './GenerateResume.css';
@@ -288,7 +289,28 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
         };
       }
 
-      await storageService.saveGeneratedResume(resumeName.trim(), savedResume);
+      // Save to Supabase
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          const { error } = await supabase
+            .from('saved_resumes')
+            .insert({
+              user_id: session.user.id,
+              name: resumeName.trim(),
+              resume_data: savedResume
+            });
+
+          if (error) throw error;
+        } else {
+          // Fallback to Chrome Storage if not signed in
+          await storageService.saveGeneratedResume(resumeName.trim(), savedResume);
+        }
+      } catch (error) {
+        console.error('Error saving to Supabase, falling back to Chrome Storage:', error);
+        // Fallback to Chrome Storage
+        await storageService.saveGeneratedResume(resumeName.trim(), savedResume);
+      }
       
       // Reset state
       setShowSaveDialog(false);
