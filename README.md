@@ -33,9 +33,12 @@ The system uses **hybrid search** (semantic + keyword matching) to find the most
 ### 📱 Chrome Extension
 - **3-Tab Interface**: Master Resume, Generate New Resume, Saved Resumes
 - **Master Resume**: Unlimited bullet points per experience/education/project with personal info + skills editors
-- **Generate New Resume**: Match best bullets to job descriptions with AI optimization; dynamic one-page caps keep Jake’s template compliant
+- **Generate New Resume**: Match best bullets to job descriptions with AI optimization; dynamic one-page caps keep Jake's template compliant
 - **Saved Resumes**: Structured editing (sections → entries → bullets) with ability to add bullets from master resume
 - **LaTeX Preview**: Side-by-side `.tex` and live PDF preview before export
+- **Resume Sharing**: Generate permanent shareable links for any saved resume
+- **Line-Specific Comments**: Comment on individual resume bullets with inline comment display
+- **Public Resume View**: Beautiful, professional resume display with comment system
 - Local storage for resume data
 - One-click job description extraction
 - LaTeX line count indicators for one-page enforcement
@@ -281,6 +284,17 @@ Manual testing via Chrome DevTools and extension popup.
 2. **Edit structure** → Sections (Experiences/Education/Projects) → Entries → Bullets
 3. **Add from master** → Select bullets from master resume to add to any entry
 4. **Save as new** → Create variations of saved resumes
+5. **Share resume** → Generate permanent shareable link for any saved resume
+6. **Go to shared** → Open shared resume view (if already shared)
+
+### Resume Sharing & Comments
+1. **Generate share link** → Click "Share Resume" on any saved resume to create a permanent link
+2. **Public view** → Anyone with the link can view the resume in a professional format
+3. **Line-specific comments** → Click on any bullet point to add comments directly on that line
+4. **Comment indicators** → Bullets with comments show a badge with comment count
+5. **General comments** → Leave general comments on the entire resume
+6. **Real-time updates** → Comments appear instantly via Supabase real-time subscriptions
+7. **Anonymous or signed-in** → Comment as anonymous (with name) or as a signed-in user
 
 ### Backend Integration (Future)
 1. **Backend receives request** → Hybrid search finds top matching bullets from master resume
@@ -323,4 +337,12 @@ For questions or suggestions, open an issue or contact the maintainer.
 - **Dynamic One-Page Selection**: the extension now auto-adjusts bullets-per-section before calling `/api/v1/select`, ensuring the returned resume fits Jake's template while adapting to experience- or project-heavy profiles.
 - **LaTeX + PDF Preview**: the Chrome popup exposes a LaTeX preview modal with copy/download options, real-time PDF rendering, and side-by-side comparison so users can inspect the generated `.tex` source before export.
 - **Backend PDF Rendering**: new `/api/v1/latex/render` endpoint converts a structured resume into PDF (via `tectonic`), returning Base64 so the frontend can show inline previews or downloads.
+- **Resume Sharing & Comments**: 
+  - Generate permanent shareable links for any saved resume
+  - Public resume view with professional formatting (Jake's template style)
+  - **Line-specific comments**: Click on any resume bullet to add comments directly on that line
+  - Comment indicators show which bullets have comments
+  - Support for both general comments and bullet-specific comments
+  - Real-time comment updates via Supabase subscriptions
+  - Anonymous and authenticated commenting support
 

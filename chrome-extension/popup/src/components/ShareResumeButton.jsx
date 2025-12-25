@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../config/supabase';
 import { storageService } from '../services/storage';
 import './ShareResumeButton.css';
 
 function ShareResumeButton({ resumeId, resumeName }) {
   const [shareLink, setShareLink] = useState(null);
+  const [existingShareLink, setExistingShareLink] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(true);
   const [error, setError] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -14,6 +16,91 @@ function ShareResumeButton({ resumeId, resumeName }) {
   const isValidUUID = (str) => {
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     return uuidRegex.test(str);
+  };
+
+  // Check for existing share link on mount
+  useEffect(() => {
+    checkExistingShareLink();
+  }, [resumeId]);
+
+  const checkExistingShareLink = async () => {
+    setChecking(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setChecking(false);
+        return;
+      }
+
+      let supabaseResumeId = resumeId;
+
+      // If resumeId is not a UUID, try to find it in Supabase
+      if (!isValidUUID(resumeId)) {
+        const savedResume = await storageService.getSavedResume(resumeId);
+        if (savedResume) {
+          const { data: existingResume } = await supabase
+            .from('saved_resumes')
+            .select('id')
+            .eq('user_id', session.user.id)
+            .eq('name', savedResume.name || resumeName)
+            .single();
+
+          if (existingResume) {
+            supabaseResumeId = existingResume.id;
+          } else {
+            // Resume not in Supabase yet, no share link exists
+            setChecking(false);
+            return;
+          }
+        } else {
+          setChecking(false);
+          return;
+        }
+      }
+
+      // Check for existing active share link
+      const { data: existingLink, error: fetchError } = await supabase
+        .from('shared_resume_links')
+        .select('*')
+        .eq('resume_id', supabaseResumeId)
+        .eq('user_id', session.user.id)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (!fetchError && existingLink) {
+        // Construct share URL
+        let shareUrl;
+        if (typeof chrome !== 'undefined' && chrome.runtime?.getURL) {
+          const baseUrl = chrome.runtime.getURL('popup-build/index.html');
+          shareUrl = `${baseUrl}?share=${existingLink.share_token}`;
+        } else {
+          const currentUrl = new URL(window.location.href);
+          shareUrl = `${currentUrl.origin}${currentUrl.pathname}?share=${existingLink.share_token}`;
+        }
+
+        setExistingShareLink({
+          ...existingLink,
+          share_url: shareUrl
+        });
+      }
+    } catch (err) {
+      // Silently fail - just don't show existing link
+      console.error('Error checking for existing share link:', err);
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  const goToShared = () => {
+    if (existingShareLink?.share_url) {
+      if (typeof chrome !== 'undefined' && chrome.tabs?.create) {
+        chrome.tabs.create({ url: existingShareLink.share_url });
+      } else {
+        window.open(existingShareLink.share_url, '_blank', 'noopener');
+      }
+    }
   };
 
   const generateShareLink = async () => {
@@ -110,10 +197,13 @@ function ShareResumeButton({ resumeId, resumeName }) {
         shareUrl = `${currentUrl.origin}${currentUrl.pathname}?share=${shareToken}`;
       }
       
-      setShareLink({
+      const newShareLink = {
         ...data,
         share_url: shareUrl
-      });
+      };
+      
+      setShareLink(newShareLink);
+      setExistingShareLink(newShareLink); // Update existing link state
       setShowModal(true);
     } catch (err) {
       setError(err.message || 'Failed to create share link');
@@ -122,15 +212,41 @@ function ShareResumeButton({ resumeId, resumeName }) {
     }
   };
 
-  const copyToClipboard = async () => {
-    try {
-      await navigator.clipboard.writeText(shareLink.share_url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      setError('Failed to copy link');
-    }
-  };
+
+  // Show loading state while checking
+  if (checking) {
+    return (
+      <button 
+        className="btn-share-resume"
+        disabled
+        title="Checking..."
+      >
+        ⏳ Checking...
+      </button>
+    );
+  }
+
+  // If share link exists, show "Go to Shared" button
+  if (existingShareLink) {
+    return (
+      <>
+        <button 
+          className="btn-share-resume btn-go-to-shared"
+          onClick={goToShared}
+          title="Open shared resume link"
+        >
+          🔗 Go to Shared
+        </button>
+        <button 
+          className="btn-share-resume btn-share-again"
+          onClick={() => setShowModal(true)}
+          title="View share link"
+        >
+          📋
+        </button>
+      </>
+    );
+  }
 
   return (
     <>
@@ -147,7 +263,7 @@ function ShareResumeButton({ resumeId, resumeName }) {
         <div className="share-error">{error}</div>
       )}
 
-      {showModal && shareLink && (
+      {showModal && (shareLink || existingShareLink) && (
         <div className="share-modal-overlay" onClick={() => setShowModal(false)}>
           <div className="share-modal" onClick={(e) => e.stopPropagation()}>
             <div className="share-modal-header">
@@ -163,12 +279,19 @@ function ShareResumeButton({ resumeId, resumeName }) {
             <div className="share-link-container">
               <input 
                 type="text" 
-                value={shareLink.share_url} 
+                value={(shareLink || existingShareLink)?.share_url} 
                 readOnly 
                 className="share-link-input"
               />
               <button 
-                onClick={copyToClipboard}
+                onClick={() => {
+                  const linkToCopy = (shareLink || existingShareLink)?.share_url;
+                  if (linkToCopy) {
+                    navigator.clipboard.writeText(linkToCopy);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  }
+                }}
                 className="btn-copy"
               >
                 {copied ? '✓ Copied!' : 'Copy'}

@@ -8,6 +8,7 @@
   font-size: 14px;
   font-weight: 500;
   transition: background 0.2s;
+  white-space: nowrap;
 }
 
 .btn-share-resume:hover:not(:disabled) {
@@ -17,6 +18,25 @@
 .btn-share-resume:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.btn-go-to-shared {
+  background: #10b981;
+}
+
+.btn-go-to-shared:hover:not(:disabled) {
+  background: #059669;
+}
+
+.btn-share-again {
+  padding: 8px 12px;
+  margin-left: 8px;
+  background: #6b7280;
+  font-size: 16px;
+}
+
+.btn-share-again:hover:not(:disabled) {
+  background: #4b5563;
 }
 
 .share-error {
