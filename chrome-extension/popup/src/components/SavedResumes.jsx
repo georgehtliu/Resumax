@@ -4,6 +4,7 @@ import ExperienceEditor from './ExperienceEditor';
 import ProjectEditor from './ProjectEditor';
 import CustomSectionEditor from './CustomSectionEditor';
 import LatexPreviewModal from './LatexPreviewModal';
+import ShareResumeButton from './ShareResumeButton';
 import { renderLatex } from '../services/api';
 import { buildLatexDocument } from '../utils/latexTemplate';
 import './SavedResumes.css';
@@ -707,6 +708,10 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
                     </p>
                   </div>
                   <div className="resume-item-actions">
+                    <ShareResumeButton 
+                      resumeId={resume.id}
+                      resumeName={resume.name}
+                    />
                     <button
                       className="btn-icon-small"
                       onClick={(e) => {

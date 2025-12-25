@@ -17,6 +17,7 @@ import ResumeCoaching from './components/ResumeCoaching';
 import About from './components/About';
 import ResumeTips from './components/ResumeTips';
 import Community from './components/Community';
+import SharedResumeView from './components/SharedResumeView';
 import { supabase } from './config/supabase';
 import { storageService } from './services/storage';
 import './App.css';
@@ -32,6 +33,16 @@ import './App.css';
 function App() {
   const queryParams = new URLSearchParams(window.location.search);
   const isManagerView = queryParams.get('view') === 'manager';
+  const shareToken = queryParams.get('share');
+
+  // If share token is present, show shared resume view (public, no auth required)
+  if (shareToken) {
+    return (
+      <div className="app">
+        <SharedResumeView shareToken={shareToken} />
+      </div>
+    );
+  }
 
   const [activeTab, setActiveTab] = useState(() => (isManagerView ? 'generate' : 'generate'));
   const [activeView, setActiveView] = useState(() => (isManagerView ? 'about' : 'generate'));
