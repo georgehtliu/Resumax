@@ -478,7 +478,8 @@ function SharedResumeView({ shareToken }) {
   const [pdfBase64, setPdfBase64] = useState(null);
   const [renderingPdf, setRenderingPdf] = useState(false);
   const [highlightedBulletInPdf, setHighlightedBulletInPdf] = useState(null);
-  const [usePdfJs, setUsePdfJs] = useState(true);
+  // Default to iframe since PDF.js cannot be loaded from CDN in Chrome extensions (CSP restrictions)
+  const [usePdfJs, setUsePdfJs] = useState(false);
   const [pdfUrl, setPdfUrl] = useState(null);
 
   useEffect(() => {

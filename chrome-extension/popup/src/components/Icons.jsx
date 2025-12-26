@@ -40,6 +40,8 @@ import {
   AlertCircle,
   ChevronLeft,
   ChevronRight,
+  Code,
+  Award,
 } from 'lucide-react';
 
 const iconMap = {
@@ -81,6 +83,8 @@ const iconMap = {
   alert: AlertCircle,
   chevronLeft: ChevronLeft,
   chevronRight: ChevronRight,
+  code: Code,
+  award: Award,
 };
 
 export function Icon({ name, size = 20, className = '', strokeWidth = 2, ...props }) {

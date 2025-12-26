@@ -1,8 +1,35 @@
 .experience-editor {
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 16px;
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  margin-bottom: 0;
+  background: var(--bg-primary);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
+}
+
+.experience-editor::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-primary-500) 0%, var(--color-purple-500) 100%);
+  transform: scaleX(0);
+  transition: transform var(--transition-base);
+}
+
+.experience-editor:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-primary-200);
+  transform: translateY(-1px);
+}
+
+.experience-editor:hover::before {
+  transform: scaleX(1);
 }
 
 .experience-form {
@@ -15,27 +42,38 @@
 
 .form-group label {
   display: block;
-  font-size: 12px;
-  font-weight: 600;
-  color: #666;
-  margin-bottom: 4px;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-1);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .form-group input,
 .form-group textarea {
   width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
   font-family: inherit;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  transition: all var(--transition-base);
+  box-sizing: border-box;
 }
 
 .form-group input:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: var(--color-primary-500);
+  box-shadow: 0 0 0 3px var(--color-primary-100);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: var(--text-tertiary);
 }
 
 .form-row {
@@ -45,9 +83,9 @@
 }
 
 .bullets-section {
-  margin-top: 24px;
-  padding-top: 24px;
-  border-top: 1px solid #e0e0e0;
+  margin-top: var(--space-6);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--color-gray-200);
 }
 
 .bullets-header {
@@ -63,9 +101,9 @@
 }
 
 .bullets-header label {
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
 }
 
 .btn-small {
@@ -141,20 +179,23 @@
   width: 32px;
   height: 32px;
   border: none;
-  background: #f0f0f0;
-  border-radius: 4px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
   cursor: pointer;
   font-size: 20px;
-  color: #999;
+  color: var(--text-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  transition: all var(--transition-base);
+  border: 1px solid var(--color-gray-200);
 }
 
 .btn-icon:hover {
-  background: #ff4444;
-  color: white;
+  background: var(--color-error-light);
+  color: var(--color-error);
+  border-color: var(--color-error);
+  transform: scale(1.1);
 }
 
 .empty-bullets {
@@ -184,20 +225,22 @@
 }
 
 .experience-header h3 {
-  font-size: 18px;
-  margin-bottom: 4px;
-  color: #333;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--space-1);
+  color: var(--text-primary);
 }
 
 .experience-role {
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 4px;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-1);
+  font-weight: var(--font-weight-medium);
 }
 
 .experience-dates {
-  font-size: 12px;
-  color: #999;
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
 }
 
 .bullets-preview {
@@ -228,7 +271,8 @@
   content: '•';
   position: absolute;
   left: 0;
-  color: #667eea;
+  color: var(--color-primary-500);
+  font-weight: var(--font-weight-bold);
 }
 
 .more-bullets {

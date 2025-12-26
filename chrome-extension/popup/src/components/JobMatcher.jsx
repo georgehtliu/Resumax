@@ -68,11 +68,11 @@ function JobMatcher({ jobDescription, onExtract, onSelect, loading }) {
               Navigate to a job posting (LinkedIn, Indeed, etc.) and click Extract.
             </p>
             <button
-              className="btn btn-primary"
+              className="btn btn-primary btn-modern"
               onClick={handleExtract}
               disabled={loading}
             >
-              <Icon name="file" size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+              <Icon name="file" size={16} />
               Extract Job Description
             </button>
             {extractionStatus && (
@@ -159,18 +159,18 @@ function JobMatcher({ jobDescription, onExtract, onSelect, loading }) {
 
       <div className="job-matcher-actions">
         <button
-          className="btn btn-primary btn-large"
+          className="btn btn-primary btn-large btn-modern"
           onClick={handleProcess}
           disabled={loading || !manualJD.trim()}
         >
           {loading ? (
             <>
-              <Icon name="clipboard" size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+              <Icon name="clipboard" size={16} />
               Selecting...
             </>
           ) : (
             <>
-              <Icon name="clipboard" size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+              <Icon name="clipboard" size={16} />
               Generate Resume
             </>
           )}

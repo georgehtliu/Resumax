@@ -1131,10 +1131,6 @@ function App() {
 
           {activeView === 'generate' && (
             <div className="view-container">
-              <div className="view-header">
-                <h1>Generate Resume</h1>
-                <p className="view-subtitle">Create a tailored resume for any job description</p>
-              </div>
               <div className="view-content">
                 <GenerateResume
                   masterResume={resume}
@@ -1148,10 +1144,6 @@ function App() {
 
           {activeView === 'saved' && (
             <div className="view-container">
-              <div className="view-header">
-                <h1>Saved Resumes</h1>
-                <p className="view-subtitle">View and manage your saved resumes</p>
-              </div>
               <div className="view-content">
                 <SavedResumes
                   onLoadResume={handleResumeSaved}

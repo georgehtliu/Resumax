@@ -16,42 +16,16 @@ function PdfViewerWithMarkers({ pdfBase64, highlightedBulletId, bullets, onBulle
       return;
     }
 
-    // Load PDF.js if not already loaded
-    const loadPdfJs = async () => {
-      if (window.pdfjsLib) {
-        loadPdf();
-        return;
-      }
-
-      // Try to load PDF.js dynamically
-      try {
-        const script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-        script.async = true;
-        script.onload = () => {
-          if (window.pdfjsLib) {
-            loadPdf();
-          } else {
-            console.error('PDF.js loaded but pdfjsLib not available');
-            setLoading(false);
-          }
-        };
-        script.onerror = () => {
-          console.error('Failed to load PDF.js from CDN');
-          setLoading(false);
-          if (onError) {
-            onError();
-          }
-        };
-        document.head.appendChild(script);
-      } catch (error) {
-        console.error('Error loading PDF.js:', error);
-        setLoading(false);
-      }
-    };
-
-    loadPdfJs();
-  }, [pdfBase64]);
+    // PDF.js cannot be loaded from CDN due to Chrome extension CSP restrictions
+    // Chrome extensions in Manifest V3 don't allow external script sources
+    // This component requires PDF.js to be bundled locally or use iframe fallback
+    // For now, we'll trigger the error callback to use iframe fallback
+    console.warn('PDF.js cannot be loaded from CDN in Chrome extension context. Using iframe fallback.');
+    setLoading(false);
+    if (onError) {
+      onError();
+    }
+  }, [pdfBase64, onError]);
 
   useEffect(() => {
     if (pdfDoc && canvasRef.current) {
@@ -86,9 +60,8 @@ function PdfViewerWithMarkers({ pdfBase64, highlightedBulletId, bullets, onBulle
       }
 
       // Set worker source - use CDN worker
-      if (window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions) {
-        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-      }
+      // PDF.js worker setup removed due to CSP restrictions
+      // Using iframe fallback instead
 
       const loadingTask = window.pdfjsLib.getDocument({ data: bytes });
       const pdf = await loadingTask.promise;
@@ -412,8 +385,16 @@ function PdfViewerWithMarkers({ pdfBase64, highlightedBulletId, bullets, onBulle
     return <div className="pdf-viewer-loading">Loading PDF...</div>;
   }
 
+  // PDF.js is not available due to Chrome extension CSP restrictions
+  // This component should not be used directly - use iframe fallback instead
+  // This check is kept for safety but should not be reached
   if (!window.pdfjsLib) {
-    return <div className="pdf-viewer-error">PDF.js library not loaded. Please refresh the page.</div>;
+    return (
+      <div className="pdf-viewer-error">
+        <p>PDF.js is not available in this context.</p>
+        <p>Please use the iframe viewer instead.</p>
+      </div>
+    );
   }
 
   if (!pdfDoc) {

@@ -590,20 +590,67 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
     );
   }
 
+  // Calculate stats
+  const totalBullets = savedResumes.reduce((sum, r) => sum + getStructuredBulletCount(r.data), 0);
+  const avgBulletsPerResume = savedResumes.length > 0 ? Math.round(totalBullets / savedResumes.length) : 0;
+
   return (
     <div className="saved-resumes">
+      {/* Header Section */}
+      <div className="saved-resumes-header-section">
+        <div className="view-header">
+          <h1>Saved Resumes</h1>
+          <p className="view-subtitle">View, edit, and manage your saved resumes</p>
+        </div>
+
+        {/* Stats Cards */}
+        {savedResumes.length > 0 && (
+          <div className="saved-resumes-stats">
+            <div className="stat-card">
+              <div className="stat-icon stat-icon-primary">
+                <FileText size={20} />
+              </div>
+              <div className="stat-content">
+                <div className="stat-value">{savedResumes.length}</div>
+                <div className="stat-label">Saved Resumes</div>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon stat-icon-secondary">
+                <Icon name="fileText" size={20} />
+              </div>
+              <div className="stat-content">
+                <div className="stat-value">{totalBullets}</div>
+                <div className="stat-label">Total Bullets</div>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon stat-icon-tertiary">
+                <Icon name="chart" size={20} />
+              </div>
+              <div className="stat-content">
+                <div className="stat-value">{avgBulletsPerResume}</div>
+                <div className="stat-label">Avg per Resume</div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
       {savedResumes.length === 0 ? (
-        <div className="saved-resumes-empty">
-          <FileText className="saved-resumes-empty-icon" size={64} />
+        <div className="saved-resumes-empty-modern">
+          <div className="empty-state-icon">
+            <FileText size={64} />
+          </div>
           <h3>No saved resumes yet</h3>
-          <p>Generate and save a resume to get started</p>
+          <p>Generate and save your first resume to get started. Create tailored resumes for different job applications.</p>
         </div>
       ) : (
         <>
           <div className="section">
-            <div className="section-header-with-action">
+            <div className="section-header-modern">
               <div>
-                <h2>Saved Resumes ({savedResumes.length})</h2>
+                <h2>Your Resumes</h2>
                 <p className="section-description">
                   Click on a resume to view and edit it. Resumes are sorted by newest first.
                 </p>
@@ -649,7 +696,7 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
           {selectedResume && (
             <>
               <div className="section">
-                <div className="section-header-with-action">
+                <div className="section-header-modern-with-action">
                   <div>
                     <h2>{selectedResume.name}</h2>
                     <p className="section-description">
@@ -665,17 +712,17 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
                       )}
                     </p>
                   </div>
-                  <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+                  <div className="section-header-actions">
                     <button
-                      className="btn btn-secondary"
+                      className="btn btn-secondary btn-modern"
                       onClick={openLatexPreview}
                       disabled={!editedResume}
                     >
-                      <Icon name="eye" size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+                      <Icon name="eye" size={16} />
                       LaTeX Preview
                     </button>
                     <button
-                      className="btn btn-primary"
+                      className="btn btn-primary btn-modern"
                       onClick={() => setShowSaveDialog(true)}
                       disabled={!editedResume || saving}
                     >

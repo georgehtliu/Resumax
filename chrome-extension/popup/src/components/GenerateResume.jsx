@@ -348,13 +348,21 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
         </div>
       )}
 
-      <div className="section">
-        <h2>Match to Job Description</h2>
-        <p className="section-description">
-          {hideExtract 
-            ? 'Paste a job description, then select the best resume points.'
-            : 'Extract or paste a job description, then select the best resume points.'}
-        </p>
+      {/* Header Section */}
+      <div className="generate-resume-header">
+        <h1>Generate Resume</h1>
+        <p className="generate-resume-subtitle">Create a tailored resume for any job description</p>
+      </div>
+
+      <div className="section section-modern">
+        <div className="section-header-modern">
+          <h2>Job Description</h2>
+          <p className="section-description">
+            {hideExtract 
+              ? 'Paste a job description, then select the best resume points.'
+              : 'Extract or paste a job description, then select the best resume points.'}
+          </p>
+        </div>
         
         <JobMatcher
           jobDescription={currentJob?.description || ''}
@@ -366,33 +374,48 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
 
       {/* Keyword Scanner */}
       {(keywordData || scanningKeywords) && (
-        <div className="section">
+        <div className="section section-modern">
+          <div className="section-header-modern">
+            <h2>Keyword Analysis</h2>
+            <p className="section-description">
+              See which keywords from the job description match your resume
+            </p>
+          </div>
           <KeywordScanner keywordData={keywordData} loading={scanningKeywords} />
         </div>
       )}
 
       {/* Optimization Results */}
       {optimizationResult && (
-        <div className="section">
-          <div className="section-header-with-action">
-            <h2>Selected Resume</h2>
-            <button
-              className="btn btn-primary"
-              onClick={() => setShowSaveDialog(true)}
-              disabled={saving}
-            >
-              <Icon name="save" size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-              Save Resume
-            </button>
-            {optimizationResult.mode === 'select' && (
+        <div className="section section-modern">
+          <div className="section-header-modern-with-action">
+            <div>
+              <h2>Selected Resume</h2>
+              <p className="section-description">
+                Review and customize your selected resume. {optimizationResult.fitsOnePage 
+                  ? '✅ Fits on one page' 
+                  : '⚠️ Exceeds one page limit'}
+              </p>
+            </div>
+            <div className="section-header-actions">
+              {optimizationResult.mode === 'select' && (
+                <button
+                  className="btn btn-secondary btn-modern"
+                  onClick={openLatexPreview}
+                >
+                  <Icon name="eye" size={16} />
+                  LaTeX Preview
+                </button>
+              )}
               <button
-                className="btn btn-secondary"
-                onClick={openLatexPreview}
+                className="btn btn-primary btn-modern"
+                onClick={() => setShowSaveDialog(true)}
+                disabled={saving}
               >
-                <Icon name="eye" size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-                LaTeX Preview
+                <Icon name="save" size={16} />
+                Save Resume
               </button>
-            )}
+            </div>
           </div>
           
           <SelectedResumeEditor

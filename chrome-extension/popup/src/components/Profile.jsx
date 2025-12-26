@@ -332,260 +332,427 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
     onResumeUpdate(mockMasterResume);
   };
 
+  // Calculate stats for header
+  const totalBullets = calculateTotalBullets(resume);
+  const totalExperiences = resume.experiences?.length || 0;
+  const totalEducation = resume.education?.length || 0;
+  const totalProjects = resume.projects?.length || 0;
+  const totalCustomSections = resume.customSections?.length || 0;
+
   return (
     <div className="profile-page">
-      <div className="profile-header sticky-header">
-        <div className="profile-header-content">
-          <div>
-            <h1>Profile</h1>
-            <p className="profile-subtitle">Manage your master resume points</p>
+      {/* Header Section */}
+      <div className="profile-header-section">
+        <div className="profile-header">
+          <div className="profile-header-main">
+            <div>
+              <h1>Profile</h1>
+              <p className="profile-subtitle">Build and manage your master resume</p>
+            </div>
+            <div className="profile-header-actions">
+              <AutoSaveIndicator status={saveStatus} />
+              <button 
+                className="btn-import-resume"
+                onClick={handleImportResume}
+                title="Import from existing resume"
+              >
+                <Icon name="download" size={18} />
+                Import Resume
+              </button>
+            </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-            <AutoSaveIndicator status={saveStatus} />
-            <button 
-              className="btn-import-resume"
-              onClick={handleImportResume}
-              title="Import from existing resume"
-            >
-              <Icon name="download" size={18} />
-              Import from Resume
-            </button>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="profile-stats">
+          <div className="stat-card">
+            <div className="stat-icon stat-icon-primary">
+              <Icon name="fileText" size={20} />
+            </div>
+            <div className="stat-content">
+              <div className="stat-value">{totalBullets}</div>
+              <div className="stat-label">Total Bullets</div>
+            </div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon stat-icon-secondary">
+              <Icon name="briefcase" size={20} />
+            </div>
+            <div className="stat-content">
+              <div className="stat-value">{totalExperiences}</div>
+              <div className="stat-label">Experiences</div>
+            </div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon stat-icon-tertiary">
+              <Icon name="graduation" size={20} />
+            </div>
+            <div className="stat-content">
+              <div className="stat-value">{totalEducation}</div>
+              <div className="stat-label">Education</div>
+            </div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon stat-icon-quaternary">
+              <Icon name="code" size={20} />
+            </div>
+            <div className="stat-content">
+              <div className="stat-value">{totalProjects}</div>
+              <div className="stat-label">Projects</div>
+            </div>
           </div>
         </div>
       </div>
 
+      {/* Content Section */}
       <div className="profile-content">
-        <div className="profile-tabs">
+        <div className="profile-tabs-wrapper">
           <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
         </div>
 
         <div className="profile-editor">
           {activeTab === 'personal' && (
-            <PersonalInfoEditor
-              value={resume.personalInfo}
-              onChange={(updatedInfo) => {
-                onResumeUpdate({
-                  ...resume,
-                  personalInfo: updatedInfo
-                });
-              }}
-            />
+            <div className="profile-tab-content">
+              <PersonalInfoEditor
+                value={resume.personalInfo}
+                onChange={(updatedInfo) => {
+                  onResumeUpdate({
+                    ...resume,
+                    personalInfo: updatedInfo
+                  });
+                }}
+              />
+            </div>
           )}
 
           {activeTab === 'experiences' && (
-            <div>
+            <div className="profile-tab-content">
               {(!resume.experiences || resume.experiences.length === 0) ? (
-                <div className="empty-state">
-                  <p>No experiences yet. Add your first work experience!</p>
+                <div className="empty-state-modern">
+                  <div className="empty-state-icon">
+                    <Icon name="briefcase" size={48} />
+                  </div>
+                  <h3>No work experiences yet</h3>
+                  <p>Start building your resume by adding your first work experience. Include company, role, dates, and bullet points.</p>
+                  <button
+                    className="btn btn-primary btn-add-modern"
+                    onClick={() => {
+                      const newExp = {
+                        id: `exp-${Date.now()}`,
+                        company: '',
+                        role: '',
+                        startDate: '',
+                        endDate: '',
+                        bullets: []
+                      };
+                      onResumeUpdate({
+                        ...resume,
+                        experiences: [...(resume.experiences || []), newExp]
+                      });
+                    }}
+                  >
+                    <Icon name="plus" size={18} />
+                    Add Your First Experience
+                  </button>
                 </div>
               ) : (
-                resume.experiences.map(experience => (
-                  <ExperienceEditor
-                    key={experience.id}
-                    experience={experience}
-                    onUpdate={(updatedExp) => {
-                      const updated = resume.experiences.map(exp =>
-                        exp.id === updatedExp.id ? updatedExp : exp
-                      );
-                      const totalBullets = calculateTotalBullets({
-                        ...resume,
-                        experiences: updated
-                      });
+                <>
+                  <div className="profile-items-list">
+                    {resume.experiences.map(experience => (
+                      <ExperienceEditor
+                        key={experience.id}
+                        experience={experience}
+                        onUpdate={(updatedExp) => {
+                          const updated = resume.experiences.map(exp =>
+                            exp.id === updatedExp.id ? updatedExp : exp
+                          );
+                          const totalBullets = calculateTotalBullets({
+                            ...resume,
+                            experiences: updated
+                          });
+                          onResumeUpdate({
+                            ...resume,
+                            experiences: updated,
+                            totalBullets
+                          });
+                        }}
+                        onDelete={(expId) => {
+                          const updated = resume.experiences.filter(exp => exp.id !== expId);
+                          const totalBullets = calculateTotalBullets({
+                            ...resume,
+                            experiences: updated
+                          });
+                          onResumeUpdate({
+                            ...resume,
+                            experiences: updated,
+                            totalBullets
+                          });
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <button
+                    className="btn btn-secondary btn-add-modern"
+                    onClick={() => {
+                      const newExp = {
+                        id: `exp-${Date.now()}`,
+                        company: '',
+                        role: '',
+                        startDate: '',
+                        endDate: '',
+                        bullets: []
+                      };
                       onResumeUpdate({
                         ...resume,
-                        experiences: updated,
-                        totalBullets
+                        experiences: [...resume.experiences, newExp]
                       });
                     }}
-                    onDelete={(expId) => {
-                      const updated = resume.experiences.filter(exp => exp.id !== expId);
-                      const totalBullets = calculateTotalBullets({
-                        ...resume,
-                        experiences: updated
-                      });
-                      onResumeUpdate({
-                        ...resume,
-                        experiences: updated,
-                        totalBullets
-                      });
-                    }}
-                  />
-                ))
+                  >
+                    <Icon name="plus" size={18} />
+                    Add Another Experience
+                  </button>
+                </>
               )}
-              <button
-                className="btn btn-primary btn-add"
-                onClick={() => {
-                  const newExp = {
-                    id: `exp-${Date.now()}`,
-                    company: '',
-                    role: '',
-                    startDate: '',
-                    endDate: '',
-                    bullets: []
-                  };
-                  onResumeUpdate({
-                    ...resume,
-                    experiences: [...resume.experiences, newExp]
-                  });
-                }}
-                style={{ marginTop: '16px' }}
-              >
-                + Add Experience
-              </button>
             </div>
           )}
 
           {activeTab === 'education' && (
-            <div>
+            <div className="profile-tab-content">
               {(!resume.education || resume.education.length === 0) ? (
-                <div className="empty-state">
-                  <p>No education entries yet. Add your first education!</p>
-                </div>
-              ) : (
-                resume.education.map(edu => (
-                  <EducationEditor
-                    key={edu.id}
-                    education={edu}
-                    onUpdate={(updatedEdu) => {
-                      const updated = resume.education.map(e =>
-                        e.id === updatedEdu.id ? updatedEdu : e
-                      );
-                      onResumeUpdate({ ...resume, education: updated });
-                    }}
-                    onDelete={(eduId) => {
+                <div className="empty-state-modern">
+                  <div className="empty-state-icon">
+                    <Icon name="graduation" size={48} />
+                  </div>
+                  <h3>No education entries yet</h3>
+                  <p>Add your educational background including school, degree, field of study, and relevant coursework or achievements.</p>
+                  <button
+                    className="btn btn-primary btn-add-modern"
+                    onClick={() => {
+                      const newEdu = {
+                        id: `edu-${Date.now()}`,
+                        school: '',
+                        degree: '',
+                        field: '',
+                        startDate: '',
+                        endDate: '',
+                        bullets: []
+                      };
                       onResumeUpdate({
                         ...resume,
-                        education: resume.education.filter(e => e.id !== eduId)
+                        education: [...(resume.education || []), newEdu]
                       });
                     }}
-                  />
-                ))
+                  >
+                    <Icon name="plus" size={18} />
+                    Add Your First Education
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div className="profile-items-list">
+                    {resume.education.map(edu => (
+                      <EducationEditor
+                        key={edu.id}
+                        education={edu}
+                        onUpdate={(updatedEdu) => {
+                          const updated = resume.education.map(e =>
+                            e.id === updatedEdu.id ? updatedEdu : e
+                          );
+                          onResumeUpdate({ ...resume, education: updated });
+                        }}
+                        onDelete={(eduId) => {
+                          onResumeUpdate({
+                            ...resume,
+                            education: resume.education.filter(e => e.id !== eduId)
+                          });
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <button
+                    className="btn btn-secondary btn-add-modern"
+                    onClick={() => {
+                      const newEdu = {
+                        id: `edu-${Date.now()}`,
+                        school: '',
+                        degree: '',
+                        field: '',
+                        startDate: '',
+                        endDate: '',
+                        bullets: []
+                      };
+                      onResumeUpdate({
+                        ...resume,
+                        education: [...resume.education, newEdu]
+                      });
+                    }}
+                  >
+                    <Icon name="plus" size={18} />
+                    Add Another Education
+                  </button>
+                </>
               )}
-              <button
-                className="btn btn-primary btn-add"
-                onClick={() => {
-                  const newEdu = {
-                    id: `edu-${Date.now()}`,
-                    school: '',
-                    degree: '',
-                    field: '',
-                    startDate: '',
-                    endDate: '',
-                    bullets: []
-                  };
-                  onResumeUpdate({
-                    ...resume,
-                    education: [...resume.education, newEdu]
-                  });
-                }}
-                style={{ marginTop: '16px' }}
-              >
-                + Add Education
-              </button>
             </div>
           )}
 
           {activeTab === 'projects' && (
-            <div>
+            <div className="profile-tab-content">
               {(!resume.projects || resume.projects.length === 0) ? (
-                <div className="empty-state">
-                  <p>No projects yet. Add your first project!</p>
-                </div>
-              ) : (
-                resume.projects.map(project => (
-                  <ProjectEditor
-                    key={project.id}
-                    project={project}
-                    onUpdate={(updatedProj) => {
-                      const updated = resume.projects.map(p =>
-                        p.id === updatedProj.id ? updatedProj : p
-                      );
-                      onResumeUpdate({ ...resume, projects: updated });
-                    }}
-                    onDelete={(projId) => {
+                <div className="empty-state-modern">
+                  <div className="empty-state-icon">
+                    <Icon name="code" size={48} />
+                  </div>
+                  <h3>No projects yet</h3>
+                  <p>Showcase your technical skills by adding personal or academic projects. Include technologies used and key achievements.</p>
+                  <button
+                    className="btn btn-primary btn-add-modern"
+                    onClick={() => {
+                      const newProj = {
+                        id: `proj-${Date.now()}`,
+                        name: '',
+                        description: '',
+                        technologies: '',
+                        startDate: '',
+                        endDate: '',
+                        bullets: []
+                      };
                       onResumeUpdate({
                         ...resume,
-                        projects: resume.projects.filter(p => p.id !== projId)
+                        projects: [...(resume.projects || []), newProj]
                       });
                     }}
-                  />
-                ))
+                  >
+                    <Icon name="plus" size={18} />
+                    Add Your First Project
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div className="profile-items-list">
+                    {resume.projects.map(project => (
+                      <ProjectEditor
+                        key={project.id}
+                        project={project}
+                        onUpdate={(updatedProj) => {
+                          const updated = resume.projects.map(p =>
+                            p.id === updatedProj.id ? updatedProj : p
+                          );
+                          onResumeUpdate({ ...resume, projects: updated });
+                        }}
+                        onDelete={(projId) => {
+                          onResumeUpdate({
+                            ...resume,
+                            projects: resume.projects.filter(p => p.id !== projId)
+                          });
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <button
+                    className="btn btn-secondary btn-add-modern"
+                    onClick={() => {
+                      const newProj = {
+                        id: `proj-${Date.now()}`,
+                        name: '',
+                        description: '',
+                        technologies: '',
+                        startDate: '',
+                        endDate: '',
+                        bullets: []
+                      };
+                      onResumeUpdate({
+                        ...resume,
+                        projects: [...resume.projects, newProj]
+                      });
+                    }}
+                  >
+                    <Icon name="plus" size={18} />
+                    Add Another Project
+                  </button>
+                </>
               )}
-              <button
-                className="btn btn-primary btn-add"
-                onClick={() => {
-                  const newProj = {
-                    id: `proj-${Date.now()}`,
-                    name: '',
-                    description: '',
-                    technologies: '',
-                    startDate: '',
-                    endDate: '',
-                    bullets: []
-                  };
-                  onResumeUpdate({
-                    ...resume,
-                    projects: [...resume.projects, newProj]
-                  });
-                }}
-                style={{ marginTop: '16px' }}
-              >
-                + Add Project
-              </button>
             </div>
           )}
 
           {activeTab === 'skills' && (
-            <SkillsEditor
-              skills={resume.skills}
-              onChange={(updatedSkills) => onResumeUpdate({ ...resume, skills: updatedSkills })}
-            />
+            <div className="profile-tab-content">
+              <SkillsEditor
+                skills={resume.skills}
+                onChange={(updatedSkills) => onResumeUpdate({ ...resume, skills: updatedSkills })}
+              />
+            </div>
           )}
 
           {activeTab === 'custom' && (
-            <div>
+            <div className="profile-tab-content">
               {(!resume.customSections || resume.customSections.length === 0) ? (
-                <div className="empty-state">
-                  <p>No custom sections yet. Add certifications, skills, awards, etc.!</p>
-                </div>
-              ) : (
-                resume.customSections.map(section => (
-                  <CustomSectionEditor
-                    key={section.id}
-                    section={section}
-                    onUpdate={(updatedSection) => {
-                      const updated = resume.customSections.map(s =>
-                        s.id === updatedSection.id ? updatedSection : s
-                      );
-                      onResumeUpdate({ ...resume, customSections: updated });
-                    }}
-                    onDelete={(sectionId) => {
+                <div className="empty-state-modern">
+                  <div className="empty-state-icon">
+                    <Icon name="award" size={48} />
+                  </div>
+                  <h3>No custom sections yet</h3>
+                  <p>Add certifications, awards, publications, or any other sections to highlight your achievements and qualifications.</p>
+                  <button
+                    className="btn btn-primary btn-add-modern"
+                    onClick={() => {
+                      const newSection = {
+                        id: `custom-${Date.now()}`,
+                        title: '',
+                        subtitle: '',
+                        bullets: []
+                      };
                       onResumeUpdate({
                         ...resume,
-                        customSections: resume.customSections.filter(s => s.id !== sectionId)
+                        customSections: [...(resume.customSections || []), newSection]
                       });
                     }}
-                  />
-                ))
+                  >
+                    <Icon name="plus" size={18} />
+                    Add Your First Custom Section
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div className="profile-items-list">
+                    {resume.customSections.map(section => (
+                      <CustomSectionEditor
+                        key={section.id}
+                        section={section}
+                        onUpdate={(updatedSection) => {
+                          const updated = resume.customSections.map(s =>
+                            s.id === updatedSection.id ? updatedSection : s
+                          );
+                          onResumeUpdate({ ...resume, customSections: updated });
+                        }}
+                        onDelete={(sectionId) => {
+                          onResumeUpdate({
+                            ...resume,
+                            customSections: resume.customSections.filter(s => s.id !== sectionId)
+                          });
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <button
+                    className="btn btn-secondary btn-add-modern"
+                    onClick={() => {
+                      const newSection = {
+                        id: `custom-${Date.now()}`,
+                        title: '',
+                        subtitle: '',
+                        bullets: []
+                      };
+                      onResumeUpdate({
+                        ...resume,
+                        customSections: [...resume.customSections, newSection]
+                      });
+                    }}
+                  >
+                    <Icon name="plus" size={18} />
+                    Add Another Custom Section
+                  </button>
+                </>
               )}
-              <button
-                className="btn btn-primary btn-add"
-                onClick={() => {
-                  const newSection = {
-                    id: `custom-${Date.now()}`,
-                    title: '',
-                    subtitle: '',
-                    bullets: []
-                  };
-                  onResumeUpdate({
-                    ...resume,
-                    customSections: [...resume.customSections, newSection]
-                  });
-                }}
-                style={{ marginTop: '16px' }}
-              >
-                + Add Custom Section
-              </button>
             </div>
           )}
         </div>
