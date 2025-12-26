@@ -6,9 +6,7 @@ import { SkeletonList, SkeletonCard } from './Skeleton';
 import Tooltip from './Tooltip';
 import { Trash2, FileText, Calendar } from 'lucide-react';
 import { Icon } from './Icons';
-import ExperienceEditor from './ExperienceEditor';
-import ProjectEditor from './ProjectEditor';
-import CustomSectionEditor from './CustomSectionEditor';
+import SelectedResumeEditor from './SelectedResumeEditor';
 import LatexPreviewModal from './LatexPreviewModal';
 import ShareResumeButton from './ShareResumeButton';
 import { renderLatex } from '../services/api';
@@ -281,8 +279,6 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [newResumeName, setNewResumeName] = useState('');
   const [saving, setSaving] = useState(false);
-  const [showAddBulletDialog, setShowAddBulletDialog] = useState(null); // { sectionType, entryId }
-  const [availableBullets, setAvailableBullets] = useState([]);
   const [showLatexPreview, setShowLatexPreview] = useState(false);
   const [latexSource, setLatexSource] = useState('');
   const [latexPdfBase64, setLatexPdfBase64] = useState(null);
@@ -449,121 +445,7 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
   }, [selectedResume?.id]);
 
   // Collect all available bullets from master resume
-  function collectMasterBullets() {
-    if (!masterResume) return [];
-    
-    const allBullets = [];
-    
-    // Collect from experiences
-    (masterResume.experiences || []).forEach(exp => {
-      (exp.bullets || []).forEach(bullet => {
-        allBullets.push({
-          ...bullet,
-          sourceSection: 'experiences',
-          sourceEntryId: exp.id,
-          sourceEntryName: `${exp.company} - ${exp.role}`
-        });
-      });
-    });
-    
-    // Collect from education
-    (masterResume.education || []).forEach(edu => {
-      (edu.bullets || []).forEach(bullet => {
-        allBullets.push({
-          ...bullet,
-          sourceSection: 'education',
-          sourceEntryId: edu.id,
-          sourceEntryName: `${edu.school} - ${edu.degree} ${edu.field}`
-        });
-      });
-    });
-    
-    // Collect from projects
-    (masterResume.projects || []).forEach(proj => {
-      (proj.bullets || []).forEach(bullet => {
-        allBullets.push({
-          ...bullet,
-          sourceSection: 'projects',
-          sourceEntryId: proj.id,
-          sourceEntryName: proj.name
-        });
-      });
-    });
-    
-    // Collect from custom sections
-    (masterResume.customSections || []).forEach(section => {
-      (section.bullets || []).forEach(bullet => {
-        allBullets.push({
-          ...bullet,
-          sourceSection: 'customSections',
-          sourceEntryId: section.id,
-          sourceEntryName: section.title
-        });
-      });
-    });
-    
-    return allBullets;
-  }
 
-  function handleAddEntry(sectionType) {
-    const newEntry = getDefaultEntry(sectionType);
-    const updated = { ...editedResume };
-    updated[sectionType] = [...(updated[sectionType] || []), newEntry];
-    setEditedResume(updated);
-  }
-
-  function handleUpdateEntry(sectionType, updatedEntry) {
-    const updated = { ...editedResume };
-    updated[sectionType] = updated[sectionType].map(entry =>
-      entry.id === updatedEntry.id
-        ? {
-            ...entry,
-            ...updatedEntry,
-            selectedBullets: Array.isArray(updatedEntry.selectedBullets) && updatedEntry.selectedBullets.length > 0
-              ? updatedEntry.selectedBullets
-              : Array.isArray(updatedEntry.bullets)
-                ? updatedEntry.bullets
-                : []
-          }
-        : entry
-    );
-    setEditedResume(updated);
-  }
-
-  function handleDeleteEntry(sectionType, entryId) {
-    const updated = { ...editedResume };
-    updated[sectionType] = updated[sectionType].filter(entry => entry.id !== entryId);
-    setEditedResume(updated);
-  }
-
-  function handleAddBulletToEntry(sectionType, entryId) {
-    setShowAddBulletDialog({ sectionType, entryId });
-    setAvailableBullets(collectMasterBullets());
-  }
-
-  function handleSelectBulletToAdd(bullet) {
-    if (!showAddBulletDialog) return;
-    
-    const { sectionType, entryId } = showAddBulletDialog;
-    const updated = { ...editedResume };
-    const entry = updated[sectionType].find(e => e.id === entryId);
-    
-    if (entry) {
-      const newBullet = normalizeBullet(
-        {
-          ...bullet,
-          text: bullet.text || bullet.rewritten || ''
-        },
-        `${entryId}-bullet`,
-        (entry.bullets?.length || 0)
-      );
-      entry.bullets = [...(entry.bullets || []), newBullet];
-      entry.selectedBullets = [...(entry.selectedBullets || []), newBullet];
-      setEditedResume({ ...updated });
-    }
-    
-    setShowAddBulletDialog(null);
-  }
 
   function openLatexPreview() {
     if (!editedResume) {
@@ -633,53 +515,6 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
     }
   }
 
-  function getDefaultEntry(sectionType) {
-    const timestamp = Date.now();
-    switch (sectionType) {
-      case 'experiences':
-        return {
-          id: `exp-${timestamp}`,
-          company: '',
-          role: '',
-          startDate: '',
-          endDate: '',
-          bullets: [],
-          selectedBullets: []
-        };
-      case 'education':
-        return {
-          id: `edu-${timestamp}`,
-          school: '',
-          degree: '',
-          field: '',
-          startDate: '',
-          endDate: '',
-          bullets: [],
-          selectedBullets: []
-        };
-      case 'projects':
-        return {
-          id: `proj-${timestamp}`,
-          name: '',
-          description: '',
-          technologies: '',
-          startDate: '',
-          endDate: '',
-          bullets: [],
-          selectedBullets: []
-        };
-      case 'customSections':
-        return {
-          id: `custom-${timestamp}`,
-          title: '',
-          subtitle: '',
-          bullets: [],
-          selectedBullets: []
-        };
-      default:
-        return { id: `entry-${timestamp}`, bullets: [], selectedBullets: [] };
-    }
-  }
 
   async function handleSaveAsNew() {
     if (!newResumeName.trim()) {
@@ -766,10 +601,14 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
       ) : (
         <>
           <div className="section">
-            <h2>Saved Resumes ({savedResumes.length})</h2>
-            <p className="section-description">
-              Click on a resume to view it. Resumes are sorted by newest first.
-            </p>
+            <div className="section-header-with-action">
+              <div>
+                <h2>Saved Resumes ({savedResumes.length})</h2>
+                <p className="section-description">
+                  Click on a resume to view and edit it. Resumes are sorted by newest first.
+                </p>
+              </div>
+            </div>
 
             <div className="resume-list">
               {savedResumes.map(resume => (
@@ -808,145 +647,70 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
           </div>
 
           {selectedResume && (
-            <div className="section">
-              <div className="section-header-with-action">
-                <h2>{selectedResume.name}</h2>
-                <div className="header-actions">
-                  <button
-                    className="btn btn-primary"
-                    onClick={() => setShowSaveDialog(true)}
-                  >
-                    <Icon name="save" size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-                    Save As New Resume
-                  </button>
-                  <button
-                    className="btn btn-secondary"
-                    onClick={openLatexPreview}
-                  >
-                    <Icon name="eye" size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-                    LaTeX Preview
-                  </button>
-                  <button
-                    className="btn btn-secondary"
-                    onClick={() => {
-                      setSelectedResume(null);
-                      setEditedResume(null);
-                      setShowLatexPreview(false);
-                      setLatexPdfBase64(null);
-                    }}
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-              
-              <div className="resume-details">
-                <div className="detail-row">
-                  <span className="detail-label">Created:</span>
-                  <span className="detail-value">{formatDate(selectedResume.createdAt)}</span>
-                </div>
-                {selectedResume.data?.jobDescription && (
-                  <div className="detail-row">
-                    <span className="detail-label">Job Description:</span>
-                    <span className="detail-value">
-                      {selectedResume.data.jobDescription.substring(0, 100)}...
-                    </span>
+            <>
+              <div className="section">
+                <div className="section-header-with-action">
+                  <div>
+                    <h2>{selectedResume.name}</h2>
+                    <p className="section-description">
+                      Created: {formatDate(selectedResume.createdAt)} • 
+                      Updated: {formatDate(selectedResume.updatedAt)} • 
+                      {getStructuredBulletCount(selectedResume.data)} bullets
+                      {selectedResume.data?.jobDescription && (
+                        <>
+                          <br />
+                          <strong>Job:</strong> {selectedResume.data.jobDescription.substring(0, 100)}
+                          {selectedResume.data.jobDescription.length > 100 ? '...' : ''}
+                        </>
+                      )}
+                    </p>
                   </div>
-                )}
+                  <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+                    <button
+                      className="btn btn-secondary"
+                      onClick={openLatexPreview}
+                      disabled={!editedResume}
+                    >
+                      <Icon name="eye" size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+                      LaTeX Preview
+                    </button>
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => setShowSaveDialog(true)}
+                      disabled={!editedResume || saving}
+                    >
+                      <Icon name="save" size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+                      Save As New
+                    </button>
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => {
+                        setSelectedResume(null);
+                        setEditedResume(null);
+                        setShowLatexPreview(false);
+                        setLatexPdfBase64(null);
+                      }}
+                    >
+                      <Icon name="x" size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+                      Close
+                    </button>
+                  </div>
+                </div>
               </div>
 
-              {/* Structured Resume Editor */}
+              {/* Resume Editor with Carousel */}
               {editedResume && (
-                <div className="resume-editor">
-                  {/* Work Experience Section */}
-                  <div className="resume-section-group">
-                    <div className="section-group-header">
-                      <h3 className="section-group-title">Work Experience</h3>
-                      <button
-                        className="btn btn-small btn-primary"
-                        onClick={() => handleAddEntry('experiences')}
-                      >
-                        + Add Experience
-                      </button>
-                    </div>
-                    
-                    {(!editedResume.experiences || editedResume.experiences.length === 0) ? (
-                      <div className="empty-state">
-                        <p>No experiences yet. Add your first experience!</p>
-                      </div>
-                    ) : (
-                      editedResume.experiences.map(experience => (
-                        <ExperienceEditor
-                          key={experience.id}
-                          experience={experience}
-                          onUpdate={(updatedExp) => handleUpdateEntry('experiences', updatedExp)}
-                          onDelete={(expId) => handleDeleteEntry('experiences', expId)}
-                          onAddBulletFromMaster={() => handleAddBulletToEntry('experiences', experience.id)}
-                        />
-                      ))
-                    )}
-                  </div>
-
-                  {/* Projects Section */}
-                  <div className="resume-section-group">
-                    <div className="section-group-header">
-                      <h3 className="section-group-title">Projects</h3>
-                      <button
-                        className="btn btn-small btn-primary"
-                        onClick={() => handleAddEntry('projects')}
-                      >
-                        + Add Project
-                      </button>
-                    </div>
-                    
-                    {(!editedResume.projects || editedResume.projects.length === 0) ? (
-                      <div className="empty-state">
-                        <p>No projects yet. Add your first project!</p>
-                      </div>
-                    ) : (
-                      editedResume.projects.map(project => (
-                        <ProjectEditor
-                          key={project.id}
-                          project={project}
-                          onUpdate={(updatedProj) => handleUpdateEntry('projects', updatedProj)}
-                          onDelete={(projId) => handleDeleteEntry('projects', projId)}
-                          onAddBulletFromMaster={() => handleAddBulletToEntry('projects', project.id)}
-                        />
-                      ))
-                    )}
-                  </div>
-
-                  {/* Custom Sections */}
-                  <div className="resume-section-group">
-                    <div className="section-group-header">
-                      <h3 className="section-group-title">Custom Sections</h3>
-                      <button
-                        className="btn btn-small btn-primary"
-                        onClick={() => handleAddEntry('customSections')}
-                      >
-                        + Add Custom Section
-                      </button>
-                    </div>
-                    
-                    {(!editedResume.customSections || editedResume.customSections.length === 0) ? (
-                      <div className="empty-state">
-                        <p>No custom sections yet. Add certifications, skills, awards, etc.!</p>
-                      </div>
-                    ) : (
-                      editedResume.customSections.map(section => (
-                        <CustomSectionEditor
-                          key={section.id}
-                          section={section}
-                          onUpdate={(updatedSection) => handleUpdateEntry('customSections', updatedSection)}
-                          onDelete={(sectionId) => handleDeleteEntry('customSections', sectionId)}
-                          onAddBulletFromMaster={() => handleAddBulletToEntry('customSections', section.id)}
-                        />
-                      ))
-                    )}
-                  </div>
+                <div className="section">
+                  <SelectedResumeEditor
+                    resume={editedResume}
+                    onUpdate={setEditedResume}
+                    showPersonalInfo={true}
+                    showSkills={true}
+                    showEducation={true}
+                  />
                 </div>
               )}
-            </div>
+            </>
           )}
         </>
       )}
@@ -1005,47 +769,6 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
         </div>
       )}
 
-      {/* Add Bullet Dialog - Select from Master Resume */}
-      {showAddBulletDialog && (
-        <div className="save-dialog-overlay">
-          <div className="save-dialog" style={{ maxWidth: '600px', maxHeight: '80vh', overflow: 'auto' }}>
-            <h3>Add Bullet from Master Resume</h3>
-            <p className="dialog-description">
-              Select a bullet point from your master resume to add to this entry.
-            </p>
-            <div className="bullets-selection-list">
-              {availableBullets.length === 0 ? (
-                <div className="empty-state-small">
-                  <p>No bullets available in master resume.</p>
-                </div>
-              ) : (
-                availableBullets.map((bullet, index) => (
-                  <div
-                    key={bullet.id || index}
-                    className="bullet-selection-item"
-                    onClick={() => handleSelectBulletToAdd(bullet)}
-                  >
-                    <div className="bullet-selection-text">
-                      {bullet.text || bullet.rewritten || 'No text'}
-                    </div>
-                    <div className="bullet-selection-source">
-                      From: {bullet.sourceEntryName || 'Unknown'}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-            <div className="dialog-actions">
-              <button
-                className="btn btn-secondary"
-                onClick={() => setShowAddBulletDialog(null)}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Delete Confirmation Dialog */}
       {showDeleteConfirm && (

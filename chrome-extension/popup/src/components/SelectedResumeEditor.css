@@ -79,6 +79,7 @@
 .carousel-container {
   position: relative;
   width: 100%;
+  max-width: 100%;
   overflow-x: auto;
   overflow-y: auto;
   scroll-behavior: smooth;
@@ -88,6 +89,8 @@
   min-height: 400px;
   scrollbar-width: thin;
   scrollbar-color: var(--color-gray-300) transparent;
+  box-sizing: border-box;
+  contain: layout;
 }
 
 .carousel-container::-webkit-scrollbar {
@@ -111,6 +114,8 @@
   display: flex;
   flex-direction: row;
   height: 100%;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .carousel-slide {

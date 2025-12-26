@@ -218,10 +218,15 @@ function SelectedResumeEditor({
   useEffect(() => {
     if (carouselRef.current && slideRefs.current[currentSectionIndex] && !isScrollingRef.current) {
       isScrollingRef.current = true;
-      slideRefs.current[currentSectionIndex].scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest',
-        inline: 'start'
+      const carousel = carouselRef.current;
+      const slideWidth = carousel.clientWidth; // Use clientWidth instead of offsetWidth to exclude scrollbar
+      const scrollPosition = slideWidth * currentSectionIndex;
+      const maxScroll = carousel.scrollWidth - carousel.clientWidth;
+      const clampedScroll = Math.min(scrollPosition, maxScroll);
+      
+      carousel.scrollTo({
+        left: clampedScroll,
+        behavior: 'smooth'
       });
       
       // Reset flag after scroll completes
@@ -273,14 +278,19 @@ function SelectedResumeEditor({
   }
 
   function goToSection(index) {
-    if (index >= 0 && index < carouselSections.length && slideRefs.current[index]) {
+    if (index >= 0 && index < carouselSections.length && carouselRef.current) {
       isScrollingRef.current = true;
       setCurrentSectionIndex(index);
       
-      slideRefs.current[index].scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest',
-        inline: 'start'
+      const carousel = carouselRef.current;
+      const slideWidth = carousel.clientWidth; // Use clientWidth instead of offsetWidth to exclude scrollbar
+      const scrollPosition = slideWidth * index;
+      const maxScroll = carousel.scrollWidth - carousel.clientWidth;
+      const clampedScroll = Math.min(scrollPosition, maxScroll);
+      
+      carousel.scrollTo({
+        left: clampedScroll,
+        behavior: 'smooth'
       });
       
       setTimeout(() => {

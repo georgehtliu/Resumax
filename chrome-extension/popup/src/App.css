@@ -50,6 +50,8 @@ body {
   max-width: 1400px;
   margin: 0 auto;
   padding: var(--space-8);
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 .view-header {
@@ -91,6 +93,10 @@ body {
   padding: var(--space-6);
   box-shadow: var(--shadow-sm);
   transition: all var(--transition-base);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 .view-content:hover {

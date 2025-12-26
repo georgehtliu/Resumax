@@ -112,6 +112,36 @@
   font-family: 'Times New Roman', 'Times', serif; /* LaTeX default serif */
 }
 
+.shared-resume-pdf-frame {
+  width: 100%;
+  height: 800px;
+  border: none;
+  display: block;
+}
+
+.pdf-loading,
+.pdf-empty {
+  padding: 48px;
+  text-align: center;
+  color: #6b7280;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.pdf-error {
+  padding: 24px;
+  text-align: center;
+  color: #dc2626;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+}
+
+.pdf-error .btn {
+  margin-top: 16px;
+}
+
 .resume-content {
   padding: 12px 48px 24px 48px; /* Tight margins like LaTeX */
   font-size: 11pt; /* Base font size in LaTeX */
@@ -516,6 +546,112 @@
   color: #6b7280;
 }
 
+.browse-bullets-section {
+  padding: 12px 20px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.browse-bullets-toggle {
+  width: 100%;
+  padding: 8px 12px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.browse-bullets-toggle:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.all-bullets-list {
+  margin-top: 12px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.all-bullet-item {
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.all-bullet-item:hover {
+  background: #f9fafb;
+  border-color: #6366f1;
+}
+
+.all-bullet-item.active {
+  background: #eef2ff;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+}
+
+.all-bullet-item.has-comments {
+  border-left: 3px solid #6366f1;
+}
+
+.all-bullet-item.highlighted {
+  background: #fef3c7 !important;
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2) !important;
+  animation: highlightPulse 0.5s ease-in-out;
+}
+
+@keyframes highlightPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(245, 158, 11, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+  }
+}
+
+.bullet-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.bullet-entry-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+}
+
+.bullet-comment-badge {
+  background: #6366f1;
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+.bullet-item-text {
+  font-size: 13px;
+  color: #374151;
+  line-height: 1.4;
+}
+
 .side-panel-content {
   flex: 1;
   overflow-y: auto;
@@ -675,6 +811,30 @@
   line-height: 1.5;
   margin: 0;
   white-space: pre-wrap;
+}
+
+.view-bullet-link {
+  margin-top: 8px;
+  padding: 4px 8px;
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  border-radius: 4px;
+  color: #6366f1;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.view-bullet-link:hover {
+  background: #e0e7ff;
+  border-color: #6366f1;
+  color: #4f46e5;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(99, 102, 241, 0.1);
 }
 
 .side-comment-replies {

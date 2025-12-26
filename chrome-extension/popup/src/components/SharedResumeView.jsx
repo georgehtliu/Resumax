@@ -1,5 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { supabase } from '../config/supabase';
+import { renderLatex } from '../services/api';
+import PdfViewerWithMarkers from './PdfViewerWithMarkers';
 import './SharedResumeView.css';
 
 // Comments Side Panel Component (Google Docs style)
@@ -7,6 +9,7 @@ function CommentsSidePanel({
   selectedBulletId,
   bulletComments,
   bulletsWithComments,
+  allBullets,
   onBulletClick,
   onCommentSubmit,
   commentText,
@@ -22,6 +25,8 @@ function CommentsSidePanel({
   findBulletContext
 }) {
   const [activeBulletId, setActiveBulletId] = useState(selectedBulletId);
+  const [showAllBullets, setShowAllBullets] = useState(false);
+  const bulletItemRefs = useRef({});
 
   useEffect(() => {
     setActiveBulletId(selectedBulletId);
@@ -30,6 +35,37 @@ function CommentsSidePanel({
   const handleBulletClick = (bulletId) => {
     setActiveBulletId(bulletId);
     onBulletClick(bulletId);
+    // Scroll to bullet in Browse All Bullets section
+    scrollToBulletInList(bulletId);
+  };
+
+  const scrollToBulletInList = (bulletId) => {
+    // Ensure Browse All Bullets section is open
+    if (!showAllBullets) {
+      setShowAllBullets(true);
+      // Wait for DOM to update, then scroll
+      setTimeout(() => {
+        const bulletElement = bulletItemRefs.current[bulletId];
+        if (bulletElement) {
+          bulletElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Add highlight effect
+          bulletElement.classList.add('highlighted');
+          setTimeout(() => {
+            bulletElement.classList.remove('highlighted');
+          }, 2000);
+        }
+      }, 100);
+    } else {
+      const bulletElement = bulletItemRefs.current[bulletId];
+      if (bulletElement) {
+        bulletElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Add highlight effect
+        bulletElement.classList.add('highlighted');
+        setTimeout(() => {
+          bulletElement.classList.remove('highlighted');
+        }, 2000);
+      }
+    }
   };
 
   return (
@@ -40,6 +76,45 @@ function CommentsSidePanel({
       </div>
 
       <div className="side-panel-content">
+        {/* Browse All Bullets Section */}
+        {allBullets && allBullets.length > 0 && (
+          <div className="browse-bullets-section">
+            <button
+              className="browse-bullets-toggle"
+              onClick={() => setShowAllBullets(!showAllBullets)}
+            >
+              {showAllBullets ? '▼' : '▶'} Browse All Bullets ({allBullets.length})
+            </button>
+            {showAllBullets && (
+              <div className="all-bullets-list">
+                {allBullets.map(({ bulletId, bulletText, entryTitle }) => {
+                  const bulletWithComments = bulletsWithComments.find(b => b.bulletId === bulletId);
+                  const hasComments = !!bulletWithComments;
+                  return (
+                    <div
+                      key={bulletId}
+                      ref={(el) => {
+                        if (el) bulletItemRefs.current[bulletId] = el;
+                      }}
+                      className={`all-bullet-item ${activeBulletId === bulletId ? 'active' : ''} ${hasComments ? 'has-comments' : ''}`}
+                      onClick={() => handleBulletClick(bulletId)}
+                    >
+                      <div className="bullet-item-header">
+                        <span className="bullet-entry-title">{entryTitle}</span>
+                        {hasComments && bulletWithComments.comments && (
+                          <span className="bullet-comment-badge">{bulletWithComments.comments.length}</span>
+                        )}
+                      </div>
+                      <div className="bullet-item-text">
+                        {bulletText.substring(0, 100)}{bulletText.length > 100 ? '...' : ''}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
         {selectedBulletId && !bulletsWithComments.find(b => b.bulletId === selectedBulletId) && (
           <div className="side-panel-new-comment">
             <div className="new-comment-header">
@@ -51,6 +126,20 @@ function CommentsSidePanel({
                 {findBulletText(selectedBulletId).length > 80 ? '...' : ''}
               </div>
             </div>
+            <button
+              className="view-bullet-link"
+              onClick={(e) => {
+                e.stopPropagation();
+                scrollToBulletInList(selectedBulletId);
+                // Highlight bullet in PDF
+                setHighlightedBulletInPdf(selectedBulletId);
+                // Clear highlight after 3 seconds
+                setTimeout(() => setHighlightedBulletInPdf(null), 3000);
+              }}
+              title="View this bullet in the resume"
+            >
+              🔗 View bullet in PDF
+            </button>
             <form 
               onSubmit={(e) => {
                 const context = findBulletContext(selectedBulletId);
@@ -116,7 +205,7 @@ function CommentsSidePanel({
         {bulletsWithComments.length === 0 && !selectedBulletId ? (
           <div className="no-bullet-comments">
             <p>No comments on bullets yet.</p>
-            <p className="hint">Click on a bullet point to add a comment.</p>
+            <p className="hint">Browse bullets above to add a comment.</p>
           </div>
         ) : (
           bulletsWithComments.map(({ bulletId, bulletText, sectionType, entryId, comments }) => (
@@ -148,6 +237,21 @@ function CommentsSidePanel({
                       </span>
                     </div>
                     <p className="side-comment-content">{comment.content}</p>
+                    <button
+                      className="view-bullet-link"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        scrollToBulletInList(bulletId);
+                        handleBulletClick(bulletId);
+                        // Highlight bullet in PDF
+                        setHighlightedBulletInPdf(bulletId);
+                        // Clear highlight after 3 seconds
+                        setTimeout(() => setHighlightedBulletInPdf(null), 3000);
+                      }}
+                      title="View this bullet in the resume"
+                    >
+                      🔗 View bullet in PDF
+                    </button>
                     {comment.replies && comment.replies.length > 0 && (
                       <div className="side-comment-replies">
                         {comment.replies.map(reply => (
@@ -363,11 +467,19 @@ function SharedResumeView({ shareToken }) {
   const [hoveredBulletId, setHoveredBulletId] = useState(null);
   const [bulletRefs, setBulletRefs] = useState({}); // Refs for scrolling to bullets
   const [loading, setLoading] = useState(true);
-  const [commentText, setCommentText] = useState('');
-  const [authorName, setAuthorName] = useState('');
-  const [isAnonymous, setIsAnonymous] = useState(true);
+  const [generalCommentText, setGeneralCommentText] = useState('');
+  const [bulletCommentText, setBulletCommentText] = useState('');
+  const [generalAuthorName, setGeneralAuthorName] = useState('');
+  const [bulletAuthorName, setBulletAuthorName] = useState('');
+  const [generalIsAnonymous, setGeneralIsAnonymous] = useState(true);
+  const [bulletIsAnonymous, setBulletIsAnonymous] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [pdfBase64, setPdfBase64] = useState(null);
+  const [renderingPdf, setRenderingPdf] = useState(false);
+  const [highlightedBulletInPdf, setHighlightedBulletInPdf] = useState(null);
+  const [usePdfJs, setUsePdfJs] = useState(true);
+  const [pdfUrl, setPdfUrl] = useState(null);
 
   useEffect(() => {
     if (shareToken) {
@@ -478,6 +590,191 @@ function SharedResumeView({ shareToken }) {
     }
   };
 
+  // Convert resume data to format needed for renderLatex API
+  const convertResumeForRender = (resumeData) => {
+    if (!resumeData) return null;
+
+    const data = resumeData.resume_data || resumeData;
+    
+    // Normalize personal info
+    const personalInfo = data.personalInfo || data.personal_info || {};
+    
+    // Normalize experiences
+    const experiences = (data.experiences || [])
+      .filter(entry => {
+        const company = entry.company && entry.company.trim();
+        const role = entry.role && entry.role.trim();
+        return company && role; // Both required
+      })
+      .map(entry => ({
+        id: entry.id || `exp-${Math.random()}`,
+        company: entry.company.trim(),
+        role: entry.role.trim(),
+        startDate: entry.startDate || null,
+        endDate: entry.endDate || null,
+        selectedBullets: (entry.selectedBullets || entry.bullets || [])
+          .filter(bullet => {
+            const text = typeof bullet === 'string' ? bullet : (bullet.text || bullet.rewritten || '');
+            return text.trim().length > 0;
+          })
+          .map(bullet => ({
+            id: bullet.id || `bullet-${Math.random()}`,
+            text: typeof bullet === 'string' ? bullet : (bullet.text || bullet.rewritten || ''),
+            relevanceScore: typeof bullet?.relevanceScore === 'number' ? bullet.relevanceScore : 0.5
+          }))
+      }));
+
+    // Normalize education
+    const education = (data.education || [])
+      .filter(entry => {
+        const school = entry.school && entry.school.trim();
+        const degree = entry.degree && entry.degree.trim();
+        const field = entry.field && entry.field.trim();
+        return school && degree && field; // All required
+      })
+      .map(entry => ({
+        id: entry.id || `edu-${Math.random()}`,
+        school: entry.school.trim(),
+        degree: entry.degree.trim(),
+        field: entry.field.trim(),
+        startDate: entry.startDate || null,
+        endDate: entry.endDate || null,
+        selectedBullets: (entry.selectedBullets || entry.bullets || [])
+          .filter(bullet => {
+            const text = typeof bullet === 'string' ? bullet : (bullet.text || bullet.rewritten || '');
+            return text.trim().length > 0;
+          })
+          .map(bullet => ({
+            id: bullet.id || `bullet-${Math.random()}`,
+            text: typeof bullet === 'string' ? bullet : (bullet.text || bullet.rewritten || ''),
+            relevanceScore: typeof bullet?.relevanceScore === 'number' ? bullet.relevanceScore : 0.5
+          }))
+      }));
+
+    // Normalize projects
+    const projects = (data.projects || [])
+      .filter(entry => entry.name && entry.name.trim()) // Only include entries with name
+      .map(entry => ({
+        id: entry.id || `proj-${Math.random()}`,
+        name: (entry.name && entry.name.trim()) || 'Project',
+        description: entry.description || null,
+        technologies: Array.isArray(entry.technologies) 
+          ? entry.technologies.join(', ') 
+          : (entry.technologies || entry.tech || entry.skills || null),
+        startDate: entry.startDate || null,
+        endDate: entry.endDate || null,
+        selectedBullets: (entry.selectedBullets || entry.bullets || [])
+          .filter(bullet => {
+            const text = typeof bullet === 'string' ? bullet : (bullet.text || bullet.rewritten || '');
+            return text.trim().length > 0;
+          })
+          .map(bullet => ({
+            id: bullet.id || `bullet-${Math.random()}`,
+            text: typeof bullet === 'string' ? bullet : (bullet.text || bullet.rewritten || ''),
+            relevanceScore: typeof bullet?.relevanceScore === 'number' ? bullet.relevanceScore : 0.5
+          }))
+      }));
+
+    // Normalize skills
+    const skills = (data.skills || []).map(group => ({
+      id: group.id || `skill-${Math.random()}`,
+      title: group.title || 'Skills',
+      skills: Array.isArray(group.skills) ? group.skills : (group.skills ? [group.skills] : [])
+    }));
+
+    // Normalize custom sections
+    const customSections = (data.customSections || [])
+      .filter(section => section.title && section.title.trim()) // Only include sections with title
+      .map(section => ({
+        id: section.id || `custom-${Math.random()}`,
+        title: (section.title && section.title.trim()) || 'Additional',
+        subtitle: section.subtitle || null,
+        selectedBullets: (section.selectedBullets || section.bullets || [])
+          .filter(bullet => {
+            const text = typeof bullet === 'string' ? bullet : (bullet.text || bullet.rewritten || '');
+            return text.trim().length > 0;
+          })
+          .map(bullet => ({
+            id: bullet.id || `bullet-${Math.random()}`,
+            text: typeof bullet === 'string' ? bullet : (bullet.text || bullet.rewritten || ''),
+            relevanceScore: typeof bullet?.relevanceScore === 'number' ? bullet.relevanceScore : 0.5
+          }))
+      }));
+
+    return {
+      personalInfo: {
+        firstName: personalInfo.firstName || personalInfo.first_name || '',
+        lastName: personalInfo.lastName || personalInfo.last_name || '',
+        phone: personalInfo.phone || '',
+        email: personalInfo.email || '',
+        linkedin: personalInfo.linkedin || '',
+        github: personalInfo.github || ''
+      },
+      experiences,
+      education,
+      projects,
+      skills,
+      customSections
+    };
+  };
+
+  // Render PDF when resume loads
+  useEffect(() => {
+    if (resume && resume.resume_data) {
+      renderPdfPreview();
+    }
+  }, [resume]);
+
+  const renderPdfPreview = async () => {
+    if (!resume || !resume.resume_data) return;
+
+    setRenderingPdf(true);
+    setPdfBase64(null);
+    try {
+      const resumeForRender = convertResumeForRender(resume);
+      if (!resumeForRender) {
+        throw new Error('Could not convert resume data');
+      }
+      const response = await renderLatex(resumeForRender);
+      if (response?.pdf_base64) {
+        setPdfBase64(response.pdf_base64);
+      } else {
+        throw new Error('LaTeX render did not return a PDF');
+      }
+    } catch (error) {
+      console.error('Render PDF failed:', error);
+      setError(error?.message || 'Failed to render PDF preview.');
+    } finally {
+      setRenderingPdf(false);
+    }
+  };
+
+  // Create PDF URL from base64
+  useEffect(() => {
+    if (!pdfBase64) {
+      setPdfUrl(null);
+      return;
+    }
+    try {
+      const binary = atob(pdfBase64);
+      const len = binary.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i += 1) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      const blob = new Blob([bytes], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      setPdfUrl(url);
+      
+      return () => {
+        URL.revokeObjectURL(url);
+      };
+    } catch (error) {
+      console.error('Failed to convert PDF base64 to blob:', error);
+      setPdfUrl(null);
+    }
+  }, [pdfBase64]);
+
   const loadComments = async () => {
     try {
       // Get share link ID
@@ -575,6 +872,11 @@ function SharedResumeView({ shareToken }) {
   const submitComment = async (e, bulletId = null, bulletText = null, sectionType = null, entryId = null) => {
     e.preventDefault();
     
+    // Use appropriate text based on whether it's a bullet comment or general comment
+    const commentText = bulletId ? bulletCommentText : generalCommentText;
+    const authorName = bulletId ? bulletAuthorName : generalAuthorName;
+    const isAnonymous = bulletId ? bulletIsAnonymous : generalIsAnonymous;
+    
     if (!commentText.trim()) return;
     if (isAnonymous && !authorName.trim()) {
       setError('Please enter your name');
@@ -614,9 +916,15 @@ function SharedResumeView({ shareToken }) {
 
       if (insertError) throw insertError;
 
-      setCommentText('');
-      setAuthorName('');
-      setSelectedBulletId(null);
+      // Clear the appropriate text field
+      if (bulletId) {
+        setBulletCommentText('');
+        setBulletAuthorName('');
+        setSelectedBulletId(null);
+      } else {
+        setGeneralCommentText('');
+        setGeneralAuthorName('');
+      }
       loadComments();
     } catch (err) {
       setError(err.message || 'Failed to post comment');
@@ -929,6 +1237,69 @@ function SharedResumeView({ shareToken }) {
     return bullets;
   };
 
+  // Get all bullets from resume for browsing
+  const getAllBullets = () => {
+    if (!resume?.resume_data) return [];
+    const data = resume.resume_data;
+    const allBullets = [];
+    
+    // Get bullets from experiences
+    (data.experiences || []).forEach(entry => {
+      const bullets = entry.selectedBullets || entry.bullets || [];
+      bullets.forEach((bullet, idx) => {
+        const bulletId = bullet.id || `${entry.id}-bullet-${idx}`;
+        const bulletText = typeof bullet === 'string' ? bullet : (bullet.text || bullet.rewritten || '');
+        if (bulletText) {
+          allBullets.push({
+            bulletId,
+            bulletText,
+            sectionType: 'experience',
+            entryId: entry.id,
+            entryTitle: `${entry.role || ''} ${entry.company || ''}`.trim() || 'Experience'
+          });
+        }
+      });
+    });
+    
+    // Get bullets from education
+    (data.education || []).forEach(entry => {
+      const bullets = entry.selectedBullets || entry.bullets || [];
+      bullets.forEach((bullet, idx) => {
+        const bulletId = bullet.id || `${entry.id}-bullet-${idx}`;
+        const bulletText = typeof bullet === 'string' ? bullet : (bullet.text || bullet.rewritten || '');
+        if (bulletText) {
+          allBullets.push({
+            bulletId,
+            bulletText,
+            sectionType: 'education',
+            entryId: entry.id,
+            entryTitle: entry.school || 'Education'
+          });
+        }
+      });
+    });
+    
+    // Get bullets from projects
+    (data.projects || []).forEach(entry => {
+      const bullets = entry.selectedBullets || entry.bullets || [];
+      bullets.forEach((bullet, idx) => {
+        const bulletId = bullet.id || `${entry.id}-bullet-${idx}`;
+        const bulletText = typeof bullet === 'string' ? bullet : (bullet.text || bullet.rewritten || '');
+        if (bulletText) {
+          allBullets.push({
+            bulletId,
+            bulletText,
+            sectionType: 'project',
+            entryId: entry.id,
+            entryTitle: entry.name || 'Project'
+          });
+        }
+      });
+    });
+    
+    return allBullets;
+  };
+
   const findBulletText = (bulletId) => {
     if (!resume?.resume_data) return '';
     const data = resume.resume_data;
@@ -1007,7 +1378,45 @@ function SharedResumeView({ shareToken }) {
       <div className="resume-layout">
         <div className="resume-main-content">
           <div className="resume-preview">
-            {renderResume()}
+            {renderingPdf && (
+              <div className="pdf-loading">Rendering PDF…</div>
+            )}
+            {!renderingPdf && pdfBase64 && usePdfJs && (
+              <PdfViewerWithMarkers
+                pdfBase64={pdfBase64}
+                highlightedBulletId={highlightedBulletInPdf}
+                bullets={getAllBullets().map(bullet => ({
+                  bulletId: bullet.bulletId,
+                  bulletText: bullet.bulletText
+                }))}
+                onBulletFound={(positions) => {
+                  // Optional: handle when bullets are found
+                }}
+                onError={() => {
+                  // Fallback to iframe if PDF.js fails
+                  setUsePdfJs(false);
+                }}
+              />
+            )}
+            {!renderingPdf && pdfUrl && !usePdfJs && (
+              <iframe
+                className="shared-resume-pdf-frame"
+                src={pdfUrl}
+                title="Resume PDF Preview"
+                style={{ width: '100%', height: '800px', border: 'none' }}
+              />
+            )}
+            {!renderingPdf && !pdfBase64 && error && (
+              <div className="pdf-error">
+                <p>Failed to load PDF preview: {error}</p>
+                <button onClick={renderPdfPreview} className="btn btn-primary">
+                  Retry PDF Rendering
+                </button>
+              </div>
+            )}
+            {!renderingPdf && !pdfBase64 && !error && (
+              <div className="pdf-empty">Loading PDF preview...</div>
+            )}
           </div>
 
           {resume.shareLink.allow_comments && (
@@ -1021,19 +1430,19 @@ function SharedResumeView({ shareToken }) {
                   <label>
                     <input
                       type="checkbox"
-                      checked={isAnonymous}
-                      onChange={(e) => setIsAnonymous(e.target.checked)}
+                      checked={generalIsAnonymous}
+                      onChange={(e) => setGeneralIsAnonymous(e.target.checked)}
                     />
                     Post as anonymous
                   </label>
                 </div>
 
-                {isAnonymous && (
+                {generalIsAnonymous && (
                   <input
                     type="text"
                     placeholder="Your name"
-                    value={authorName}
-                    onChange={(e) => setAuthorName(e.target.value)}
+                    value={generalAuthorName}
+                    onChange={(e) => setGeneralAuthorName(e.target.value)}
                     className="comment-author-input"
                     required
                   />
@@ -1041,8 +1450,8 @@ function SharedResumeView({ shareToken }) {
 
                 <textarea
                   placeholder="Add a general comment about the resume..."
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
+                  value={generalCommentText}
+                  onChange={(e) => setGeneralCommentText(e.target.value)}
                   className="comment-textarea"
                   required
                   rows={4}
@@ -1075,19 +1484,24 @@ function SharedResumeView({ shareToken }) {
             selectedBulletId={selectedBulletId}
             bulletComments={bulletComments}
             bulletsWithComments={getAllBulletsWithComments()}
-            onBulletClick={scrollToBullet}
+            allBullets={getAllBullets()}
+            onBulletClick={(bulletId) => setSelectedBulletId(bulletId)}
             onCommentSubmit={(e, bulletId, bulletText, sectionType, entryId) => 
               submitComment(e, bulletId, bulletText, sectionType, entryId)
             }
-            commentText={commentText}
-            setCommentText={setCommentText}
-            authorName={authorName}
-            setAuthorName={setAuthorName}
-            isAnonymous={isAnonymous}
-            setIsAnonymous={setIsAnonymous}
+            commentText={bulletCommentText}
+            setCommentText={setBulletCommentText}
+            authorName={bulletAuthorName}
+            setAuthorName={setBulletAuthorName}
+            isAnonymous={bulletIsAnonymous}
+            setIsAnonymous={setBulletIsAnonymous}
             submitting={submitting}
             error={error}
-            onCancel={() => setSelectedBulletId(null)}
+            onCancel={() => {
+              setSelectedBulletId(null);
+              setBulletCommentText('');
+              setBulletAuthorName('');
+            }}
             findBulletText={findBulletText}
             findBulletContext={findBulletContext}
           />
