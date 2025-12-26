@@ -267,3 +267,35 @@ class LatexRenderResponse(BaseModel):
     rendered_at: datetime = Field(default_factory=datetime.now, description="Timestamp for rendering")
 
 
+class KeywordMatch(BaseModel):
+    """Represents a keyword found in the resume."""
+    keyword: str = Field(..., description="The keyword that was found")
+    found_in: List[str] = Field(default_factory=list, description="Locations where keyword was found")
+    match_count: int = Field(..., description="Number of times keyword appears")
+    is_required: bool = Field(False, description="Whether keyword is required based on JD")
+
+class MissingKeyword(BaseModel):
+    """Represents a keyword missing from the resume."""
+    keyword: str = Field(..., description="The missing keyword")
+    is_required: bool = Field(False, description="Whether keyword is required based on JD")
+    category: str = Field("other", description="Category of keyword (programming_language, framework, etc.)")
+
+class KeywordScanStatistics(BaseModel):
+    """Statistics about keyword matching."""
+    total_keywords: int = Field(..., description="Total keywords extracted from JD")
+    found_count: int = Field(..., description="Number of keywords found in resume")
+    missing_count: int = Field(..., description="Number of keywords missing from resume")
+    match_percentage: float = Field(..., description="Percentage of keywords found")
+
+class KeywordScanRequest(BaseModel):
+    """Request for keyword scanning."""
+    resume: StructuredResume = Field(..., description="Structured resume to scan")
+    job_description: str = Field(..., description="Job description to extract keywords from")
+
+class KeywordScanResponse(BaseModel):
+    """Response for keyword scanning."""
+    found_keywords: List[KeywordMatch] = Field(default_factory=list, description="Keywords found in resume")
+    missing_keywords: List[MissingKeyword] = Field(default_factory=list, description="Keywords missing from resume")
+    statistics: KeywordScanStatistics = Field(..., description="Match statistics")
+
+

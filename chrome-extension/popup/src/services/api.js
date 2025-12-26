@@ -228,6 +228,42 @@ export async function renderLatex(resume) {
   return response.json();
 }
 
+export async function scanKeywords({ jobDescription, resume }) {
+  const baseUrl = getApiBaseUrl();
+  const requestBody = {
+    job_description: jobDescription,
+    resume,
+  };
+
+  const response = await fetch(`${baseUrl.replace(/\/$/, '')}/keywords/scan`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(requestBody),
+  });
+
+  if (!response.ok) {
+    let errorMessage = `Keyword scan failed with status ${response.status}`;
+    try {
+      const errorPayload = await response.json();
+      if (errorPayload?.detail) {
+        errorMessage = Array.isArray(errorPayload.detail)
+          ? errorPayload.detail.map((item) => (item.msg ? `${item.msg}` : JSON.stringify(item))).join('\n')
+          : (errorPayload.detail.message || errorPayload.detail);
+      }
+    } catch (parseError) {
+      const fallbackText = await response.text();
+      if (fallbackText) {
+        errorMessage = fallbackText;
+      }
+    }
+    throw new Error(errorMessage);
+  }
+
+  return response.json();
+}
+
 /**
  * Parse resume from uploaded file
  * TODO: Implement backend API endpoint for resume parsing
@@ -261,6 +297,7 @@ export const apiService = {
   selectResume,
   renderLatex,
   parseResume,
+  scanKeywords,
 };
 
 

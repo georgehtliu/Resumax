@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import JobMatcher from './JobMatcher';
 import SelectedResumeEditor from './SelectedResumeEditor';
 import LatexPreviewModal from './LatexPreviewModal';
+import KeywordScanner from './KeywordScanner';
 import { storageService } from '../services/storage';
 import { supabase } from '../config/supabase';
-import { buildStructuredResume, selectResume, renderLatex } from '../services/api';
+import { buildStructuredResume, selectResume, renderLatex, scanKeywords } from '../services/api';
 import { buildLatexDocument } from '../utils/latexTemplate';
 import { Icon } from './Icons';
 import './GenerateResume.css';
@@ -27,6 +28,8 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
   const [latexSource, setLatexSource] = useState('');
   const [latexPdfBase64, setLatexPdfBase64] = useState(null);
   const [renderingPdf, setRenderingPdf] = useState(false);
+  const [keywordData, setKeywordData] = useState(null);
+  const [scanningKeywords, setScanningKeywords] = useState(false);
 
   /**
    * Extract job description from current tab
@@ -118,6 +121,9 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
         source: prev?.source || 'manual',
       }));
 
+      // Scan keywords after selection
+      scanKeywordsForResume(structuredResume, trimmedDescription);
+
       if (typeof onSelectionComplete === 'function') {
         onSelectionComplete({
           selectedResume,
@@ -130,6 +136,29 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
       alert(error?.message || 'Unable to select bullets. Please try again.');
     } finally {
       setLoading(false);
+    }
+  }
+
+  /**
+   * Scan keywords from job description against resume
+   */
+  async function scanKeywordsForResume(resume, jobDescription) {
+    if (!resume || !jobDescription) {
+      return;
+    }
+
+    setScanningKeywords(true);
+    try {
+      const keywordResult = await scanKeywords({
+        resume,
+        jobDescription,
+      });
+      setKeywordData(keywordResult);
+    } catch (error) {
+      console.error('Error scanning keywords:', error);
+      // Don't show alert for keyword scan errors, just log
+    } finally {
+      setScanningKeywords(false);
     }
   }
 
@@ -297,6 +326,13 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
           loading={loading}
         />
       </div>
+
+      {/* Keyword Scanner */}
+      {(keywordData || scanningKeywords) && (
+        <div className="section">
+          <KeywordScanner keywordData={keywordData} loading={scanningKeywords} />
+        </div>
+      )}
 
       {/* Optimization Results */}
       {optimizationResult && (
