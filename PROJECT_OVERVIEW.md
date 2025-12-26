@@ -4,12 +4,22 @@
 
 A **Chrome extension** that lets software engineers maintain a "super resume" with unlimited bullet points per experience, then instantly optimize it for specific job descriptions while enforcing a one-page LaTeX resume format.
 
-### Core User Experience (3-Tab Interface)
+### Core User Experience
 
+**Popup View (3-Tab Interface):**
 1. **Master Resume Tab**: Build and maintain unlimited bullet points across all sections (Experiences, Education, Projects, Custom)
-2. **Generate New Resume Tab**: Match best bullets to a job description with AI optimization
-3. **Saved Resumes Tab**: View and edit saved resumes with structured editing (sections → entries → bullets), add bullets from master resume
-4. **One-Page Export**: (Future) Generate clean LaTeX/PDF resume using Jake's template
+2. **Generate New Resume Tab**: Match best bullets to a job description with AI optimization using carousel editor
+3. **Saved Resumes Tab**: View and edit saved resumes with carousel editor, matching Generate Resume interface
+
+**Manager View (Full-Screen Web App):**
+- Side navigation with multiple views (About, Profile, Generate Resume, Saved Resumes, Community, Resume Coaching)
+- Full-screen experience for comprehensive resume management
+- Accessible via "Open Manager" button in popup
+
+**Resume Sharing:**
+- Generate permanent shareable links for any saved resume
+- Public view with LaTeX-generated PDF and interactive comment system
+- PDF.js-powered viewer with visual markers linking comments to specific bullets
 
 ---
 
@@ -451,22 +461,51 @@ chrome-extension/
   - Gap analysis
   - Customization options
   - Non-negotiable bullets highlighted
-- **LaTeXPreview**: (Future) Real-time LaTeX preview
-- **LaTeXExport**: (Future) Export to PDF with one-page warning
+- **SelectedResumeEditor**: Carousel-style editor for navigating through resume sections
+  - Arrow navigation and dot indicators
+  - Smooth scrolling between sections
+  - Personal info, skills, experiences, education, projects, custom sections
+- **LatexPreviewModal**: Real-time LaTeX preview with PDF rendering
+  - Side-by-side LaTeX source and PDF preview
+  - Copy LaTeX and download .tex file
+  - Real-time PDF rendering via backend API
 
 **Tab 3: Saved Resumes**
 - **SavedResumes**: Main container for saved resume management
-- **Resume List**: Shows all saved resumes (sorted by newest)
-- **Resume Editor**: Uses same editors as Master Resume
-  - ExperienceEditor, EducationEditor, etc.
-  - "+ From Master" button to add bullets from master resume
-  - Structured editing: Sections → Entries → Bullets
+- **Resume List**: Modern card-based UI showing all saved resumes (sorted by newest)
+- **SelectedResumeEditor**: Carousel editor matching Generate Resume interface
+  - Same carousel navigation as Generate Resume
+  - Personal info, skills, and all resume sections
+  - LaTeX Preview button for each saved resume
+- **Save As New**: Create variations of saved resumes
+- **Share Resume**: Generate permanent shareable links
+
+**Manager View (Full-Screen Web App)**
+- **SideNav**: Fixed side navigation with expandable menu items
+- **Profile**: Edit master resume with all sections
+- **Generate Resume**: Full-screen version of Generate New Resume tab
+- **Saved Resumes**: Full-screen version of Saved Resumes tab
+- **About, Resume Tips, Community**: Additional informational pages
+- **Resume Coaching**: AI Coach and Human Critique sections (coming soon)
+
+**Resume Sharing & Comments**
+- **SharedResumeView**: Public resume view accessible via share token
+- **PdfViewerWithMarkers**: PDF.js-powered viewer with interactive markers
+  - Visual arrows linking comments to PDF bullet locations
+  - Yellow highlights around commented bullets
+  - Zoom and page navigation controls
+- **CommentsSidePanel**: Side panel for viewing and adding comments
+  - Browse All Bullets section listing all resume bullets
+  - Comment counts and "View in PDF" buttons
+  - Separate forms for general vs. bullet-specific comments
+- **Real-time Updates**: Supabase subscriptions for instant comment updates
 
 **Shared Components**
-- **Tabs**: Tab navigation component
-- **BulletEditor**: Rich text editor for bullets (bold formatting)
-- **LaTeXPreview**: (Future) Live preview of LaTeX output
-- **LaTeXExport**: (Future) Export dialog with one-page enforcement
+- **Tabs**: Tab navigation component (for popup view)
+- **SelectedResumeEditor**: Carousel editor used across Generate Resume and Saved Resumes
+- **LatexPreviewModal**: LaTeX and PDF preview modal
+- **ShareResumeButton**: Button to generate and copy shareable links
+- **PdfViewerWithMarkers**: Interactive PDF viewer with comment markers
 
 ---
 

@@ -6,13 +6,22 @@
 
 ---
 
-## 🏗️ Extension Architecture (3 Tabs)
+## 🏗️ Extension Architecture
 
-The extension is organized into 3 main tabs:
-
+**Popup View (3 Tabs):**
 1. **Master Resume** - Build and maintain unlimited bullet points
-2. **Generate New Resume** - Match bullets to job descriptions and optimize
-3. **Saved Resumes** - View and edit previously saved optimized resumes
+2. **Generate New Resume** - Match bullets to job descriptions and optimize with carousel editor
+3. **Saved Resumes** - View and edit previously saved optimized resumes with carousel editor
+
+**Manager View (Full-Screen Web App):**
+- Side navigation with multiple views (About, Profile, Generate Resume, Saved Resumes, Community, Resume Coaching)
+- Accessible via "Open Manager" button in popup
+- Full-screen experience for comprehensive resume management
+
+**Resume Sharing:**
+- Generate permanent shareable links for any saved resume
+- Public view with LaTeX-generated PDF and interactive comment system
+- PDF.js-powered viewer with visual markers
 
 ---
 
@@ -271,20 +280,27 @@ The extension is organized into 3 main tabs:
 ```
 
 **Key Features:**
+- ✅ Modern card-based UI matching project theme
+- ✅ Carousel editor (`SelectedResumeEditor`) matching Generate Resume interface
+- ✅ Arrow navigation and dot indicators for smooth section browsing
 - ✅ View all saved resumes (sorted by newest first)
-- ✅ Click resume to view/edit
+- ✅ Click resume to view/edit with carousel navigation
+- ✅ LaTeX Preview button for each saved resume
 - ✅ Edit structure: Sections → Entries → Bullets
-- ✅ Add bullets from master resume ("+ From Master" button)
-- ✅ Add new entries to sections
+- ✅ Add bullets from master resume
 - ✅ Save as new resume (create variations)
+- ✅ Share resume to generate permanent link
 
 **User Actions:**
 1. **View saved resume** → Click on resume name
-2. **Edit sections** → Add new entries to Experiences, Education, Projects, etc.
-3. **Edit entries** → Modify company, dates, role, etc.
-4. **Add bullets from master** → Click "+ From Master" → Select bullet from master resume
-5. **Add new bullets** → Click "+ Add Bullet" → Type manually
-6. **Save as new** → Click "Save As New Resume" → Enter name → Creates new saved resume
+2. **Navigate sections** → Use arrow buttons or dots to move through Personal Info, Skills, Experiences, Education, Projects, Custom Sections
+3. **Edit sections** → Add new entries to Experiences, Education, Projects, etc.
+4. **Edit entries** → Modify company, dates, role, etc.
+5. **Add bullets from master** → Click "+ From Master" → Select bullet from master resume
+6. **Add new bullets** → Click "+ Add Bullet" → Type manually
+7. **LaTeX Preview** → Click "LaTeX Preview" → View LaTeX source and rendered PDF
+8. **Save as new** → Click "Save As New Resume" → Enter name → Creates new saved resume
+9. **Share resume** → Click "Share Resume" → Generate permanent link
 
 **Structure:**
 - **Sections**: Work Experience, Education, Projects, Custom Sections
@@ -444,6 +460,90 @@ Chrome Local Storage
 
 ---
 
+## Resume Sharing & Comments
+
+### Sharing a Resume
+
+**User clicks "Share Resume" on any saved resume**
+
+```
+┌─────────────────────────────────────────┐
+│  Saved Resumes                          │
+│  ────────────────────────────────────   │
+│                                          │
+│  ┌─ Google SWE - Backend ────────────┐ │
+│  │  [💾 Save As New] [📄 LaTeX]      │ │
+│  │  [🔗 Share Resume]                │ │
+│  └─────────────────────────────────────┘ │
+│                                          │
+│  Clicking "Share Resume" generates:     │
+│  https://resumax.app/share/abc123xyz     │
+│                                          │
+│  [Link copied to clipboard!]            │
+└─────────────────────────────────────────┘
+```
+
+### Public Resume View
+
+**Anyone with the share link can view the resume**
+
+```
+┌─────────────────────────────────────────┐
+│  Shared Resume View                      │
+│  ────────────────────────────────────   │
+│                                          │
+│  ┌─ PDF Viewer (Left) ────────────────┐ │
+│  │  [PDF.js-powered viewer]          │ │
+│  │  [Zoom controls] [Page nav]       │ │
+│  │                                    │ │
+│  │  ┌─ Visual Marker ─────────────┐ │ │
+│  │  │  ────→ [Highlighted bullet] │ │ │ │
+│  │  │  Orange arrow + yellow highlight│ │ │
+│  │  └───────────────────────────────┘ │ │
+│  └─────────────────────────────────────┘ │
+│                                          │
+│  ┌─ Comments Panel (Right) ───────────┐ │
+│  │  Browse All Bullets                │ │
+│  │  ┌─ Google ─────────────────────┐ │ │
+│  │  │ • Developed microservices   │ │ │
+│  │  │   [2 comments] [View in PDF] │ │ │
+│  │  │ • Optimized database...     │ │ │
+│  │  │   [1 comment] [View in PDF] │ │ │
+│  │  └──────────────────────────────┘ │ │
+│  │                                    │ │
+│  │  General Comments (3)              │ │
+│  │  ┌─ Comment ────────────────────┐ │ │
+│  │  │ John Doe: Great resume!      │ │ │
+│  │  │ 2 hours ago                   │ │ │
+│  │  └──────────────────────────────┘ │ │
+│  │                                    │ │
+│  │  Add Comment:                     │ │
+│  │  [Text input] [Anonymous] [Post] │ │
+│  └─────────────────────────────────────┘ │
+└─────────────────────────────────────────┘
+```
+
+**Key Features:**
+- ✅ LaTeX-generated PDF (not HTML mimic) using backend `/api/v1/latex/render`
+- ✅ PDF.js-powered viewer with zoom and page navigation
+- ✅ Visual markers: Orange curved arrows and yellow highlights linking comments to PDF bullets
+- ✅ Browse All Bullets: Side panel listing all resume bullets with comment counts
+- ✅ Line-specific comments: Click any bullet to add comments directly on that line
+- ✅ General comments: Separate section for overall resume feedback
+- ✅ Real-time updates: Comments appear instantly via Supabase subscriptions
+- ✅ Anonymous or authenticated: Comment as anonymous (with name) or signed-in user
+- ✅ PDF bullet detection: Automatically finds bullet positions in PDF and draws visual connections
+
+**User Actions:**
+1. **View shared resume** → Open share link → See LaTeX-generated PDF
+2. **Browse bullets** → Scroll through "Browse All Bullets" panel
+3. **View bullet in PDF** → Click "View in PDF" → PDF scrolls to bullet with visual marker
+4. **Add bullet comment** → Click bullet → Enter comment → Visual marker appears on PDF
+5. **Add general comment** → Enter comment in general section → Appears in comments list
+6. **Real-time updates** → New comments appear instantly without refresh
+
+---
+
 ## Future Enhancements
 
 ### Backend Integration
@@ -452,9 +552,10 @@ Chrome Local Storage
 - Authentication and user accounts
 
 ### LaTeX Integration
-- Real-time LaTeX compilation
-- One-page constraint enforcement
-- PDF export
+- ✅ Real-time LaTeX compilation (implemented)
+- ✅ One-page constraint enforcement (implemented)
+- ✅ PDF export (implemented)
+- ✅ PDF rendering with visual markers (implemented)
 
 ### Enhanced Editing
 - Drag-and-drop reordering

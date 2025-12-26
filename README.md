@@ -1,94 +1,140 @@
-# AI Resume Optimizer
+# Resumax - AI Resume Optimizer
 
-An intelligent resume optimization system that helps software engineers tailor their resumes to specific job descriptions using AI-powered matching, rewriting, and analysis.
+An intelligent resume optimization system that helps software engineers tailor their resumes to specific job descriptions using AI-powered matching, rewriting, and analysis. Built as a Chrome extension with a full-stack backend API.
 
-## 🎯 What Is This?
+## 🎯 Overview
 
-**AI Resume Optimizer** is a full-stack application that combines:
+Resumax combines a **Chrome extension** (React-based UI) with a **FastAPI backend** to provide:
 
-1. **Backend API** - FastAPI service with RAG (Retrieval-Augmented Generation) pipeline
-2. **Chrome Extension** - React-based UI for managing resumes and optimizing bullet points
-
-The system uses **hybrid search** (semantic + keyword matching) to find the most relevant resume bullets for a job description, then uses AI to rewrite and optimize them while identifying skill gaps.
+- **Master Resume Management**: Build and maintain unlimited bullet points across all resume sections
+- **AI-Powered Optimization**: Match and rewrite bullets for specific job descriptions using hybrid search (semantic + keyword matching)
+- **One-Page Resume Generation**: Automatically select bullets that fit within one page using Jake's LaTeX template
+- **Resume Sharing & Collaboration**: Generate shareable links with interactive PDF viewer and comment system
+- **Real-Time PDF Preview**: View LaTeX-generated PDFs with visual markers linking comments to specific bullets
 
 ## ✨ Key Features
 
-### 🔍 Hybrid Search
-- **Semantic Search**: Vector embeddings capture meaning and context
-- **Keyword Matching**: Exact tech term matching (300+ technologies supported)
-- **Combined Ranking**: 70% semantic + 30% keyword for optimal results
+### 🔍 Hybrid Search Engine
+- **Semantic Search**: Vector embeddings capture meaning and context using OpenAI's `text-embedding-3-small/large`
+- **Keyword Matching**: Exact tech term matching across 300+ technology patterns
+- **Combined Ranking**: 70% semantic similarity + 30% keyword matching for optimal results
 
 ### 🤖 AI Optimization
-- **Unified Optimizer**: Single LLM call for ranking, rewriting, and gap analysis
-- **Cost Efficient**: 80-90% cost reduction vs. multiple agent workflows
-- **Dual Modes**: 
-  - **Strict**: Only optimize existing bullets
-  - **Creative**: Suggest new bullets for missing skills
-
-### 💰 Cost Optimization
-- **Dev Mode**: `gpt-4o-mini` + `text-embedding-3-small` (~$0.01-0.02 per optimization)
-- **Prod Mode**: `gpt-4-turbo` + `text-embedding-3-large` (~$0.05-0.15 per optimization)
-- **Caching**: Embeddings and responses cached to reduce API calls
+- **Unified Optimizer**: Single LLM call for ranking, rewriting, and gap analysis (80-90% cost reduction vs. multi-agent workflows)
+- **Dual Modes**:
+  - **Strict Mode**: Only rewrites existing bullets, identifies gaps but doesn't fill them
+  - **Creative Mode**: Rewrites existing bullets and suggests new bullets for identified gaps
+- **Cost Efficient**: Dev mode (~$0.01-0.02) vs. Prod mode (~$0.05-0.15) per optimization
 
 ### 📱 Chrome Extension
-- **3-Tab Interface**: Master Resume, Generate New Resume, Saved Resumes
-- **Master Resume**: Unlimited bullet points per experience/education/project with personal info + skills editors
-- **Generate New Resume**: Match best bullets to job descriptions with AI optimization; dynamic one-page caps keep Jake's template compliant
-- **Saved Resumes**: Structured editing (sections → entries → bullets) with ability to add bullets from master resume
-- **LaTeX Preview**: Side-by-side `.tex` and live PDF preview before export
-- **Resume Sharing**: Generate permanent shareable links for any saved resume
-- **Line-Specific Comments**: Comment on individual resume bullets with inline comment display
-- **Public Resume View**: Beautiful, professional resume display with comment system
-- Local storage for resume data
-- One-click job description extraction
-- LaTeX line count indicators for one-page enforcement
 
-### 💾 Backend Enhancements
-- `/api/v1/select`: bullet selection without rewriting
-- `/api/v1/optimize`: selection plus AI rewriting
-- `/api/v1/latex/render`: generate LaTeX/PDF for Jake’s template via `tectonic`
+**Two Views:**
+
+1. **Popup View** (3-Tab Interface):
+   - **Master Resume**: Build unlimited bullet points with personal info, skills, experiences, education, projects, and custom sections
+   - **Generate New Resume**: Match bullets to job descriptions with AI optimization using carousel editor
+   - **Saved Resumes**: View and edit saved resumes with carousel editor, LaTeX preview, and sharing
+
+2. **Manager View** (Full-Screen Web App):
+   - Side navigation with multiple views (About, Profile, Generate Resume, Saved Resumes, Community, Resume Coaching)
+   - Accessible via "Open Manager" button in popup
+   - Full-screen experience for comprehensive resume management
+
+**Core Features:**
+- **Carousel Editor** (`SelectedResumeEditor`): Modern carousel-style editor for navigating through resume sections with smooth scrolling
+- **LaTeX Preview**: Side-by-side `.tex` source and live PDF preview with real-time rendering
+- **Resume Sharing**: Generate permanent shareable links for any saved resume
+- **Interactive PDF Viewer**: PDF.js-powered viewer with zoom, page navigation, and visual markers
+- **Comment System**: Line-specific comments with visual arrows linking to PDF bullet locations
+- **Browse All Bullets**: Side panel showing all resume bullets with comment counts and quick navigation
+- **One-Page Enforcement**: Dynamic bullet selection that adapts to fit Jake's LaTeX template
+
+### 💾 Backend API
+
+**Endpoints:**
+- `POST /api/v1/select`: Fast bullet selection without rewriting (vector search only)
+- `POST /api/v1/optimize`: Selection plus AI rewriting with gap analysis
+- `POST /api/v1/latex/render`: Generate LaTeX/PDF for Jake's template via `tectonic`
+- `POST /api/v1/keywords/scan`: Extract and match keywords from job descriptions
 
 ## 🏗️ Architecture
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│              Chrome Extension (React UI)                │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐ │
-│  │ Experience   │  │ Job          │  │ Optimization │ │
-│  │ Editor       │  │ Matcher      │  │ Panel        │ │
-│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘ │
-└─────────┼──────────────────┼──────────────────┼─────────┘
-          │                  │                  │
-          └──────────────────┴──────────────────┘
-                             │
-                             ▼
-┌─────────────────────────────────────────────────────────┐
-│              Backend API (FastAPI)                      │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐ │
-│  │ Hybrid       │  │ Unified      │  │ RAG          │ │
-│  │ Search       │  │ Optimizer    │  │ Service       │ │
-│  │ (Vector +    │  │ (LLM)        │  │ Pipeline      │ │
-│  │  Keywords)   │  │              │  │               │ │
-│  └──────────────┘  └──────────────┘  └──────────────┘ │
-└──────────────────────┬───────────────────────────────────┘
-                       │
-                       ▼
-┌─────────────────────────────────────────────────────────┐
-│              Data Layer                                 │
-│  ┌──────────────┐  ┌──────────────┐                    │
-│  │ ChromaDB     │  │ OpenAI API   │                    │
-│  │ (Embeddings) │  │ (Embeddings  │                    │
-│  │              │  │  + LLM)      │                    │
-│  └──────────────┘  └──────────────┘                    │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                    Chrome Extension (React)                     │
+│                                                                 │
+│  ┌──────────────────────┐  ┌──────────────────────┐          │
+│  │   Popup View         │  │   Manager View        │          │
+│  │   (3-Tab Interface)  │  │   (Full-Screen App)   │          │
+│  │                      │  │                       │          │
+│  │  • Master Resume     │  │  • Side Navigation    │          │
+│  │  • Generate Resume   │  │  • Profile             │          │
+│  │  • Saved Resumes    │  │  • Generate Resume     │          │
+│  │                      │  │  • Saved Resumes     │          │
+│  │                      │  │  • Community          │          │
+│  └──────────┬──────────┘  └──────────┬───────────┘          │
+│             │                          │                       │
+│             └──────────┬───────────────┘                       │
+│                        │                                       │
+│  ┌─────────────────────┼──────────────────────┐              │
+│  │  Shared Components                          │              │
+│  │  • SelectedResumeEditor (Carousel)          │              │
+│  │  • LatexPreviewModal                        │              │
+│  │  • SharedResumeView                         │              │
+│  │  • PdfViewerWithMarkers                     │              │
+│  └─────────────────────┼──────────────────────┘              │
+└────────────────────────┼──────────────────────────────────────┘
+                          │
+                          │ HTTP API Calls
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    Backend API (FastAPI)                       │
+│                                                                 │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐        │
+│  │   Selection  │  │ Optimization │  │  LaTeX       │        │
+│  │   Service    │  │   Service    │  │  Renderer    │        │
+│  │              │  │              │  │              │        │
+│  │ • Vector     │  │ • LLM        │  │ • Template   │        │
+│  │   Search     │  │   Rewriting  │  │   Builder    │        │
+│  │ • Keyword    │  │ • Gap        │  │ • PDF        │        │
+│  │   Matching   │  │   Analysis   │  │   Compiler   │        │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘        │
+│         │                 │                  │                 │
+│         └─────────────────┴──────────────────┘                 │
+│                          │                                     │
+│  ┌───────────────────────┼───────────────────────┐            │
+│  │         Core Services                          │            │
+│  │  • RAG Service (Orchestration)                │            │
+│  │  • Keyword Scanner                             │            │
+│  │  • LLM Service (OpenAI wrapper)               │            │
+│  └───────────────────────┼───────────────────────┘            │
+└──────────────────────────┼────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    External Services                            │
+│                                                                 │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐        │
+│  │   OpenAI     │  │   Supabase   │  │   Tectonic   │        │
+│  │   API        │  │   (Database) │  │   (LaTeX     │        │
+│  │              │  │              │  │   Compiler)  │        │
+│  │ • Embeddings │  │ • Resumes    │  │              │        │
+│  │ • LLM        │  │ • Comments   │  │              │        │
+│  │              │  │ • Shares      │  │              │        │
+│  └──────────────┘  └──────────────┘  └──────────────┘        │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Python 3.11+
-- Node.js 18+
-- OpenAI API key
+
+- **Python 3.11+**
+- **Node.js 18+**
+- **OpenAI API Key** (for embeddings and LLM)
+- **Supabase Account** (for resume storage and comments)
+- **Tectonic** (for LaTeX PDF compilation) - Optional, only needed for PDF rendering
 
 ### Backend Setup
 
@@ -105,25 +151,20 @@ The system uses **hybrid search** (semantic + keyword matching) to find the most
 3. **Set up environment:**
    ```bash
    cp env.example .env
-   # Edit .env and add your OPENAI_API_KEY
+   # Edit .env and add:
+   # - OPENAI_API_KEY=your_key_here
+   # - SUPABASE_URL=your_supabase_url
+   # - SUPABASE_KEY=your_supabase_key
    ```
 
-4. **Load resume points:**
-   ```bash
-   # Add your resume bullets to data/resume_points.txt
-   ```
-
-5. **Start the server:**
+4. **Start the server:**
    ```bash
    uvicorn app.main:app --reload
    ```
 
-6. **Test the API:**
-   ```bash
-   # Visit http://localhost:8000/docs for interactive API docs
-   # Or run tests:
-   pytest tests/ -v
-   ```
+5. **Test the API:**
+   - Visit `http://localhost:8000/docs` for interactive API docs
+   - Or run tests: `pytest tests/ -v`
 
 ### Chrome Extension Setup
 
@@ -143,16 +184,20 @@ The system uses **hybrid search** (semantic + keyword matching) to find the most
    npm run build
    ```
 
-4. **Load in Chrome:**
+4. **Configure Supabase:**
+   - Create `chrome-extension/popup/src/config/supabase.js` with your Supabase credentials
+
+5. **Load in Chrome:**
    - Open Chrome and go to `chrome://extensions/`
    - Enable "Developer mode"
    - Click "Load unpacked"
    - Select the `chrome-extension` directory
 
-5. **Test the extension:**
+6. **Test the extension:**
    - Click the extension icon
-   - Add some work experiences and bullet points
-   - Paste a job description and click "Optimize"
+   - Sign in or use test account (123@test.com / 123@)
+   - Add work experiences and bullet points
+   - Generate a resume from a job description
 
 For detailed setup instructions, see:
 - [Backend README](backend/README.md)
@@ -162,83 +207,156 @@ For detailed setup instructions, see:
 
 ```
 Resumax/
-├── backend/                    # FastAPI backend
+├── backend/                          # FastAPI backend
 │   ├── app/
-│   │   ├── core/              # Core functionality
-│   │   │   ├── embeddings.py  # OpenAI embedding generation
-│   │   │   ├── search.py      # Hybrid search (vector + keywords)
-│   │   │   └── keyword_patterns.py  # Tech keyword patterns
-│   │   ├── services/          # Business logic
-│   │   │   ├── rag_service.py      # RAG pipeline orchestration
-│   │   │   ├── unified_optimizer.py # Single LLM call optimizer
-│   │   │   └── llm_service.py      # OpenAI LLM wrapper
-│   │   ├── api/               # FastAPI endpoints
-│   │   │   └── rag.py        # RAG API routes
-│   │   └── main.py           # FastAPI app
-│   ├── tests/                 # Test suite
-│   │   ├── test_hybrid_search.py    # Hybrid search tests
-│   │   └── test_hybrid_integration.py # Integration tests
-│   ├── data/                  # Sample data
-│   │   └── resume_points.txt   # Resume bullets
-│   └── requirements.txt       # Python dependencies
+│   │   ├── api/
+│   │   │   └── rag.py               # API endpoints (select, optimize, latex/render)
+│   │   ├── core/
+│   │   │   ├── embeddings.py        # OpenAI embedding generation
+│   │   │   ├── search.py            # Hybrid search (vector + keywords)
+│   │   │   └── keyword_patterns.py # Tech keyword patterns (300+)
+│   │   ├── services/
+│   │   │   ├── rag_service.py       # RAG pipeline orchestration
+│   │   │   ├── selection_service.py # Bullet selection (no LLM)
+│   │   │   ├── optimization_service.py # Bullet optimization (with LLM)
+│   │   │   ├── keyword_scanner.py  # Keyword extraction
+│   │   │   └── llm_service.py       # OpenAI LLM wrapper
+│   │   ├── schemas/
+│   │   │   └── rag.py              # Pydantic models for API
+│   │   ├── utils/
+│   │   │   └── latex.py            # LaTeX template builder + PDF renderer
+│   │   └── main.py                 # FastAPI app entry point
+│   ├── tests/                       # Test suite
+│   └── requirements.txt             # Python dependencies
 │
-├── chrome-extension/          # Chrome extension
-│   ├── popup/                 # React popup UI
+├── chrome-extension/                 # Chrome extension
+│   ├── popup/                       # React popup UI
 │   │   ├── src/
-│   │   │   ├── components/    # React components
-│   │   │   │   ├── ExperienceEditor.jsx    # Edit work experiences
-│   │   │   │   ├── EducationEditor.jsx     # Edit education
-│   │   │   │   ├── ProjectEditor.jsx        # Edit projects
-│   │   │   │   ├── CustomSectionEditor.jsx  # Edit custom sections
-│   │   │   │   ├── JobMatcher.jsx           # Job description input
-│   │   │   │   ├── OptimizationPanel.jsx     # Optimization results
-│   │   │   │   ├── GenerateResume.jsx       # Tab 2: Generate new resume + LaTeX preview
-│   │   │   │   ├── SavedResumes.jsx         # Tab 3: Saved resumes
-│   │   │   │   ├── LatexPreviewModal.jsx    # LaTeX + PDF modal
-│   │   │   │   └── Tabs.jsx                 # Tab navigation
-│   │   │   ├── utils/         # Utilities
-│   │   │   │   ├── latexLineCount.js       # LaTeX line estimation helpers
-│   │   │   │   └── latexTemplate.js        # Jake template builder for previews
-│   │   │   └── services/      # Chrome API wrappers
-│   │   │       ├── storage.js                # Chrome Storage API
-│   │   │       └── messaging.js              # Chrome Messaging API
-│   │   └── vite.config.js     # Build config
-│   ├── background/            # Background service worker
-│   ├── content/               # Content scripts (job description extraction)
-│   └── manifest.json          # Extension manifest
+│   │   │   ├── components/
+│   │   │   │   ├── GenerateResume.jsx      # Generate new resume tab
+│   │   │   │   ├── SavedResumes.jsx        # Saved resumes tab
+│   │   │   │   ├── SelectedResumeEditor.jsx # Carousel editor component
+│   │   │   │   ├── LatexPreviewModal.jsx  # LaTeX + PDF preview modal
+│   │   │   │   ├── SharedResumeView.jsx   # Public resume view
+│   │   │   │   ├── PdfViewerWithMarkers.jsx # PDF.js viewer with markers
+│   │   │   │   ├── Profile.jsx            # Master resume editor
+│   │   │   │   ├── SideNav.jsx            # Manager view navigation
+│   │   │   │   ├── ExperienceEditor.jsx   # Work experience editor
+│   │   │   │   ├── EducationEditor.jsx    # Education editor
+│   │   │   │   ├── ProjectEditor.jsx      # Projects editor
+│   │   │   │   └── ...                    # Other components
+│   │   │   ├── services/
+│   │   │   │   ├── api.js                  # Backend API client
+│   │   │   │   └── storage.js              # Chrome Storage API wrapper
+│   │   │   ├── config/
+│   │   │   │   └── supabase.js             # Supabase configuration
+│   │   │   └── App.jsx                     # Main React app
+│   │   └── vite.config.js          # Build configuration
+│   ├── background/
+│   │   └── service-worker.js       # Background service worker
+│   ├── content/
+│   │   ├── content-script.js       # Job description extraction
+│   │   └── content-style.css       # Content script styles
+│   └── manifest.json               # Extension manifest
 │
-├── PROJECT_OVERVIEW.md        # Detailed architecture & roadmap
-├── CHROME_EXTENSION_FLOW.md   # Extension user flow
-└── README.md                  # This file
+├── PROJECT_OVERVIEW.md              # Detailed architecture & roadmap
+├── CHROME_EXTENSION_FLOW.md         # Extension user flow documentation
+└── README.md                        # This file
 ```
 
 ## 🛠️ Tech Stack
 
 ### Backend
-- **FastAPI** - Modern Python web framework
-- **ChromaDB** - Local vector database for embeddings
+- **FastAPI** - Modern Python web framework with automatic API docs
 - **OpenAI API** - Embeddings (`text-embedding-3-small/large`) and LLM (`gpt-4o-mini`, `gpt-4-turbo`)
 - **NumPy** - Vector operations and similarity calculations
 - **Pydantic** - Data validation and serialization
+- **Tectonic** - LaTeX to PDF compilation
 
 ### Frontend (Chrome Extension)
 - **React** - UI framework
-- **Vite** - Build tool
-- **Chrome Extensions API** - Storage, Messaging, Tabs
-- **Chrome Debugger API** - Advanced page inspection
+- **Vite** - Build tool and dev server
+- **PDF.js** - PDF rendering and interaction
+- **Chrome Extensions API** - Storage, Messaging, Tabs, Debugger
+- **Supabase** - Database and real-time subscriptions for comments
+
+### Data Storage
+- **Chrome Storage API** - Local storage for master resume and saved resumes
+- **Supabase** - Cloud database for shared resumes and comments
 
 ### Testing
 - **Pytest** - Python testing framework
 - **Unit Tests** - Hybrid search, keyword extraction, scoring
 - **Integration Tests** - Full RAG pipeline
 
+## 💡 How It Works
+
+### 1. Master Resume (Profile Tab)
+
+Users build a comprehensive "super resume" with unlimited bullet points:
+
+- **Personal Information**: Name, phone, email, LinkedIn, GitHub
+- **Skills**: List of technical skills
+- **Work Experience**: Multiple experiences, each with unlimited bullets
+- **Education**: Education entries with bullets
+- **Projects**: Project entries with bullets
+- **Custom Sections**: Additional sections (certifications, awards, etc.)
+
+**Features:**
+- Bold text formatting using markdown (`**text**`)
+- Non-negotiable bullets (must-include flag)
+- LaTeX line count indicators for one-page constraint
+- Auto-save to Chrome local storage
+
+### 2. Generate New Resume
+
+Users create tailored resumes for specific job descriptions:
+
+1. **Extract/Paste Job Description**: Content script extracts from job sites or manual input
+2. **Select Best Bullets**: Backend `/api/v1/select` endpoint uses hybrid search to find top matching bullets
+3. **AI Optimization** (optional): Backend `/api/v1/optimize` endpoint rewrites bullets and identifies gaps
+4. **Carousel Editor**: Navigate through sections (Personal Info, Skills, Experiences, etc.) using arrow buttons
+5. **Customize**: Edit bullets, reorder, add/remove
+6. **LaTeX Preview**: View LaTeX source and rendered PDF side-by-side
+7. **Save**: Save as named resume for future editing
+
+**Dynamic One-Page Selection:**
+- Backend automatically adjusts bullets-per-section to fit Jake's LaTeX template
+- Adapts to experience-heavy or project-heavy profiles
+- Ensures one-page compliance
+
+### 3. Saved Resumes
+
+Users manage and edit previously saved resumes:
+
+- **Resume List**: Card-based UI showing all saved resumes (newest first)
+- **Carousel Editor**: Same carousel interface as Generate Resume for consistent UX
+- **Edit Structure**: Modify sections, entries, and bullets
+- **Add from Master**: Select bullets from master resume to add to any entry
+- **LaTeX Preview**: Preview LaTeX source and PDF before export
+- **Share Resume**: Generate permanent shareable link
+
+### 4. Resume Sharing & Comments
+
+Public resume view with interactive comment system:
+
+1. **Generate Share Link**: Click "Share Resume" to create permanent link
+2. **Public View**: Anyone with link can view LaTeX-generated PDF
+3. **PDF.js Viewer**: Interactive viewer with zoom and page navigation
+4. **Visual Markers**: Comments show orange curved arrows and yellow highlights on PDF
+5. **Browse All Bullets**: Side panel listing all bullets with comment counts
+6. **Line-Specific Comments**: Click any bullet to add comments directly on that line
+7. **General Comments**: Separate section for overall resume feedback
+8. **Real-Time Updates**: Comments appear instantly via Supabase subscriptions
+9. **PDF Bullet Detection**: Automatically finds bullet positions in PDF and draws visual connections
+
 ## 📚 Documentation
 
 - **[PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md)** - Complete architecture, cost optimization, and roadmap
-- **[Backend README](backend/README.md)** - Backend setup and usage
-- **[Chrome Extension README](chrome-extension/README.md)** - Extension setup and development
+- **[CHROME_EXTENSION_FLOW.md](CHROME_EXTENSION_FLOW.md)** - Detailed user workflow and UI flow
+- **[Backend README](backend/README.md)** - Backend setup, API endpoints, and usage
+- **[Chrome Extension README](chrome-extension/README.md)** - Extension setup and development guide
 - **[Backend Testing Guide](backend/TESTING_GUIDE.md)** - How to run and write tests
-- **[Chrome Extension Flow](CHROME_EXTENSION_FLOW.md)** - User workflow and UI flow
 
 ## 🧪 Testing
 
@@ -254,67 +372,29 @@ pytest tests/ -v
 - Keyword extraction (300+ tech patterns)
 - Keyword scoring
 - RAG pipeline integration
+- API endpoints
 
 ### Extension Tests
 
-Manual testing via Chrome DevTools and extension popup.
-
-## 💡 How It Works
-
-### Master Resume (Tab 1)
-1. **User adds personal info** → Name, phone, email, LinkedIn, GitHub
-2. **User builds super resume** → Add unlimited bullet points to experiences, education, projects, and custom sections
-3. **Format bullets** → Use **bold** text (markdown-style: `**text**`)
-4. **Mark non-negotiable bullets** → Flag bullets that must be included in all optimized resumes
-5. **Data stored locally** → Chrome extension local storage
-6. **LaTeX line indicators** → Shows estimated line count for one-page constraint
-
-### Generate New Resume (Tab 2)
-1. **User extracts/pastes job description** → Content script extracts from job sites or manual input
-2. **Match best bullets** → (Currently mock, will connect to backend) Selects top bullets from master resume
-3. **AI optimization** → (Future) Backend processes with hybrid search + unified optimizer
-   - Non-negotiable bullets always included
-   - Respects one-page constraint
-4. **Preview LaTeX** → Real-time preview of resume (future)
-5. **Customize & save** → User edits bullets, then saves as named resume
-6. **Export to PDF** → Generate LaTeX/PDF with one-page warning if exceeds limit
-
-### Saved Resumes (Tab 3)
-1. **View saved resumes** → List of all saved optimized resumes
-2. **Edit structure** → Sections (Experiences/Education/Projects) → Entries → Bullets
-3. **Add from master** → Select bullets from master resume to add to any entry
-4. **Save as new** → Create variations of saved resumes
-5. **Share resume** → Generate permanent shareable link for any saved resume
-6. **Go to shared** → Open shared resume view (if already shared)
-
-### Resume Sharing & Comments
-1. **Generate share link** → Click "Share Resume" on any saved resume to create a permanent link
-2. **Public view** → Anyone with the link can view the resume in a professional format
-3. **Line-specific comments** → Click on any bullet point to add comments directly on that line
-4. **Comment indicators** → Bullets with comments show a badge with comment count
-5. **General comments** → Leave general comments on the entire resume
-6. **Real-time updates** → Comments appear instantly via Supabase real-time subscriptions
-7. **Anonymous or signed-in** → Comment as anonymous (with name) or as a signed-in user
-
-### Backend Integration (Future)
-1. **Backend receives request** → Hybrid search finds top matching bullets from master resume
-2. **Unified optimizer processes** → Single LLM call:
-   - Ranks bullets by relevance
-   - Rewrites bullets for better match
-   - Identifies skill gaps
-3. **Results returned** → User reviews and customizes in extension
-4. **Export** → (Future) Generate one-page LaTeX resume using Jake's template
+Manual testing via Chrome DevTools and extension popup. Test flows:
+- Master resume creation and editing
+- Resume generation from job descriptions
+- Saved resume management
+- Resume sharing and comments
 
 ## 🎓 Learning Goals
 
 This project demonstrates:
-- **RAG (Retrieval-Augmented Generation)** pipeline
+
+- **RAG (Retrieval-Augmented Generation)** pipeline implementation
 - **Hybrid search** combining semantic and keyword matching
-- **Cost optimization** strategies for AI APIs
-- **Chrome Extensions** development (APIs, messaging, storage)
-- **FastAPI** backend architecture
-- **Vector databases** for similarity search
+- **Cost optimization** strategies for AI APIs (80-90% reduction)
+- **Chrome Extensions** development (APIs, messaging, storage, content scripts)
+- **FastAPI** backend architecture with Pydantic validation
+- **Vector similarity search** for semantic matching
 - **LLM prompt engineering** for structured outputs
+- **PDF.js** integration for interactive PDF viewing
+- **Real-time updates** using Supabase subscriptions
 
 ## 📝 License
 
@@ -331,18 +411,3 @@ For questions or suggestions, open an issue or contact the maintainer.
 ---
 
 **Built with ❤️ for software engineers who want to optimize their resumes efficiently.**
-
-## Latest Features
-
-- **Dynamic One-Page Selection**: the extension now auto-adjusts bullets-per-section before calling `/api/v1/select`, ensuring the returned resume fits Jake's template while adapting to experience- or project-heavy profiles.
-- **LaTeX + PDF Preview**: the Chrome popup exposes a LaTeX preview modal with copy/download options, real-time PDF rendering, and side-by-side comparison so users can inspect the generated `.tex` source before export.
-- **Backend PDF Rendering**: new `/api/v1/latex/render` endpoint converts a structured resume into PDF (via `tectonic`), returning Base64 so the frontend can show inline previews or downloads.
-- **Resume Sharing & Comments**: 
-  - Generate permanent shareable links for any saved resume
-  - Public resume view with professional formatting (Jake's template style)
-  - **Line-specific comments**: Click on any resume bullet to add comments directly on that line
-  - Comment indicators show which bullets have comments
-  - Support for both general comments and bullet-specific comments
-  - Real-time comment updates via Supabase subscriptions
-  - Anonymous and authenticated commenting support
-
