@@ -1,7 +1,8 @@
 const LATEX_HEADER = String.raw`
 %-------------------------
 % Resume in Latex
-% Author : Jake Gutierrez (adapted)
+% Author : Jake Gutierrez
+% Based off of: https://github.com/sb2nov/resume
 % License : MIT
 %-------------------------
 
@@ -20,29 +21,35 @@ const LATEX_HEADER = String.raw`
 \usepackage{tabularx}
 
 \pagestyle{fancy}
-\fancyhf{}
+\fancyhf{} % clear all header and footer fields
 \fancyfoot{}
 \renewcommand{\headrulewidth}{0pt}
 \renewcommand{\footrulewidth}{0pt}
 
+% Adjust margins
 \addtolength{\oddsidemargin}{-0.5in}
 \addtolength{\evensidemargin}{-0.5in}
 \addtolength{\textwidth}{1in}
 \addtolength{\topmargin}{-.5in}
 \addtolength{\textheight}{1.0in}
 
-\urlstyle{same}
 
 \raggedbottom
 \raggedright
 \setlength{\tabcolsep}{0in}
 
+% Sections formatting
 \titleformat{\section}{
   \vspace{-4pt}\scshape\raggedright\large
 }{}{0em}{}[\color{black}\titlerule \vspace{-5pt}]
 
+
+%-------------------------
+% Custom commands
 \newcommand{\resumeItem}[1]{
-  \item\small{#1 \vspace{-2pt}}
+  \item\small{
+    {#1 \vspace{-2pt}}
+  }
 }
 
 \newcommand{\resumeSubheading}[4]{
@@ -50,6 +57,13 @@ const LATEX_HEADER = String.raw`
     \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
       \textbf{#1} & #2 \\
       \textit{\small#3} & \textit{\small #4} \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeSubSubheading}[2]{
+    \item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \textit{\small#1} & \textit{\small #2} \\
     \end{tabular*}\vspace{-7pt}
 }
 
@@ -62,7 +76,8 @@ const LATEX_HEADER = String.raw`
 
 \newcommand{\resumeSubItem}[1]{\resumeItem{#1}\vspace{-4pt}}
 
-\renewcommand\labelitemii{$\vcenter{\hbox{\tiny$\bullet$}}$}
+\renewcommand\labelitemii{$\bullet$}
+
 \newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0.15in, label={}]}
 \newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
 \newcommand{\resumeItemListStart}{\begin{itemize}}
@@ -100,7 +115,7 @@ function buildHeading(personalInfo) {
   const contactLine = contactParts.join(' $|$ ');
 
   return `\\begin{center}
-    \\textbf{\\Huge \\scshape ${escapeLatex(name)}} \\ \\vspace{1pt}
+    \\textbf{\\Huge \\scshape ${escapeLatex(name)}} \\\\ \\vspace{1pt}
     \\small ${contactLine}
 \\end{center}
 `;
@@ -142,16 +157,17 @@ function buildExperienceSection(entries = []) {
     const start = entry.startDate ? escapeLatex(entry.startDate) : '';
     const end = entry.endDate ? escapeLatex(entry.endDate) : 'Present';
     const dateRange = start ? `${start} -- ${end}` : end;
+    const location = escapeLatex(entry.location || '');
     const bullets = (entry.selectedBullets || []).map((bullet) => `  \\resumeItem{${escapeLatex(bullet.text || '')}}`).join('\n');
     const list = bullets ? `\\resumeItemListStart\n${bullets}\n\\resumeItemListEnd` : '';
 
     return `  \\resumeSubheading
       {${escapeLatex(entry.company || '')}}{${dateRange}}
-      {${escapeLatex(entry.role || '')}}{}
+      {${escapeLatex(entry.role || '')}}{${location}}
 ${list}`;
   }).join('\n\n');
 
-  return `\\section{Experience}
+  return `\\section{EXPERIENCE}
 \\resumeSubHeadingListStart
 ${sectionBody}
 \\resumeSubHeadingListEnd
@@ -167,7 +183,7 @@ function buildProjectsSection(entries = []) {
     const heading = entry.url
       ? `\\href{${escapeLatex(entry.url)}}{\\textbf{${escapeLatex(entry.name || '')}}}`
       : `\\textbf{${escapeLatex(entry.name || '')}}`;
-    const tech = entry.technologies ? ` \\emph{${escapeLatex(entry.technologies)}}` : '';
+    const tech = entry.technologies ? ` $|$ \\emph{${escapeLatex(entry.technologies)}}` : '';
     const bullets = (entry.selectedBullets || []).map((bullet) => `  \\resumeItem{${escapeLatex(bullet.text || '')}}`).join('\n');
     const list = bullets ? `\\resumeItemListStart\n${bullets}\n\\resumeItemListEnd` : '';
 
@@ -176,7 +192,7 @@ function buildProjectsSection(entries = []) {
 ${list}`;
   }).join('\n\n');
 
-  return `\\section{Projects}
+  return `\\section{PROJECTS}
 \\resumeSubHeadingListStart
 ${sectionBody}
 \\resumeSubHeadingListEnd
@@ -190,23 +206,21 @@ function buildSkillsSection(skillGroups = []) {
 
   const lines = skillGroups
     .filter((group) => group && (group.title || (group.skills && group.skills.length)))
-    .map((group) => `\\textbf{${escapeLatex(group.title || 'Skills')}}: ${escapeLatex((group.skills || []).join(', '))}`);
+    .map((group) => `\\textbf{${escapeLatex(group.title || 'Skills')}}: {${escapeLatex((group.skills || []).join(', '))}}`);
 
   if (lines.length === 0) {
     return '';
   }
 
-  const formattedLines = lines
-    .map((line, idx) => {
-      const spacer = idx === lines.length - 1 ? '' : '\\\\[2pt]';
-      return `${line}${spacer}`;
-    })
-    .join('\n');
+  // Join with proper line breaks - add [2pt] spacing between lines, but NOT after last line
+  const body = lines.join(' \\\\[2pt]\n     ');
 
-  return `\\section{Skills}
-{\\small
-${formattedLines}
-}
+  return `\\section{SKILLS}
+ \\begin{itemize}[leftmargin=0in, label={}]
+    \\small{\\item{
+     ${body}
+    }}
+ \\end{itemize}
 `;
 }
 

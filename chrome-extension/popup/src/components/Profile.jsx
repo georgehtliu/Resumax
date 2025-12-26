@@ -100,73 +100,161 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
   }, [resume, calculateTotalBullets]);
 
   const handleImportResume = async () => {
-    // Load mock data for now
+    // Load Waterloo student mock data with 8 internships and 3 projects
     const mockMasterResume = {
       personalInfo: {
-        firstName: 'Jane',
-        lastName: 'Doe',
-        email: 'jane.doe@example.com',
-        phone: '+1 (555) 123-4567',
-        linkedin: 'linkedin.com/in/janedoe',
-        github: 'github.com/janedoe'
+        firstName: 'Alex',
+        lastName: 'Chen',
+        email: 'alex.chen@uwaterloo.ca',
+        phone: '+1 (519) 888-4567',
+        linkedin: 'linkedin.com/in/alexchen',
+        github: 'github.com/alexchen'
       },
       skills: [
         {
           id: 'skill-1',
           title: 'Languages',
-          skills: ['Python', 'JavaScript', 'Go', 'Java', 'SQL']
+          skills: ['Python', 'JavaScript', 'TypeScript', 'Go', 'Java', 'C++', 'SQL', 'Bash', 'Ruby']
         },
         {
           id: 'skill-2',
-          title: 'Frameworks & Libraries',
-          skills: ['React', 'Node.js', 'Django', 'Spring Boot', 'GraphQL']
+          title: 'Frontend',
+          skills: ['React', 'Redux', 'Next.js', 'HTML5', 'CSS3', 'WebSocket', 'WebRTC', 'D3.js']
         },
         {
           id: 'skill-3',
+          title: 'Backend',
+          skills: ['Node.js', 'Express', 'Django', 'Spring Boot', 'Ruby on Rails', 'GraphQL', 'gRPC', 'REST APIs']
+        },
+        {
+          id: 'skill-4',
+          title: 'Databases',
+          skills: ['PostgreSQL', 'MongoDB', 'Redis', 'DynamoDB', 'Elasticsearch']
+        },
+        {
+          id: 'skill-5',
           title: 'Cloud & DevOps',
-          skills: ['AWS', 'Docker', 'Kubernetes', 'Terraform', 'CI/CD']
+          skills: ['Docker', 'Kubernetes', 'Jenkins', 'AWS', 'CI/CD', 'Terraform']
+        },
+        {
+          id: 'skill-6',
+          title: 'Tools',
+          skills: ['Git', 'GitHub', 'Jira', 'Confluence', 'Prometheus', 'Grafana', 'Splunk', 'Datadog']
         }
       ],
       experiences: [
         {
           id: 'exp-1',
           company: 'Google',
-          role: 'Software Engineer II',
-          startDate: 'Jun 2022',
-          endDate: 'Present',
+          role: 'Software Engineering Intern',
+          startDate: 'Sep 2023',
+          endDate: 'Dec 2023',
           bullets: [
-            { id: 'bullet-1', text: 'Scaled Go/Python microservices for 10M+ daily requests while keeping uptime at 99.9%' },
-            { id: 'bullet-2', text: 'Cut API latency 40% by tuning SQL and cache layers, saving $50K in annual infra costs' },
-            { id: 'bullet-3', text: 'Led three engineers to launch recommendations that raised engagement 25% and revenue $2M' },
-            { id: 'bullet-4', text: 'Automated Jenkins and Docker pipelines enabling daily releases and trimming deploy time 60%' },
-            { id: 'bullet-5', text: 'Built REST and gRPC services for 5M+ calls with sub-100ms latency to speed the mobile app' }
+            { id: 'bullet-1', text: 'Developed and maintained microservices handling 10M+ daily requests using Python, Go, and Kubernetes, ensuring 99.9% uptime' },
+            { id: 'bullet-2', text: 'Optimized database queries and caching strategies, reducing API response time by 40% and saving $50K annually in infrastructure costs' },
+            { id: 'bullet-3', text: 'Implemented comprehensive CI/CD pipelines using Jenkins, Docker, and Kubernetes, reducing deployment time by 60% and enabling daily releases' },
+            { id: 'bullet-4', text: 'Designed and built RESTful and gRPC APIs serving 5M+ requests per day with sub-100ms latency, improving mobile app performance by 30%' }
           ]
         },
         {
           id: 'exp-2',
           company: 'Meta',
           role: 'Software Engineering Intern',
-          startDate: 'Jun 2021',
+          startDate: 'May 2023',
+          endDate: 'Aug 2023',
+          bullets: [
+            { id: 'bullet-5', text: 'Built React components for Facebook Marketplace improving user interface accessibility and mobile responsiveness, increasing conversion rate by 15%' },
+            { id: 'bullet-6', text: 'Implemented real-time notification system using WebSocket connections and Redis, reducing latency by 30% and improving user engagement' },
+            { id: 'bullet-7', text: 'Optimized GraphQL API endpoints and data fetching strategies, reducing server load by 25% and improving page load times' },
+            { id: 'bullet-8', text: 'Developed A/B testing framework for feature rollouts, enabling data-driven product decisions and reducing risk of regressions' }
+          ]
+        },
+        {
+          id: 'exp-3',
+          company: 'Amazon Web Services',
+          role: 'Software Development Engineer Intern',
+          startDate: 'Sep 2022',
+          endDate: 'Dec 2022',
+          bullets: [
+            { id: 'bullet-9', text: 'Developed internal tools using Java and Spring Boot to automate deployment processes, reducing manual work by 40 hours per week' },
+            { id: 'bullet-10', text: 'Built monitoring and alerting system for AWS services using CloudWatch and Lambda, improving incident detection time by 50%' },
+            { id: 'bullet-11', text: 'Optimized database queries and implemented caching layer using DynamoDB and ElastiCache, reducing query latency by 35%' }
+          ]
+        },
+        {
+          id: 'exp-4',
+          company: 'Shopify',
+          role: 'Backend Developer Intern',
+          startDate: 'Jan 2022',
+          endDate: 'Apr 2022',
+          bullets: [
+            { id: 'bullet-12', text: 'Built scalable payment processing system using Ruby on Rails and PostgreSQL, handling 1M+ transactions daily with 99.99% reliability' },
+            { id: 'bullet-13', text: 'Implemented distributed caching solution using Redis Cluster, reducing database load by 60% and improving response times by 45%' },
+            { id: 'bullet-14', text: 'Developed RESTful APIs for merchant dashboard, enabling real-time analytics and business insights for 100K+ merchants' }
+          ]
+        },
+        {
+          id: 'exp-5',
+          company: 'Microsoft',
+          role: 'Software Engineering Intern',
+          startDate: 'May 2021',
           endDate: 'Aug 2021',
           bullets: [
-            { id: 'bullet-9', text: 'Shipped accessible Marketplace UI components that lifted conversion by 15%' },
-            { id: 'bullet-10', text: 'Built WebSocket plus Redis alerts trimming latency 30% and boosting engagement' },
-            { id: 'bullet-11', text: 'Optimized GraphQL queries to cut server load 25% and speed page renders' }
+            { id: 'bullet-15', text: 'Contributed to Azure cloud services development using C# and .NET, implementing features used by millions of enterprise customers' },
+            { id: 'bullet-16', text: 'Built automated testing framework reducing manual QA time by 50% and increasing test coverage from 60% to 85%' },
+            { id: 'bullet-17', text: 'Optimized SQL queries and database schema design, improving query performance by 40% and reducing storage costs by 25%' }
+          ]
+        },
+        {
+          id: 'exp-6',
+          company: 'Stripe',
+          role: 'Software Engineering Intern',
+          startDate: 'Sep 2020',
+          endDate: 'Dec 2020',
+          bullets: [
+            { id: 'bullet-18', text: 'Developed fraud detection algorithms using machine learning models, reducing false positives by 30% and improving detection accuracy' },
+            { id: 'bullet-19', text: 'Built real-time payment processing pipeline using Kafka and microservices architecture, handling 10K+ transactions per second' },
+            { id: 'bullet-20', text: 'Implemented comprehensive logging and monitoring using Datadog and ELK stack, improving debugging efficiency by 50%' }
+          ]
+        },
+        {
+          id: 'exp-7',
+          company: 'Palantir',
+          role: 'Software Engineering Intern',
+          startDate: 'Jan 2020',
+          endDate: 'Apr 2020',
+          bullets: [
+            { id: 'bullet-21', text: 'Built data visualization dashboard using React and D3.js, enabling analysts to process and visualize large-scale datasets efficiently' },
+            { id: 'bullet-22', text: 'Developed ETL pipelines using Python and Apache Spark, processing terabytes of data daily with 99.9% reliability' },
+            { id: 'bullet-23', text: 'Implemented distributed data processing system using Kubernetes, scaling to handle 100x data volume increases' }
+          ]
+        },
+        {
+          id: 'exp-8',
+          company: 'RBC',
+          role: 'Software Developer Intern',
+          startDate: 'May 2019',
+          endDate: 'Aug 2019',
+          bullets: [
+            { id: 'bullet-24', text: 'Developed banking APIs using Java and Spring Framework, ensuring PCI-DSS compliance and handling sensitive financial data' },
+            { id: 'bullet-25', text: 'Built automated testing suite using JUnit and Mockito, increasing code coverage from 45% to 80% and reducing production bugs by 60%' },
+            { id: 'bullet-26', text: 'Collaborated with cross-functional teams to deliver mobile banking features, improving user satisfaction scores by 25%' }
           ]
         }
       ],
       education: [
         {
           id: 'edu-1',
-          school: 'Stanford University',
+          school: 'University of Waterloo',
           degree: 'B.S.',
           field: 'Computer Science',
           startDate: 'Sep 2018',
-          endDate: 'Jun 2022',
+          endDate: 'Apr 2024',
           bullets: [
-            { id: 'bullet-18', text: 'GPA 3.9/4.0, Magna Cum Laude, Dean\'s List in every term' },
-            { id: 'bullet-19', text: 'Core courses: Algorithms, Machine Learning, Distributed Systems, Databases' },
-            { id: 'bullet-20', text: 'Teaching assistant for CS161 supporting 50+ students with labs and grading' }
+            { id: 'bullet-27', text: 'GPA: 3.9/4.0, Dean\'s Honour List, Co-op Program' },
+            { id: 'bullet-28', text: 'Relevant Coursework: Algorithms & Data Structures, Machine Learning, Distributed Systems, Database Systems, Computer Networks, Operating Systems' },
+            { id: 'bullet-29', text: 'Teaching Assistant for CS341 (Algorithms) - graded assignments and held office hours for 80+ students' },
+            { id: 'bullet-30', text: 'Research Assistant in Systems Lab - worked on distributed systems optimization and performance analysis' }
           ]
         }
       ],
@@ -176,16 +264,55 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
           name: 'Distributed Task Scheduler',
           description: 'High-performance distributed task scheduling system with fault tolerance',
           technologies: 'Go, Kubernetes, Redis, PostgreSQL, gRPC',
-          startDate: 'Jan 2022',
-          endDate: 'May 2022',
+          startDate: 'Jan 2023',
+          endDate: 'Apr 2023',
           bullets: [
-            { id: 'bullet-22', text: 'Built Go + Kubernetes scheduler processing 100K concurrent jobs at 99.95% uptime' },
-            { id: 'bullet-23', text: 'Implemented Raft-based leader election to coordinate task execution' },
-            { id: 'bullet-24', text: 'Designed failover with replication to prevent task loss during node outages' }
+            { id: 'bullet-31', text: 'Built scalable task scheduler handling 100K+ concurrent tasks using Go and Kubernetes, achieving 99.95% reliability' },
+            { id: 'bullet-32', text: 'Implemented distributed consensus algorithm using Raft protocol for leader election and task coordination across nodes' },
+            { id: 'bullet-33', text: 'Designed fault-tolerant architecture with automatic failover and task replication, ensuring zero data loss during node failures' },
+            { id: 'bullet-34', text: 'Created monitoring dashboard using Prometheus and Grafana, enabling real-time visibility into system performance and health' }
+          ]
+        },
+        {
+          id: 'proj-2',
+          name: 'E-commerce Platform',
+          description: 'Full-stack e-commerce platform with payment integration and inventory management',
+          technologies: 'React, Node.js, Express, PostgreSQL, Stripe API, AWS',
+          startDate: 'Sep 2021',
+          endDate: 'Dec 2021',
+          bullets: [
+            { id: 'bullet-35', text: 'Built scalable web application supporting 1000+ concurrent users with real-time inventory updates and order processing' },
+            { id: 'bullet-36', text: 'Integrated Stripe payment processing handling $50K+ in transactions with PCI compliance and fraud detection' },
+            { id: 'bullet-37', text: 'Implemented JWT-based authentication and authorization with role-based access control for admin and customer roles' },
+            { id: 'bullet-38', text: 'Deployed on AWS using EC2, RDS, S3, and CloudFront with automated backup, monitoring, and auto-scaling capabilities' }
+          ]
+        },
+        {
+          id: 'proj-3',
+          name: 'Real-time Chat Application',
+          description: 'Scalable real-time messaging platform with end-to-end encryption',
+          technologies: 'React, Node.js, Socket.io, MongoDB, Redis, Docker',
+          startDate: 'May 2022',
+          endDate: 'Aug 2022',
+          bullets: [
+            { id: 'bullet-39', text: 'Built real-time chat application supporting 10K+ concurrent users with WebSocket connections and message queuing' },
+            { id: 'bullet-40', text: 'Implemented end-to-end encryption using RSA and AES algorithms, ensuring secure message transmission' },
+            { id: 'bullet-41', text: 'Designed microservices architecture with message broker using Redis, achieving sub-100ms message delivery latency' },
+            { id: 'bullet-42', text: 'Deployed using Docker containers and Kubernetes orchestration, enabling horizontal scaling and high availability' }
           ]
         }
       ],
-      customSections: []
+      customSections: [
+        {
+          id: 'custom-2',
+          title: 'Awards & Recognition',
+          subtitle: '',
+          bullets: [
+            { id: 'bullet-50', text: 'Google Hackathon Winner - Best Technical Implementation (2023) - Built AI-powered code review tool' },
+            { id: 'bullet-51', text: 'University of Waterloo Engineering Excellence Award (2022) - Top 5% of Computer Science graduating class' }
+          ]
+        }
+      ]
     };
 
     // Save to storage and update the resume

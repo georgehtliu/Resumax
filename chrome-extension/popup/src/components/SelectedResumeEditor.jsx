@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { getLineCountInfo } from '../utils/latexLineCount';
 import PersonalInfoEditor from './PersonalInfoEditor';
 import SkillsEditor from './SkillsEditor';
@@ -74,17 +74,34 @@ function SelectedResumeEditor({
   showEducation = true
 }) {
   const [localResume, setLocalResume] = useState(() => normalizeResume(resume));
+  const isLocalUpdateRef = useRef(false);
+  const lastResumeRef = useRef(JSON.stringify(resume));
 
   const lineTotals = useMemo(() => calculateTotalLines(localResume), [localResume]);
   const maxLines = typeof summary?.maxLines === 'number' ? summary.maxLines : 50;
   const fitsOnePage = lineTotals <= maxLines;
 
+  // Only sync from prop if it's an external change (not from our own updates)
   useEffect(() => {
-    setLocalResume(normalizeResume(resume));
+    // Skip if this update came from our local changes
+    if (isLocalUpdateRef.current) {
+      isLocalUpdateRef.current = false;
+      // Update the ref to match what we expect
+      lastResumeRef.current = JSON.stringify(resume);
+      return;
+    }
+
+    // Only update if the resume prop actually changed
+    const resumeStr = JSON.stringify(resume);
+    if (resumeStr !== lastResumeRef.current) {
+      lastResumeRef.current = resumeStr;
+      setLocalResume(normalizeResume(resume));
+    }
   }, [resume]);
 
   useEffect(() => {
     if (onUpdate) {
+      isLocalUpdateRef.current = true;
       onUpdate(clone(localResume));
     }
   }, [localResume, onUpdate]);

@@ -16,15 +16,17 @@ from app.schemas.rag import (
     SelectedProject, SelectedCustomSection, SelectedBullet, Bullet, Experience
 )
 
-def estimate_latex_lines(text: str, chars_per_line: int = 110) -> int:
+def estimate_latex_lines(text: str, chars_per_line: int = 145) -> int:
     """
     Estimate how many lines a bullet point will take in LaTeX.
     
     Uses a simple heuristic: characters per line in Jake's Resume format.
+    Updated to match actual resume capacity - with \small font and adjusted margins,
+    ~140-150 chars per line is realistic.
     
     Args:
         text: Bullet point text
-        chars_per_line: Average characters per line in LaTeX
+        chars_per_line: Average characters per line in LaTeX (default 145 for \small font)
         
     Returns:
         Estimated number of lines
@@ -39,8 +41,7 @@ def estimate_latex_lines(text: str, chars_per_line: int = 110) -> int:
         return 0
 
     lines = max(1, math.ceil(effective_length / chars_per_line))
-    if chars_per_line >= 80:
-        return min(lines, 3)
+    # Don't cap at 3 - allow longer bullets to be estimated correctly
     return lines
 
 # Prestigious companies that should be included even if less relevant

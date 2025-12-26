@@ -9,48 +9,68 @@ from app.schemas import SelectedResume
 
 LATEX_HEADER = r"""
 %-------------------------
-% Resume in Latex (Jake template, adapted)
+% Resume in Latex - Minimal Tectonic-Compatible Version
+% Author : Jake Gutierrez (adapted for tectonic)
 %-------------------------
+
 \documentclass[letterpaper,11pt]{article}
-\usepackage{latexsym}
+
 \usepackage[empty]{fullpage}
 \usepackage{titlesec}
-\usepackage{marvosym}
 \usepackage[usenames,dvipsnames]{color}
-\usepackage{verbatim}
 \usepackage{enumitem}
 \usepackage[hidelinks]{hyperref}
-\usepackage{fancyhdr}
-\usepackage[english]{babel}
-\usepackage{tabularx}
 
-\pagestyle{fancy}
-\fancyhf{}
-\fancyfoot{}
-\renewcommand{\headrulewidth}{0pt}
-\renewcommand{\footrulewidth}{0pt}
+\pagestyle{empty}
+
+% Adjust margins
 \addtolength{\oddsidemargin}{-0.5in}
 \addtolength{\evensidemargin}{-0.5in}
 \addtolength{\textwidth}{1in}
 \addtolength{\topmargin}{-.5in}
 \addtolength{\textheight}{1.0in}
-\urlstyle{same}
+
 \raggedbottom
 \raggedright
 \setlength{\tabcolsep}{0in}
-\titleformat{\section}{\vspace{-4pt}\scshape\raggedright\large}{}{0em}{}[\color{black}\titlerule \vspace{-5pt}]
-\newcommand{\resumeItem}[1]{\item\small{#1 \vspace{-2pt}}}
-\newcommand{\resumeSubheading}[4]{\vspace{-2pt}\item
-  \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
-    \textbf{#1} & #2 \\
-    \textit{\small#3} & \textit{\small #4} \\
-  \end{tabular*}\vspace{-7pt}}
-\newcommand{\resumeProjectHeading}[2]{\item
-  \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
-    \small#1 & #2 \\
-  \end{tabular*}\vspace{-7pt}}
+
+% Sections formatting
+\titleformat{\section}{
+  \vspace{-4pt}\scshape\raggedright\large
+}{}{0em}{}[\color{black}\titlerule \vspace{-5pt}]
+
+%-------------------------
+% Custom commands
+\newcommand{\resumeItem}[1]{
+  \item\small{#1 \vspace{-2pt}}
+}
+
+\newcommand{\resumeSubheading}[4]{
+  \vspace{-2pt}\item
+    \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & #2 \\
+      \textit{\small#3} & \textit{\small #4} \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeSubSubheading}[2]{
+    \item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \textit{\small#1} & \textit{\small #2} \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeProjectHeading}[2]{
+    \item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \small#1 & #2 \\
+    \end{tabular*}\vspace{-7pt}
+}
+
 \newcommand{\resumeSubItem}[1]{\resumeItem{#1}\vspace{-4pt}}
-\renewcommand\labelitemii{$\vcenter{\hbox{\tiny$\bullet$}}$}
+
+\renewcommand\labelitemii{$\bullet$}
+
 \newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0.15in, label={}]}
 \newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
 \newcommand{\resumeItemListStart}{\begin{itemize}}
@@ -89,7 +109,8 @@ def _build_heading(personal_info: dict | None) -> str:
 
     parts: list[str] = []
     if info.get("phone"):
-        parts.append(f"\\underline{{{_escape_latex(info['phone'])}}}")
+        phone = _escape_latex(info['phone'])
+        parts.append(f"\\underline{{{phone}}}")
     if info.get("email"):
         email = _escape_latex(info["email"])
         parts.append(f"\\href{{mailto:{email}}}{{\\underline{{{email}}}}}")
@@ -103,8 +124,8 @@ def _build_heading(personal_info: dict | None) -> str:
     contact_line = " $|$ ".join(parts)
     return (
         "\\begin{center}\n"
-        f"  \\textbf{{\\Huge \\scshape {_escape_latex(name)}}} \\\\ \\vspace{{1pt}}\n"
-        f"  \\small {contact_line}\n"
+        f"    \\textbf{{\\Huge \\scshape {_escape_latex(name)}}} \\\\ \\vspace{{1pt}}\n"
+        f"    \\small {contact_line}\n"
         "\\end{center}\n"
     )
 
@@ -149,14 +170,15 @@ def _build_experience(experiences: list) -> str:
         start = _escape_latex(entry.startDate or "")
         end = _escape_latex(entry.endDate or "") or "Present"
         date_range = f"{start} -- {end}" if start else end
+        location = _escape_latex(getattr(entry, "location", None) or "")
         line = (
             "  \\resumeSubheading\n"
             f"    {{{_escape_latex(entry.company or '')}}}{{{date_range}}}\n"
-            f"    {{{_escape_latex(entry.role or '')}}}{{}}\n"
+            f"    {{{_escape_latex(entry.role or '')}}}{{{location}}}\n"
         )
         bullets = _format_bullets(entry.selectedBullets or [])
         sections.append(line + ("\n" + bullets if bullets else ""))
-    return "\\section{Experience}\n\\resumeSubHeadingListStart\n" + "\n\n".join(sections) + "\n\\resumeSubHeadingListEnd\n"
+    return "\\section{EXPERIENCE}\n\\resumeSubHeadingListStart\n" + "\n\n".join(sections) + "\n\\resumeSubHeadingListEnd\n"
 
 
 def _build_projects(projects: list) -> str:
@@ -165,17 +187,18 @@ def _build_projects(projects: list) -> str:
     sections = []
     for entry in projects:
         name = _escape_latex(getattr(entry, "name", "") or "")
-        heading = f"\\textbf{{{name}}}"
         url_value = getattr(entry, "url", None)
         if url_value:
             url = _escape_latex(url_value)
-            heading = f"\\href{{{url}}}{{{heading}}}"
+            heading = f"\\href{{{url}}}{{\\textbf{{{name}}}}}"
+        else:
+            heading = f"\\textbf{{{name}}}"
         tech_value = getattr(entry, "technologies", None)
-        tech = f" \\emph{{{_escape_latex(tech_value)}}}" if tech_value else ''
+        tech = f" $|$ \\emph{{{_escape_latex(tech_value)}}}" if tech_value else ''
         bullets = _format_bullets(getattr(entry, "selectedBullets", None) or [])
         line = "  \\resumeProjectHeading\n    {" + heading + tech + "}{}\n"
         sections.append(line + ("\n" + bullets if bullets else ""))
-    return "\\section{Projects}\n\\resumeSubHeadingListStart\n" + "\n\n".join(sections) + "\n\\resumeSubHeadingListEnd\n"
+    return "\\section{PROJECTS}\n\\resumeSubHeadingListStart\n" + "\n\n".join(sections) + "\n\\resumeSubHeadingListEnd\n"
 
 
 def _build_skills(skills: list) -> str:
@@ -186,15 +209,15 @@ def _build_skills(skills: list) -> str:
         title = _escape_latex(group.title or 'Skills')
         skill_text = _escape_latex(", ".join(group.skills or []))
         if skill_text:
-            lines.append(f"\\textbf{{{title}}}: {skill_text}")
+            lines.append(f"\\textbf{{{title}}}: {{{skill_text}}}")
     if not lines:
         return ""
-    formatted_lines = []
-    for idx, line in enumerate(lines):
-        spacer = "" if idx == len(lines) - 1 else "\\\\[2pt]"
-        formatted_lines.append(f"{line}{spacer}")
-    body = "\n".join(formatted_lines)
-    return f"\\section{{Skills}}\n{{\\small\n{body}\n}}\n"
+    # Join with proper line breaks - add [2pt] spacing between lines, but NOT after last line
+    if len(lines) == 1:
+        body = lines[0]
+    else:
+        body = " \\\\[2pt]\n     ".join(lines)
+    return f"\\section{{SKILLS}}\n \\begin{{itemize}}[leftmargin=0in, label={{}}]\n    \\small{{\\item{{\n     {body}\n    }}}}\n \\end{{itemize}}\n"
 
 
 def _build_custom_sections(sections: list) -> str:

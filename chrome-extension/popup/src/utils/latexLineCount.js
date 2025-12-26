@@ -2,8 +2,8 @@
  * Utility to estimate LaTeX line count for bullet points in Jake's Resume template
  * 
  * Jake's Resume typically uses:
- * - ~60-70 characters per line for bullet points
- * - Narrow column width
+ * - ~140-150 characters per line for bullet points with \small font
+ * - Narrow column width but with adjusted margins
  * 
  * This provides an approximate estimate for visual feedback
  */
@@ -18,10 +18,13 @@ export function estimateLatexLines(text) {
     return 0;
   }
 
-  const CHARS_PER_LINE = 110;
+  // Updated to match actual resume capacity - bullets can be much longer
+  // With \small font and adjusted margins, ~140-150 chars per line is realistic
+  const CHARS_PER_LINE = 145;
   const effectiveLength = text.trim().length + 2;
   const lineCount = Math.max(1, Math.ceil(effectiveLength / CHARS_PER_LINE));
-  return Math.min(lineCount, 3);
+  // Don't cap at 3 - allow longer bullets to be estimated correctly
+  return lineCount;
 }
 
 /**
