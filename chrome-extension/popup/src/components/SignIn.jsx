@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../config/supabase';
+import { Icon } from './Icons';
 import './SignIn.css';
 
 /**
@@ -315,7 +316,7 @@ function SignIn({ onSignIn, onSwitchToSignUp }) {
             onClick={() => handleSocialSignIn('google')}
             type="button"
           >
-            <span className="social-icon">🔍</span>
+            <Icon name="search" size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
             Continue with Google
           </button>
           <button 
@@ -324,7 +325,7 @@ function SignIn({ onSignIn, onSwitchToSignUp }) {
             onClick={() => handleSocialSignIn('github')}
             type="button"
           >
-            <span className="social-icon">💻</span>
+            <Icon name="laptop" size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
             Continue with GitHub
           </button>
         </div>

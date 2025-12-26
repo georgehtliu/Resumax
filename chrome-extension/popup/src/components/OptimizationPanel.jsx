@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Icon } from './Icons';
 import './OptimizationPanel.css';
 
 /**
@@ -51,7 +52,17 @@ function OptimizationPanel({ result, onClose, onBulletsUpdate }) {
         <div className="stat">
           <span className="stat-label">Mode:</span>
           <span className="stat-value">
-            {isOptimized ? '✨ Optimized' : '📋 Selected'}
+            {isOptimized ? (
+              <>
+                <Icon name="sparkles" size={14} style={{ marginRight: '4px', verticalAlign: 'middle', display: 'inline-block' }} />
+                Optimized
+              </>
+            ) : (
+              <>
+                <Icon name="clipboard" size={14} style={{ marginRight: '4px', verticalAlign: 'middle', display: 'inline-block' }} />
+                Selected
+              </>
+            )}
           </span>
         </div>
       </div>

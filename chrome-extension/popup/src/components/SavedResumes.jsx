@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { storageService } from '../services/storage';
 import { supabase } from '../config/supabase';
+import { useToast } from '../hooks/useToast';
+import { SkeletonList, SkeletonCard } from './Skeleton';
+import Tooltip from './Tooltip';
+import { Trash2, FileText, Calendar } from 'lucide-react';
+import { Icon } from './Icons';
 import ExperienceEditor from './ExperienceEditor';
 import ProjectEditor from './ProjectEditor';
 import CustomSectionEditor from './CustomSectionEditor';
@@ -269,6 +274,7 @@ function flattenStructuredResume(resume) {
 function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
   const [savedResumes, setSavedResumes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { success, error: showError } = useToast();
   const [selectedResume, setSelectedResume] = useState(null);
   const [editedResume, setEditedResume] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
@@ -360,9 +366,10 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
         setEditedResume(null);
       }
       setShowDeleteConfirm(null);
+      success('Resume deleted');
     } catch (error) {
       console.error('Error deleting resume:', error);
-      alert('Error deleting resume: ' + error.message);
+      showError('Failed to delete resume: ' + error.message);
     }
   }
 
@@ -721,10 +728,10 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
         onLoadResume();
       }
 
-      alert('Resume saved successfully!');
+      success('Resume saved successfully!');
     } catch (error) {
       console.error('Error saving resume:', error);
-      alert('Error saving resume');
+      showError('Failed to save resume: ' + error.message);
     } finally {
       setSaving(false);
     }
@@ -739,9 +746,11 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
   if (loading) {
     return (
       <div className="saved-resumes">
-        <div className="section">
-          <p>Loading saved resumes...</p>
+        <div className="view-header">
+          <h1>Saved Resumes</h1>
+          <p className="view-subtitle">View and manage your saved resumes</p>
         </div>
+        <SkeletonList items={3} />
       </div>
     );
   }
@@ -749,11 +758,10 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
   return (
     <div className="saved-resumes">
       {savedResumes.length === 0 ? (
-        <div className="section">
-          <div className="empty-state">
-            <p>No saved resumes yet.</p>
-            <p className="empty-hint">Generate and save a resume to see it here.</p>
-          </div>
+        <div className="saved-resumes-empty">
+          <FileText className="saved-resumes-empty-icon" size={64} />
+          <h3>No saved resumes yet</h3>
+          <p>Generate and save a resume to get started</p>
         </div>
       ) : (
         <>
@@ -773,6 +781,7 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
                   <div className="resume-item-content">
                     <h3 className="resume-name">{resume.name}</h3>
                     <p className="resume-meta">
+                      <Calendar size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '4px' }} />
                       {formatDate(resume.createdAt)} • {getStructuredBulletCount(resume.data)} bullets
                     </p>
                   </div>
@@ -781,16 +790,17 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
                       resumeId={resume.id}
                       resumeName={resume.name}
                     />
-                    <button
-                      className="btn-icon-small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowDeleteConfirm(resume.id);
-                      }}
-                      title="Delete"
-                    >
-                      🗑️
-                    </button>
+                    <Tooltip content="Delete resume">
+                      <button
+                        className="btn-icon-small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowDeleteConfirm(resume.id);
+                        }}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </Tooltip>
                   </div>
                 </div>
               ))}
@@ -806,13 +816,15 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
                     className="btn btn-primary"
                     onClick={() => setShowSaveDialog(true)}
                   >
-                    💾 Save As New Resume
+                    <Icon name="save" size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+                    Save As New Resume
                   </button>
                   <button
                     className="btn btn-secondary"
                     onClick={openLatexPreview}
                   >
-                    👁️ LaTeX Preview
+                    <Icon name="eye" size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+                    LaTeX Preview
                   </button>
                   <button
                     className="btn btn-secondary"

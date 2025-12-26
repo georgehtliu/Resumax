@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { getLineCountInfo } from '../utils/latexLineCount';
+import { Icon } from './Icons';
 import './SectionEditor.css';
 
 /**
@@ -122,7 +123,11 @@ function CustomSectionEditor({ section, onUpdate, onDelete, onAddBulletFromMaste
                         rows={2}
                       />
                       <span className={`latex-line-indicator ${lineInfo.category}`} title={`Estimated LaTeX lines: ${lineInfo.count}`}>
-                        {lineInfo.count === 0 ? '' : lineInfo.count === 1 ? '1 line' : lineInfo.count === 2 ? '2 lines' : `${lineInfo.count} lines ⚠️`}
+                        {lineInfo.count === 0 ? '' : lineInfo.count === 1 ? '1 line' : lineInfo.count === 2 ? '2 lines' : (
+                          <>
+                            {lineInfo.count} lines <Icon name="warning" size={14} style={{ marginLeft: '4px', verticalAlign: 'middle', display: 'inline-block' }} />
+                          </>
+                        )}
                       </span>
                     </div>
                     <button

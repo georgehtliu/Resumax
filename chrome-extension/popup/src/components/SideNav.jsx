@@ -1,4 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { 
+  Info, Lightbulb, User, Sparkles, FileText, Users, GraduationCap, 
+  Bot, MessageSquare, Rocket 
+} from 'lucide-react';
 import './SideNav.css';
 
 /**
@@ -16,19 +20,19 @@ function SideNav({ activeView, onViewChange, userEmail, onSignOut }) {
   }, [activeView]);
 
   const navItems = [
-    { id: 'about', label: 'About', icon: 'ℹ️' },
-    { id: 'tips', label: 'Resume Tips', icon: '💡' },
-    { id: 'profile', label: 'Profile', icon: '👤' },
-    { id: 'generate', label: 'Generate Resume', icon: '✨' },
-    { id: 'saved', label: 'Saved Resumes', icon: '📄' },
-    { id: 'community', label: 'Community', icon: '👥' },
+    { id: 'about', label: 'About', icon: Info },
+    { id: 'tips', label: 'Resume Tips', icon: Lightbulb },
+    { id: 'profile', label: 'Profile', icon: User },
+    { id: 'generate', label: 'Generate Resume', icon: Sparkles },
+    { id: 'saved', label: 'Saved Resumes', icon: FileText },
+    { id: 'community', label: 'Community', icon: Users },
     { 
       id: 'coaching', 
       label: 'Resume Coaching', 
-      icon: '🎓',
+      icon: GraduationCap,
       subItems: [
-        { id: 'coaching-ai', label: 'AI Coach', icon: '🤖' },
-        { id: 'coaching-human', label: 'Critique with Human', icon: '👥' },
+        { id: 'coaching-ai', label: 'AI Coach', icon: Bot },
+        { id: 'coaching-human', label: 'Critique with Human', icon: MessageSquare },
       ]
     },
   ];
@@ -55,7 +59,7 @@ function SideNav({ activeView, onViewChange, userEmail, onSignOut }) {
     <nav className="side-nav">
       <div className="side-nav-header">
         <div className="side-nav-logo">
-          <span className="logo-icon">🚀</span>
+          <Rocket className="logo-icon" size={24} />
           <span className="logo-text">Resumax</span>
         </div>
       </div>
@@ -82,7 +86,7 @@ function SideNav({ activeView, onViewChange, userEmail, onSignOut }) {
                 }
               }}
             >
-              <span className="nav-icon">{item.icon}</span>
+              {React.createElement(item.icon, { className: 'nav-icon', size: 18 })}
               <span className="nav-label">{item.label}</span>
               {item.subItems && (
                 <span className={`nav-chevron ${expandedItems[item.id] ? 'expanded' : ''}`}>
@@ -99,7 +103,7 @@ function SideNav({ activeView, onViewChange, userEmail, onSignOut }) {
                     className={`side-nav-subitem ${isSubItemActive(subItem.id) ? 'active' : ''}`}
                     onClick={() => onViewChange(subItem.id)}
                   >
-                    <span className="nav-icon">{subItem.icon}</span>
+                    {React.createElement(subItem.icon, { className: 'nav-icon', size: 16 })}
                     <span className="nav-label">{subItem.label}</span>
                   </button>
                 ))}

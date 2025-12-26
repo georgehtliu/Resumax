@@ -18,8 +18,15 @@ import About from './components/About';
 import ResumeTips from './components/ResumeTips';
 import Community from './components/Community';
 import SharedResumeView from './components/SharedResumeView';
+import ToastContainer from './components/ToastContainer';
+import { useToast } from './hooks/useToast';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { supabase } from './config/supabase';
 import { storageService } from './services/storage';
+import Skeleton, { SkeletonCard } from './components/Skeleton';
+import { Icon } from './components/Icons';
+import './styles/design-system.css';
+import './styles/animations.css';
 import './App.css';
 
 /**
@@ -81,6 +88,24 @@ function App() {
     customSections: [],
     totalBullets: 0
   });
+
+  // Toast notifications
+  const { toasts, removeToast, success, error: showError } = useToast();
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts([
+    {
+      key: 'cmd+s',
+      handler: (e) => {
+        if (isSignedIn && !isManagerView) {
+          e.preventDefault();
+          saveResumeData(resume);
+          success('Resume saved');
+        }
+      },
+      allowInInput: false,
+    },
+  ]);
 
   function openManagerPage() {
     const managerUrl =
@@ -802,7 +827,7 @@ function App() {
   /**
    * Save resume to Chrome storage
    */
-  async function saveResumeData(updatedResume) {
+  async function saveResumeData(updatedResume, showNotification = true) {
     try {
       const totalBullets = calculateTotalBullets(updatedResume);
       const normalized = {
@@ -824,8 +849,14 @@ function App() {
 
       await storageService.saveResume(normalized);
       setResume(normalized);
+      if (showNotification) {
+        success('Resume saved');
+      }
     } catch (error) {
       console.error('Error saving resume:', error);
+      if (showNotification) {
+        showError('Failed to save resume');
+      }
     }
   }
 
@@ -982,12 +1013,21 @@ function App() {
     if (!isSignedIn) {
       return (
         <div className="popup-container">
+          <ToastContainer toasts={toasts} removeToast={removeToast} />
           <header className="popup-header">
-            <h1>AI Resume Optimizer</h1>
+            <div className="popup-logo">
+              <div className="popup-logo-icon">
+                <Icon name="sparkles" size={20} />
+              </div>
+              <h1>Resumax</h1>
+            </div>
             <p className="popup-subtitle">Redirecting to sign in...</p>
           </header>
           <main className="popup-main">
-            <div className="popup-loading">Please sign in to continue</div>
+            <div className="popup-loading">
+              <div className="popup-loading-spinner"></div>
+              <div className="popup-loading-text">Please sign in to continue</div>
+            </div>
           </main>
         </div>
       );
@@ -995,16 +1035,30 @@ function App() {
 
     return (
       <div className="popup-container">
+        <ToastContainer toasts={toasts} removeToast={removeToast} />
         <header className="popup-header">
-          <h1>AI Resume Optimizer</h1>
+          <div className="popup-logo">
+            <div className="popup-logo-icon">
+              <Icon name="sparkles" size={20} />
+            </div>
+            <h1>Resumax</h1>
+          </div>
           <p className="popup-subtitle">Extract or paste a job description and pick the best bullets fast.</p>
-          <button className="btn btn-secondary popup-btn" onClick={openManagerPage}>
-            Open Resume Manager
-          </button>
+          <div className="popup-header-actions">
+            <button className="btn popup-btn" onClick={openManagerPage}>
+              Open Manager
+            </button>
+          </div>
         </header>
         <main className="popup-main">
           {loading ? (
-            <div className="popup-loading">Loading master resume...</div>
+            <div className="popup-skeleton">
+              <div className="popup-skeleton-header">
+                <Skeleton height="24px" width="60%" />
+                <Skeleton height="16px" width="80%" />
+              </div>
+              <SkeletonCard />
+            </div>
           ) : (
             <div className="popup-card">
               <GenerateResume
@@ -1055,6 +1109,7 @@ function App() {
 
   return (
     <div className={`app ${isManagerView ? 'app-manager' : ''}`}>
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
       {isManagerView && isSignedIn && (
         <SideNav
           activeView={activeView}
@@ -1064,7 +1119,7 @@ function App() {
         />
       )}
       
-      <div className={`app-content ${isManagerView && isSignedIn ? 'with-sidebar' : ''}`}>
+      <div className={`app-content ${isManagerView && isSignedIn ? 'with-sidebar' : ''} page-transition`}>
         {isManagerView && isSignedIn && isTestUser() && (
           <div style={{ padding: '16px', background: '#fef3c7', borderBottom: '1px solid #fde68a' }}>
             <button
@@ -1080,7 +1135,8 @@ function App() {
                 fontWeight: '500'
               }}
             >
-              🔄 Force Load Mock Data
+              <Icon name="refresh" size={14} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />
+              Force Load Mock Data
             </button>
           </div>
         )}
@@ -1151,7 +1207,9 @@ function App() {
               </div>
               <div className="view-content">
                 <div className="coaching-placeholder">
-                  <div className="placeholder-icon">🤖</div>
+                  <div className="placeholder-icon">
+                    <Icon name="bot" size={48} />
+                  </div>
                   <h2>AI Coach Coming Soon</h2>
                   <p>AI-powered resume coaching features will be available here soon.</p>
                   <p className="placeholder-subtext">
@@ -1171,7 +1229,9 @@ function App() {
               </div>
               <div className="view-content">
                 <div className="coaching-placeholder">
-                  <div className="placeholder-icon">👥</div>
+                  <div className="placeholder-icon">
+                    <Icon name="users" size={48} />
+                  </div>
                   <h2>Human Critique Coming Soon</h2>
                   <p>Connect with professional resume reviewers for personalized feedback.</p>
                   <p className="placeholder-subtext">

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../config/supabase';
+import { Icon } from './Icons';
 import './SignUp.css';
 
 /**
@@ -88,7 +89,8 @@ function SignUp({ onSignUp, onSwitchToSignIn }) {
 
         {success && (
           <div className="success-message">
-            ✅ Account created! Redirecting...
+            <Icon name="checkCircle" size={16} style={{ marginRight: '6px', verticalAlign: 'middle', display: 'inline-block' }} />
+            Account created! Redirecting...
           </div>
         )}
 

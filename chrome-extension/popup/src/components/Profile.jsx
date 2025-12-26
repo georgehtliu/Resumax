@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ExperienceEditor from './ExperienceEditor';
 import EducationEditor from './EducationEditor';
 import ProjectEditor from './ProjectEditor';
@@ -6,7 +6,9 @@ import CustomSectionEditor from './CustomSectionEditor';
 import PersonalInfoEditor from './PersonalInfoEditor';
 import SkillsEditor from './SkillsEditor';
 import Tabs from './Tabs';
+import AutoSaveIndicator from './AutoSaveIndicator';
 import { storageService } from '../services/storage';
+import { Icon } from './Icons';
 import './Profile.css';
 
 /**
@@ -14,6 +16,7 @@ import './Profile.css';
  * Contains master resume points and editing
  */
 function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
+  // onResumeUpdate signature: (updatedResume, showNotification = true)
   const tabs = [
     { id: 'personal', label: 'Personal Info' },
     { id: 'experiences', label: 'Experiences' },
@@ -24,6 +27,77 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
   ];
 
   const [activeTab, setActiveTab] = React.useState('personal');
+  const [saveStatus, setSaveStatus] = useState('idle');
+  const saveTimeoutRef = useRef(null);
+  const isInitialMount = useRef(true);
+  const previousResumeRef = useRef(resume);
+
+  // Auto-save on resume update (skip on initial mount)
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      previousResumeRef.current = JSON.stringify(resume);
+      return;
+    }
+
+    const currentResumeStr = JSON.stringify(resume);
+    
+    // Check if resume actually changed
+    if (previousResumeRef.current === currentResumeStr) {
+      return;
+    }
+
+    previousResumeRef.current = currentResumeStr;
+
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    // Only auto-save if resume has actual content
+    const hasContent = resume.experiences?.length > 0 || 
+                      resume.education?.length > 0 || 
+                      resume.projects?.length > 0 ||
+                      (resume.personalInfo?.firstName && resume.personalInfo?.lastName);
+
+    if (hasContent) {
+      setSaveStatus('saving');
+      saveTimeoutRef.current = setTimeout(async () => {
+        try {
+          // Save directly to storage without triggering state update
+          const totalBullets = calculateTotalBullets(resume);
+          const normalized = {
+            personalInfo: resume.personalInfo || {
+              firstName: '',
+              lastName: '',
+              email: '',
+              phone: '',
+              linkedin: '',
+              github: ''
+            },
+            skills: Array.isArray(resume.skills) ? resume.skills : [],
+            experiences: Array.isArray(resume.experiences) ? resume.experiences : [],
+            education: Array.isArray(resume.education) ? resume.education : [],
+            projects: Array.isArray(resume.projects) ? resume.projects : [],
+            customSections: Array.isArray(resume.customSections) ? resume.customSections : [],
+            totalBullets
+          };
+          await storageService.saveResume(normalized);
+          setSaveStatus('saved');
+          setTimeout(() => setSaveStatus('idle'), 2000);
+        } catch (error) {
+          console.error('Auto-save error:', error);
+          setSaveStatus('error');
+          setTimeout(() => setSaveStatus('idle'), 3000);
+        }
+      }, 1000); // Debounce: save 1 second after last change
+    }
+
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [resume, calculateTotalBullets]);
 
   const handleImportResume = async () => {
     // Load mock data for now
@@ -121,20 +195,23 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
 
   return (
     <div className="profile-page">
-      <div className="profile-header">
+      <div className="profile-header sticky-header">
         <div className="profile-header-content">
           <div>
             <h1>Profile</h1>
             <p className="profile-subtitle">Manage your master resume points</p>
           </div>
-          <button 
-            className="btn-import-resume"
-            onClick={handleImportResume}
-            title="Import from existing resume"
-          >
-            <span className="import-icon">📥</span>
-            Import from Resume
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+            <AutoSaveIndicator status={saveStatus} />
+            <button 
+              className="btn-import-resume"
+              onClick={handleImportResume}
+              title="Import from existing resume"
+            >
+              <Icon name="download" size={18} />
+              Import from Resume
+            </button>
+          </div>
         </div>
       </div>
 

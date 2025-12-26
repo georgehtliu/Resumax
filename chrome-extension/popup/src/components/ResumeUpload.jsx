@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { Icon } from './Icons';
 import './ResumeUpload.css';
 
 /**
@@ -138,7 +139,9 @@ function ResumeUpload({ onUpload, onCancel }) {
           
           {!file ? (
             <>
-              <div className="upload-icon">📄</div>
+              <div className="upload-icon">
+                <Icon name="file" size={48} />
+              </div>
               <p className="upload-text">
                 <strong>Click to upload</strong> or drag and drop
               </p>
@@ -209,3 +212,4 @@ function ResumeUpload({ onUpload, onCancel }) {
 }
 
 export default ResumeUpload;
+
