@@ -1,4 +1,5 @@
 import React from 'react';
+import { Icon } from './Icons';
 import './ResumeTips.css';
 
 /**
@@ -9,7 +10,7 @@ function ResumeTips() {
   const tips = [
     {
       category: 'Format & Structure',
-      icon: '📐',
+      icon: 'file',
       items: [
         {
           title: 'Use Jake\'s Resume LaTeX Template',
@@ -32,7 +33,7 @@ function ResumeTips() {
     },
     {
       category: 'Bullet Points',
-      icon: '📝',
+      icon: 'edit',
       items: [
         {
           title: 'Use Action Verbs',
@@ -61,7 +62,7 @@ function ResumeTips() {
     },
     {
       category: 'Content Strategy',
-      icon: '🎯',
+      icon: 'target',
       items: [
         {
           title: 'Tailor for Each Application',
@@ -84,7 +85,7 @@ function ResumeTips() {
     },
     {
       category: 'Technical Details',
-      icon: '💻',
+      icon: 'laptop',
       items: [
         {
           title: 'List Relevant Technologies',
@@ -102,7 +103,7 @@ function ResumeTips() {
     },
     {
       category: 'Common Mistakes to Avoid',
-      icon: '⚠️',
+      icon: 'warning',
       items: [
         {
           title: 'Don\'t Use Pronouns',
@@ -128,7 +129,7 @@ function ResumeTips() {
     },
     {
       category: 'ATS Optimization',
-      icon: '🤖',
+      icon: 'bot',
       items: [
         {
           title: 'Use Standard Section Headers',
@@ -163,7 +164,9 @@ function ResumeTips() {
         {tips.map((category, categoryIndex) => (
           <section key={categoryIndex} className="tips-category">
             <div className="category-header">
-              <span className="category-icon">{category.icon}</span>
+              <span className="category-icon">
+                <Icon name={category.icon} size={24} />
+              </span>
               <h2>{category.category}</h2>
             </div>
             <div className="tips-list">
@@ -186,7 +189,8 @@ function ResumeTips() {
 
       <div className="tips-footer">
         <div className="footer-note">
-          <strong>💡 Pro Tip:</strong> Use Resumax to maintain a comprehensive master resume with all your achievements, 
+          <Icon name="lightbulb" size={18} style={{ marginRight: '6px', verticalAlign: 'middle', display: 'inline-block' }} />
+          <strong>Pro Tip:</strong> Use Resumax to maintain a comprehensive master resume with all your achievements, 
           then automatically select the most relevant points for each job application. This ensures you never miss 
           highlighting the right experience for the right role.
         </div>

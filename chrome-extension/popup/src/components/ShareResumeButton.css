@@ -139,5 +139,21 @@
 .share-warning {
   color: #f59e0b;
   font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+
+/* Spinner animation for loading icons */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 

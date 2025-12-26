@@ -7,6 +7,7 @@ import { storageService } from '../services/storage';
 import { supabase } from '../config/supabase';
 import { buildStructuredResume, selectResume, renderLatex } from '../services/api';
 import { buildLatexDocument } from '../utils/latexTemplate';
+import { Icon } from './Icons';
 import './GenerateResume.css';
 
 /**
@@ -357,7 +358,9 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
             />
             <label htmlFor="mode-select">
               <div className="mode-label">
-                <span className="mode-icon">📋</span>
+                <span className="mode-icon">
+                  <Icon name="clipboard" size={24} />
+                </span>
                 <div className="mode-content">
                   <div className="mode-title">Select Best Bullets</div>
                   <div className="mode-description">Fast selection without rewriting</div>
@@ -377,7 +380,9 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
             />
             <label htmlFor="mode-optimize">
               <div className="mode-label">
-                <span className="mode-icon">✨</span>
+                <span className="mode-icon">
+                  <Icon name="sparkles" size={24} />
+                </span>
                 <div className="mode-content">
                   <div className="mode-title">Optimize & Rewrite</div>
                   <div className="mode-description">Selection + AI rewriting (slower)</div>
@@ -409,14 +414,16 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
               onClick={() => setShowSaveDialog(true)}
               disabled={saving}
             >
-              💾 Save Resume
+              <Icon name="save" size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+              Save Resume
             </button>
             {optimizationResult.mode === 'select' && (
               <button
                 className="btn btn-secondary"
                 onClick={openLatexPreview}
               >
-                👁️ LaTeX Preview
+                <Icon name="eye" size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+                LaTeX Preview
               </button>
             )}
           </div>

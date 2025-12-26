@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Icon } from './Icons';
 import './JobMatcher.css';
 
 /**
@@ -31,10 +32,10 @@ function JobMatcher({ jobDescription, onExtract, onSelect, onOptimize, optimizat
     setExtractionStatus('Extracting...');
     try {
       await onExtract();
-      setExtractionStatus('✓ Extracted successfully!');
+      setExtractionStatus('Extracted successfully!');
       setTimeout(() => setExtractionStatus(''), 3000);
     } catch (error) {
-      setExtractionStatus('✗ Extraction failed');
+      setExtractionStatus('Extraction failed');
       setTimeout(() => setExtractionStatus(''), 3000);
     }
   }
@@ -73,7 +74,8 @@ function JobMatcher({ jobDescription, onExtract, onSelect, onOptimize, optimizat
               onClick={handleExtract}
               disabled={loading}
             >
-              📄 Extract Job Description
+              <Icon name="file" size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+              Extract Job Description
             </button>
             {extractionStatus && (
               <p className="status-message">{extractionStatus}</p>
@@ -100,7 +102,17 @@ function JobMatcher({ jobDescription, onExtract, onSelect, onOptimize, optimizat
           <span>{manualJD.length} characters</span>
           {manualJD.length > 0 && (
             <span className={manualJD.length < 100 ? 'warning' : 'ok'}>
-              {manualJD.length < 100 ? '⚠ Too short' : '✓ Good length'}
+              {manualJD.length < 100 ? (
+                <>
+                  <Icon name="warning" size={14} style={{ marginRight: '4px', verticalAlign: 'middle', display: 'inline-block' }} />
+                  Too short
+                </>
+              ) : (
+                <>
+                  <Icon name="checkCircle" size={14} style={{ marginRight: '4px', verticalAlign: 'middle', display: 'inline-block' }} />
+                  Good length
+                </>
+              )}
             </span>
           )}
         </div>
@@ -156,8 +168,18 @@ function JobMatcher({ jobDescription, onExtract, onSelect, onOptimize, optimizat
           {loading 
             ? (optimizationMode === 'optimize' ? 'Optimizing...' : 'Selecting...')
             : (optimizationMode === 'optimize' 
-                ? '✨ Optimize & Rewrite' 
-                : '📋 Select Best Bullets')}
+                ? (
+                  <>
+                    <Icon name="sparkles" size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+                    Optimize & Rewrite
+                  </>
+                )
+                : (
+                  <>
+                    <Icon name="clipboard" size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+                    Select Best Bullets
+                  </>
+                ))}
         </button>
       </div>
     </div>

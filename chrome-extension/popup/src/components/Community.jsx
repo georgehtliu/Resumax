@@ -1,4 +1,5 @@
 import React from 'react';
+import { Icon } from './Icons';
 import './Community.css';
 
 /**
@@ -15,7 +16,9 @@ function Community() {
 
       <div className="community-content">
         <div className="community-placeholder">
-          <div className="placeholder-icon">👥</div>
+          <div className="placeholder-icon">
+            <Icon name="users" size={48} />
+          </div>
           <h2>Coming Soon</h2>
           <p>Community features will be available here soon.</p>
           <p className="placeholder-subtext">

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../config/supabase';
 import { storageService } from '../services/storage';
+import { Icon } from './Icons';
 import './ShareResumeButton.css';
 
 function ShareResumeButton({ resumeId, resumeName }) {
@@ -235,14 +236,15 @@ function ShareResumeButton({ resumeId, resumeName }) {
           onClick={goToShared}
           title="Open shared resume link"
         >
-          🔗 Go to Shared
+          <Icon name="link" size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+          Go to Shared
         </button>
         <button 
           className="btn-share-resume btn-share-again"
           onClick={() => setShowModal(true)}
           title="View share link"
         >
-          📋
+          <Icon name="clipboard" size={16} />
         </button>
       </>
     );
@@ -256,7 +258,17 @@ function ShareResumeButton({ resumeId, resumeName }) {
         disabled={loading}
         title="Generate shareable link"
       >
-        {loading ? '⏳ Generating...' : '🔗 Share Resume'}
+        {loading ? (
+          <>
+            <Icon name="loader" size={16} className="animate-spin" style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+            Generating...
+          </>
+        ) : (
+          <>
+            <Icon name="link" size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+            Share Resume
+          </>
+        )}
       </button>
 
       {error && (
@@ -294,14 +306,20 @@ function ShareResumeButton({ resumeId, resumeName }) {
                 }}
                 className="btn-copy"
               >
-                {copied ? '✓ Copied!' : 'Copy'}
+                {copied ? (
+                  <>
+                    <Icon name="checkCircle" size={14} style={{ marginRight: '4px', verticalAlign: 'middle' }} />
+                    Copied!
+                  </>
+                ) : 'Copy'}
               </button>
             </div>
             
             <div className="share-info">
               <p>Anyone with this link can view and comment on your resume.</p>
               <p className="share-warning">
-                ⚠️ This link is permanent. You can deactivate it from your saved resumes.
+                <Icon name="warning" size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+                This link is permanent. You can deactivate it from your saved resumes.
               </p>
             </div>
           </div>

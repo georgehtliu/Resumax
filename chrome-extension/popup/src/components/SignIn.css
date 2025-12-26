@@ -1,138 +1,172 @@
+/* Modern Sign In with Glassmorphism */
+
 .sign-in-container {
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  padding: 24px;
-  background: linear-gradient(180deg, #f0f3fb 0%, #e2e7f4 100%);
+  padding: var(--space-4);
+  background: linear-gradient(135deg, var(--color-primary-50) 0%, var(--color-purple-50) 100%);
   width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.sign-in-container::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+  animation: pulse 20s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
 }
 
 .sign-in-card {
-  background: #ffffff;
-  border-radius: 20px;
-  padding: 48px 40px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-10) var(--space-8);
   width: 100%;
   max-width: 440px;
-  box-shadow: 0 24px 48px rgba(88, 114, 186, 0.2);
+  box-shadow: var(--shadow-2xl);
+  position: relative;
+  z-index: 1;
+  animation: slideUp var(--transition-slow);
 }
 
 .sign-in-header {
   text-align: center;
-  margin-bottom: 36px;
+  margin-bottom: var(--space-8);
 }
 
 .sign-in-header h1 {
-  font-size: 28px;
-  font-weight: 700;
-  color: #243352;
-  margin-bottom: 8px;
-  background: linear-gradient(135deg, #5c7adf 0%, #7ea6f9 100%);
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--space-2);
+  background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-purple-600) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .sign-in-subtitle {
-  font-size: 15px;
-  color: #5b6b8c;
+  font-size: var(--font-size-base);
+  color: var(--text-secondary);
   margin: 0;
 }
 
 .sign-in-form {
-  margin-bottom: 24px;
+  margin-bottom: var(--space-6);
 }
 
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: var(--space-5);
 }
 
 .form-group label {
   display: block;
-  font-size: 14px;
-  font-weight: 600;
-  color: #243352;
-  margin-bottom: 8px;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+  margin-bottom: var(--space-2);
 }
 
 .form-group input[type="email"],
-.form-group input[type="password"] {
+.form-group input[type="password"],
+.form-group input[type="text"] {
   width: 100%;
-  padding: 12px 16px;
-  border: 2px solid #e5ebfa;
-  border-radius: 10px;
-  font-size: 15px;
-  color: #243352;
-  background: #ffffff;
-  transition: all 0.2s;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  transition: all var(--transition-base);
   box-sizing: border-box;
 }
 
 .form-group input[type="email"]:focus,
-.form-group input[type="password"]:focus {
+.form-group input[type="password"]:focus,
+.form-group input[type="text"]:focus {
   outline: none;
-  border-color: #5c7adf;
-  box-shadow: 0 0 0 3px rgba(92, 122, 223, 0.1);
+  border-color: var(--color-primary-500);
+  box-shadow: 0 0 0 3px var(--color-primary-100);
 }
 
 .form-group input[type="email"]:disabled,
-.form-group input[type="password"]:disabled {
+.form-group input[type="password"]:disabled,
+.form-group input[type="text"]:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  background: #f6f8fc;
+  background: var(--bg-tertiary);
 }
 
 .form-group input::placeholder {
-  color: #98a4bb;
+  color: var(--text-tertiary);
 }
 
 .form-options {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
-  font-size: 14px;
+  margin-bottom: var(--space-6);
+  font-size: var(--font-size-sm);
 }
 
 .checkbox-label {
   display: flex;
   align-items: center;
   cursor: pointer;
-  color: #5b6b8c;
+  color: var(--text-secondary);
+  gap: var(--space-2);
 }
 
 .checkbox-label input[type="checkbox"] {
-  margin-right: 8px;
   width: 16px;
   height: 16px;
   cursor: pointer;
-  accent-color: #5c7adf;
+  accent-color: var(--color-primary-500);
 }
 
 .forgot-password {
-  color: #5c7adf;
+  color: var(--color-primary-600);
   text-decoration: none;
-  font-weight: 500;
-  transition: color 0.2s;
+  font-weight: var(--font-weight-medium);
+  transition: color var(--transition-base);
 }
 
 .forgot-password:hover {
-  color: #4a6bc7;
+  color: var(--color-primary-700);
   text-decoration: underline;
 }
 
 .btn-sign-in {
   width: 100%;
-  padding: 14px;
-  font-size: 16px;
-  font-weight: 600;
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
   margin-bottom: 0;
 }
 
 .sign-in-divider {
   display: flex;
   align-items: center;
-  margin: 28px 0;
+  margin: var(--space-6) 0;
   text-align: center;
 }
 
@@ -141,45 +175,45 @@
   content: '';
   flex: 1;
   height: 1px;
-  background: #e5ebfa;
+  background: var(--color-gray-300);
 }
 
 .sign-in-divider span {
-  padding: 0 16px;
-  color: #98a4bb;
-  font-size: 13px;
-  font-weight: 500;
+  padding: 0 var(--space-4);
+  color: var(--text-tertiary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
 }
 
 .sign-in-social {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-bottom: 24px;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
 }
 
 .btn-social {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: var(--space-2);
   width: 100%;
-  padding: 12px 16px;
-  border: 2px solid #e5ebfa;
-  border-radius: 10px;
-  background: #ffffff;
-  color: #243352;
-  font-size: 15px;
-  font-weight: 500;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition-base);
 }
 
 .btn-social:hover:not(:disabled) {
-  border-color: #5c7adf;
-  background: #f6f8fc;
+  border-color: var(--color-primary-400);
+  background: var(--color-primary-50);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(92, 122, 223, 0.15);
+  box-shadow: var(--shadow-md);
 }
 
 .btn-social:disabled {
@@ -188,51 +222,62 @@
 }
 
 .social-icon {
-  font-size: 18px;
-}
-
-.btn-google {
-  border-color: #e5ebfa;
-}
-
-.btn-github {
-  border-color: #e5ebfa;
+  font-size: var(--font-size-base);
 }
 
 .sign-in-footer {
   text-align: center;
-  padding-top: 20px;
-  border-top: 1px solid #e5ebfa;
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-gray-200);
 }
 
 .sign-in-footer p {
   margin: 0;
-  font-size: 14px;
-  color: #5b6b8c;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
 }
 
 .sign-in-footer a {
-  color: #5c7adf;
+  color: var(--color-primary-600);
   text-decoration: none;
-  font-weight: 600;
-  transition: color 0.2s;
+  font-weight: var(--font-weight-semibold);
+  transition: color var(--transition-base);
 }
 
 .sign-in-footer a:hover {
-  color: #4a6bc7;
+  color: var(--color-primary-700);
   text-decoration: underline;
+}
+
+.error-message {
+  background: var(--color-error-light);
+  border: 1px solid var(--color-error);
+  color: var(--color-error);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-5);
+  font-size: var(--font-size-sm);
+  text-align: center;
+  animation: shake var(--transition-base);
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
 }
 
 @media (max-width: 768px) {
   .sign-in-container {
-    padding: 16px;
+    padding: var(--space-4);
   }
 
   .sign-in-card {
-    padding: 36px 28px;
+    padding: var(--space-8) var(--space-6);
   }
 
   .sign-in-header h1 {
-    font-size: 24px;
+    font-size: var(--font-size-2xl);
   }
 }
+

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Icon } from './Icons';
 import './ResumeCoaching.css';
 
 /**
@@ -15,7 +16,9 @@ function ResumeCoaching() {
 
       <div className="coaching-content">
         <div className="coaching-placeholder">
-          <div className="placeholder-icon">🎓</div>
+          <div className="placeholder-icon">
+            <Icon name="graduation" size={48} />
+          </div>
           <h2>Coming Soon</h2>
           <p>Resume coaching features will be available here soon.</p>
           <p className="placeholder-subtext">

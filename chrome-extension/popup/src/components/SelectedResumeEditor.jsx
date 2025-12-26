@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { getLineCountInfo } from '../utils/latexLineCount';
 import PersonalInfoEditor from './PersonalInfoEditor';
 import SkillsEditor from './SkillsEditor';
+import { Icon } from './Icons';
 import './SelectedResumeEditor.css';
 
 const DEFAULT_PERSONAL_INFO = {
@@ -175,7 +176,17 @@ function SelectedResumeEditor({
           <div className="summary-item">
             <span className="summary-label">One-Page Fit</span>
             <span className={`summary-value ${fitsOnePage ? 'summary-good' : 'summary-warning'}`}>
-              {fitsOnePage ? '✅ Fits on one page' : '⚠️ Exceeds one page'}
+              {fitsOnePage ? (
+                <>
+                  <Icon name="checkCircle" size={16} style={{ marginRight: '4px', verticalAlign: 'middle', display: 'inline-block' }} />
+                  Fits on one page
+                </>
+              ) : (
+                <>
+                  <Icon name="warning" size={16} style={{ marginRight: '4px', verticalAlign: 'middle', display: 'inline-block' }} />
+                  Exceeds one page
+                </>
+              )}
             </span>
           </div>
           <div className="summary-item">

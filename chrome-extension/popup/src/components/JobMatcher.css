@@ -1,36 +1,46 @@
 .job-matcher {
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
 }
 
 .job-matcher-section {
-  margin-bottom: 24px;
+  margin-bottom: var(--space-5);
+}
+
+.job-matcher-section:last-child {
+  margin-bottom: 0;
 }
 
 .job-matcher-section h3 {
-  font-size: 16px;
-  margin-bottom: 8px;
-  color: #333;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--space-2);
+  color: var(--text-primary);
 }
 
 .section-description {
-  font-size: 12px;
-  color: #666;
-  margin-bottom: 12px;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-3);
+  line-height: var(--line-height-normal);
 }
 
 .status-message {
-  margin-top: 8px;
-  font-size: 12px;
-  color: #667eea;
-  font-weight: 500;
+  margin-top: var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-primary-600);
+  font-weight: var(--font-weight-medium);
 }
 
 .divider {
   text-align: center;
-  color: #999;
-  font-size: 12px;
-  margin: 20px 0;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-xs);
+  margin: var(--space-5) 0;
   position: relative;
+  font-weight: var(--font-weight-medium);
 }
 
 .divider::before,
@@ -38,9 +48,9 @@
   content: '';
   position: absolute;
   top: 50%;
-  width: 40%;
+  width: calc(50% - 24px);
   height: 1px;
-  background: #e0e0e0;
+  background: var(--color-gray-300);
 }
 
 .divider::before {
@@ -53,50 +63,64 @@
 
 .jd-textarea {
   width: 100%;
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 13px;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
   font-family: inherit;
   resize: vertical;
   min-height: 120px;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  transition: all var(--transition-base);
+  box-sizing: border-box;
 }
 
 .jd-textarea:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: var(--color-primary-500);
+  box-shadow: 0 0 0 3px var(--color-primary-100);
+}
+
+.jd-textarea::placeholder {
+  color: var(--text-tertiary);
 }
 
 .jd-stats {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 8px;
-  font-size: 11px;
-  color: #999;
+  margin-top: var(--space-2);
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
 }
 
 .jd-stats .warning {
-  color: #ff9800;
-  font-weight: 500;
+  color: var(--color-warning);
+  font-weight: var(--font-weight-medium);
 }
 
 .jd-stats .ok {
-  color: #4caf50;
-  font-weight: 500;
+  color: var(--color-success);
+  font-weight: var(--font-weight-medium);
+}
+
+.jd-stats .info {
+  color: var(--text-secondary);
+  font-style: italic;
 }
 
 .job-matcher-actions {
-  margin-top: 24px;
-  padding-top: 24px;
-  border-top: 1px solid #e0e0e0;
+  margin-top: var(--space-5);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-gray-200);
 }
 
 .btn-large {
   width: 100%;
-  padding: 14px;
-  font-size: 16px;
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
 }
 
 /* Job Description Preview */
@@ -104,40 +128,45 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: var(--space-2);
+  gap: var(--space-2);
 }
 
 .jd-preview-header h3 {
   margin: 0;
-  font-size: 14px;
-  color: #333;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
 }
 
 .btn-toggle-expand {
-  background: none;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  padding: 4px 12px;
-  font-size: 11px;
-  color: #667eea;
+  background: var(--bg-primary);
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--font-size-xs);
+  color: var(--color-primary-600);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition-base);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
 }
 
 .btn-toggle-expand:hover {
-  background: #f0f0f0;
-  border-color: #667eea;
+  background: var(--bg-tertiary);
+  border-color: var(--color-primary-400);
+  color: var(--color-primary-700);
 }
 
 .jd-preview-box {
   position: relative;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  background: #f9f9f9;
-  padding: 12px;
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--radius-md);
+  background: var(--bg-tertiary);
+  padding: var(--space-3) var(--space-4);
   max-height: 200px;
   overflow-y: auto;
-  transition: max-height 0.3s ease;
+  transition: max-height var(--transition-slow);
 }
 
 .jd-preview-box.expanded {
@@ -145,9 +174,9 @@
 }
 
 .jd-preview-text {
-  font-size: 12px;
-  line-height: 1.6;
-  color: #555;
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-relaxed);
+  color: var(--text-secondary);
   white-space: pre-wrap;
   word-wrap: break-word;
 }
@@ -157,34 +186,29 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(to bottom, transparent, #f9f9f9 80%);
-  padding: 20px 12px 12px;
+  background: linear-gradient(to bottom, transparent, var(--bg-tertiary) 80%);
+  padding: var(--space-5) var(--space-4) var(--space-3);
   display: flex;
   justify-content: center;
   pointer-events: none;
 }
 
 .btn-expand-inline {
-  background: #667eea;
-  color: white;
+  background: linear-gradient(135deg, var(--color-primary-500) 0%, var(--color-purple-500) 100%);
+  color: var(--text-inverse);
   border: none;
-  border-radius: 4px;
-  padding: 6px 16px;
-  font-size: 11px;
-  font-weight: 500;
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
   pointer-events: all;
-  transition: all 0.2s;
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-expand-inline:hover {
-  background: #5568d3;
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
-}
-
-.jd-stats .info {
-  color: #666;
-  font-style: italic;
+  box-shadow: var(--shadow-md);
 }
 

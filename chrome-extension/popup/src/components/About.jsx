@@ -1,4 +1,5 @@
 import React from 'react';
+import { Icon } from './Icons';
 import './About.css';
 
 /**
@@ -29,32 +30,44 @@ function About() {
           <h2>Key Features</h2>
           <div className="features-grid">
             <div className="feature-card">
-              <div className="feature-icon">📝</div>
+              <div className="feature-icon">
+                <Icon name="edit" size={32} />
+              </div>
               <h3>Master Resume</h3>
               <p>Build one comprehensive resume with unlimited bullet points per experience. Never lose track of your achievements.</p>
             </div>
             <div className="feature-card">
-              <div className="feature-icon">✨</div>
+              <div className="feature-icon">
+                <Icon name="sparkles" size={32} />
+              </div>
               <h3>AI-Powered Selection</h3>
               <p>Automatically select the most relevant bullet points from your master resume based on job descriptions.</p>
             </div>
             <div className="feature-card">
-              <div className="feature-icon">🎯</div>
+              <div className="feature-icon">
+                <Icon name="target" size={32} />
+              </div>
               <h3>Job Matching</h3>
               <p>Extract job descriptions directly from job boards or paste them in. Get instant matching recommendations.</p>
             </div>
             <div className="feature-card">
-              <div className="feature-icon">📄</div>
+              <div className="feature-icon">
+                <Icon name="file" size={32} />
+              </div>
               <h3>LaTeX Export</h3>
               <p>Generate beautiful, ATS-friendly resumes using Jake's Resume LaTeX template. Perfect for technical roles.</p>
             </div>
             <div className="feature-card">
-              <div className="feature-icon">💾</div>
+              <div className="feature-icon">
+                <Icon name="save" size={32} />
+              </div>
               <h3>Save & Manage</h3>
               <p>Save multiple tailored resumes for different applications. Easy to update and regenerate.</p>
             </div>
             <div className="feature-card">
-              <div className="feature-icon">🔒</div>
+              <div className="feature-icon">
+                <Icon name="lock" size={32} />
+              </div>
               <h3>Secure & Private</h3>
               <p>Your data is stored securely. Sign in with Google OAuth for seamless access across devices.</p>
             </div>

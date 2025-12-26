@@ -40,9 +40,19 @@
     }
   ],
   
+  "icons": {
+    "16": "assets/icons/icon16.png",
+    "48": "assets/icons/icon48.png",
+    "128": "assets/icons/icon128.png"
+  },
   "action": {
     "default_popup": "popup-build/index.html",
-    "default_title": "AI Resume Optimizer"
+    "default_title": "AI Resume Optimizer",
+    "default_icon": {
+      "16": "assets/icons/icon16.png",
+      "48": "assets/icons/icon48.png",
+      "128": "assets/icons/icon128.png"
+    }
   },
   
   "web_accessible_resources": [

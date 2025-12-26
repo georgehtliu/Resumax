@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import ResumeUpload from './ResumeUpload';
+import { Icon } from './Icons';
 import './Onboarding.css';
 
 /**
@@ -83,7 +84,9 @@ function Onboarding({ onUploadComplete, onSkip }) {
 
       <div className="onboarding-options">
         <div className="option-card" onClick={() => setMode('upload')}>
-          <div className="option-icon">📄</div>
+          <div className="option-icon">
+            <Icon name="file" size={32} />
+          </div>
           <h3>Upload Existing Resume</h3>
           <p className="option-description">
             Upload your PDF, DOCX, or TXT resume and we'll extract the information for you.
@@ -95,7 +98,9 @@ function Onboarding({ onUploadComplete, onSkip }) {
         </div>
 
         <div className="option-card" onClick={handleSkip}>
-          <div className="option-icon">✏️</div>
+          <div className="option-icon">
+            <Icon name="edit" size={32} />
+          </div>
           <h3>Enter Manually</h3>
           <p className="option-description">
             Start from scratch and build your master resume step by step.
@@ -115,3 +120,4 @@ function Onboarding({ onUploadComplete, onSkip }) {
 }
 
 export default Onboarding;
+

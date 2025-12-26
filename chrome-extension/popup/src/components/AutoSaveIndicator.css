@@ -1,0 +1,49 @@
+/* Auto-save Indicator */
+
+.auto-save-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  border: 1px solid var(--color-gray-200);
+  transition: all var(--transition-base);
+}
+
+.auto-save-icon {
+  flex-shrink: 0;
+  animation: none;
+}
+
+.auto-save-saving {
+  color: var(--color-info);
+}
+
+.auto-save-saving .auto-save-icon {
+  animation: spin 1s linear infinite;
+}
+
+.auto-save-saved {
+  color: var(--color-success);
+  border-color: var(--color-success-light);
+  background: var(--color-success-light);
+}
+
+.auto-save-error {
+  color: var(--color-error);
+  border-color: var(--color-error-light);
+  background: var(--color-error-light);
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
