@@ -117,16 +117,6 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
           skills: ['Python', 'JavaScript', 'TypeScript', 'Go', 'Java', 'C++', 'SQL', 'Bash', 'Ruby']
         },
         {
-          id: 'skill-2',
-          title: 'Frontend',
-          skills: ['React', 'Redux', 'Next.js', 'HTML5', 'CSS3', 'WebSocket', 'WebRTC', 'D3.js']
-        },
-        {
-          id: 'skill-3',
-          title: 'Backend',
-          skills: ['Node.js', 'Express', 'Django', 'Spring Boot', 'Ruby on Rails', 'GraphQL', 'gRPC', 'REST APIs']
-        },
-        {
           id: 'skill-4',
           title: 'Databases',
           skills: ['PostgreSQL', 'MongoDB', 'Redis', 'DynamoDB', 'Elasticsearch']

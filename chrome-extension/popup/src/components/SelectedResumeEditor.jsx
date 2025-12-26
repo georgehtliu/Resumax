@@ -74,8 +74,12 @@ function SelectedResumeEditor({
   showEducation = true
 }) {
   const [localResume, setLocalResume] = useState(() => normalizeResume(resume));
+  const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const isLocalUpdateRef = useRef(false);
   const lastResumeRef = useRef(JSON.stringify(resume));
+  const carouselRef = useRef(null);
+  const slideRefs = useRef([]);
+  const isScrollingRef = useRef(false);
 
   const lineTotals = useMemo(() => calculateTotalLines(localResume), [localResume]);
   const maxLines = typeof summary?.maxLines === 'number' ? summary.maxLines : 42;
@@ -186,6 +190,105 @@ function SelectedResumeEditor({
     });
   }, [showEducation]);
 
+  // Build carousel sections array
+  const carouselSections = useMemo(() => {
+    const sections = [];
+    
+    if (showPersonalInfo) {
+      sections.push({ type: 'personalInfo', title: 'Personal Information' });
+    }
+    
+    if (showSkills) {
+      sections.push({ type: 'skills', title: 'Skills' });
+    }
+    
+    visibleSections.forEach((section) => {
+      sections.push({ type: 'section', config: section, title: section.title });
+    });
+    
+    return sections;
+  }, [showPersonalInfo, showSkills, visibleSections]);
+
+  // Initialize slide refs array
+  useEffect(() => {
+    slideRefs.current = new Array(carouselSections.length);
+  }, [carouselSections.length]);
+
+  // Scroll to current section when index changes (fallback)
+  useEffect(() => {
+    if (carouselRef.current && slideRefs.current[currentSectionIndex] && !isScrollingRef.current) {
+      isScrollingRef.current = true;
+      slideRefs.current[currentSectionIndex].scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'start'
+      });
+      
+      // Reset flag after scroll completes
+      setTimeout(() => {
+        isScrollingRef.current = false;
+      }, 300);
+    }
+  }, [currentSectionIndex]);
+
+  // Handle scroll events to update current section index (only for manual scrolling)
+  useEffect(() => {
+    const carousel = carouselRef.current;
+    if (!carousel) return;
+
+    const handleScroll = () => {
+      // Ignore scroll events during programmatic scrolling
+      if (isScrollingRef.current) return;
+      
+      const scrollLeft = carousel.scrollLeft;
+      const slideWidth = carousel.offsetWidth;
+      const newIndex = Math.round(scrollLeft / slideWidth);
+      
+      if (newIndex !== currentSectionIndex && newIndex >= 0 && newIndex < carouselSections.length) {
+        setCurrentSectionIndex(newIndex);
+      }
+    };
+
+    carousel.addEventListener('scroll', handleScroll, { passive: true });
+    return () => carousel.removeEventListener('scroll', handleScroll);
+  }, [currentSectionIndex, carouselSections.length]);
+
+  // Debug logging
+  useEffect(() => {
+    console.log('[SelectedResumeEditor] showSkills:', showSkills, 'skills count:', localResume.skills?.length || 0);
+  }, [showSkills, localResume.skills]);
+
+  function goToNextSection() {
+    if (currentSectionIndex < carouselSections.length - 1) {
+      const nextIndex = currentSectionIndex + 1;
+      goToSection(nextIndex);
+    }
+  }
+
+  function goToPrevSection() {
+    if (currentSectionIndex > 0) {
+      const prevIndex = currentSectionIndex - 1;
+      goToSection(prevIndex);
+    }
+  }
+
+  function goToSection(index) {
+    if (index >= 0 && index < carouselSections.length && slideRefs.current[index]) {
+      isScrollingRef.current = true;
+      setCurrentSectionIndex(index);
+      
+      slideRefs.current[index].scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'start'
+      });
+      
+      setTimeout(() => {
+        isScrollingRef.current = false;
+      }, 300);
+    }
+  }
+
   return (
     <div className="selected-resume-editor">
       {summary && (
@@ -221,43 +324,119 @@ function SelectedResumeEditor({
         </div>
       )}
 
-      {showPersonalInfo && (
-        <div className="selected-section">
-          <h3>Personal Information</h3>
-          <PersonalInfoEditor
-            value={localResume.personalInfo}
-            onChange={(info) => updateResume((draft) => {
-              draft.personalInfo = info;
-            })}
-            variant="compact"
-          />
+      {/* Carousel Navigation */}
+      {carouselSections.length > 1 && (
+        <div className="carousel-navigation">
+          <button
+            className="carousel-nav-btn"
+            onClick={goToPrevSection}
+            disabled={currentSectionIndex === 0}
+            aria-label="Previous section"
+          >
+            <Icon name="chevronLeft" size={20} />
+          </button>
+          
+          <div className="carousel-dots">
+            {carouselSections.map((section, index) => (
+              <button
+                key={index}
+                className={`carousel-dot ${index === currentSectionIndex ? 'active' : ''}`}
+                onClick={() => goToSection(index)}
+                aria-label={`Go to ${section.title}`}
+              />
+            ))}
+          </div>
+          
+          <button
+            className="carousel-nav-btn"
+            onClick={goToNextSection}
+            disabled={currentSectionIndex === carouselSections.length - 1}
+            aria-label="Next section"
+          >
+            <Icon name="chevronRight" size={20} />
+          </button>
         </div>
       )}
 
-      {showSkills && (
-        <div className="selected-section">
-          <SkillsEditor
-            skills={localResume.skills}
-            onChange={(updatedSkills) => updateResume((draft) => {
-              draft.skills = updatedSkills;
-            })}
-          />
+      {/* Carousel Container */}
+      <div className="carousel-container" ref={carouselRef}>
+        <div className="carousel-track">
+          {carouselSections.map((section, index) => {
+            if (section.type === 'personalInfo') {
+              return (
+                <div 
+                  key="personalInfo"
+                  className="carousel-slide" 
+                  ref={(el) => {
+                    if (slideRefs.current) {
+                      slideRefs.current[index] = el;
+                    }
+                  }}
+                >
+                  <div className="selected-section">
+                    <h3>Personal Information</h3>
+                    <PersonalInfoEditor
+                      value={localResume.personalInfo}
+                      onChange={(info) => updateResume((draft) => {
+                        draft.personalInfo = info;
+                      })}
+                      variant="compact"
+                    />
+                  </div>
+                </div>
+              );
+            } else if (section.type === 'skills') {
+              return (
+                <div 
+                  key="skills"
+                  className="carousel-slide" 
+                  data-testid="skills-section"
+                  ref={(el) => {
+                    if (slideRefs.current) {
+                      slideRefs.current[index] = el;
+                    }
+                  }}
+                >
+                  <div className="selected-section">
+                    <SkillsEditor
+                      skills={localResume.skills || []}
+                      onChange={(updatedSkills) => {
+                        console.log('[SelectedResumeEditor] Skills updated:', updatedSkills);
+                        updateResume((draft) => {
+                          draft.skills = updatedSkills;
+                        });
+                      }}
+                    />
+                  </div>
+                </div>
+              );
+            } else {
+              return (
+                <div 
+                  key={section.config.key} 
+                  className="carousel-slide"
+                  ref={(el) => {
+                    if (slideRefs.current) {
+                      slideRefs.current[index] = el;
+                    }
+                  }}
+                >
+                  <SectionEditor
+                    config={section.config}
+                    entries={localResume[section.config.key] || []}
+                    onFieldChange={handleEntryFieldChange}
+                    onAddEntry={handleAddEntry}
+                    onDeleteEntry={handleDeleteEntry}
+                    onAddBullet={handleAddBullet}
+                    onBulletChange={handleBulletChange}
+                    onDeleteBullet={handleDeleteBullet}
+                  />
+                </div>
+              );
+            }
+          })}
         </div>
-      )}
-
-      {visibleSections.map((section) => (
-        <SectionEditor
-          key={section.key}
-          config={section}
-          entries={localResume[section.key] || []}
-          onFieldChange={handleEntryFieldChange}
-          onAddEntry={handleAddEntry}
-          onDeleteEntry={handleDeleteEntry}
-          onAddBullet={handleAddBullet}
-          onBulletChange={handleBulletChange}
-          onDeleteBullet={handleDeleteBullet}
-        />
-      ))}
+      </div>
     </div>
   );
 }

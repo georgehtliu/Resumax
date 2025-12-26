@@ -171,7 +171,7 @@ function JobMatcher({ jobDescription, onExtract, onSelect, loading }) {
           ) : (
             <>
               <Icon name="clipboard" size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-              Select Best Bullets
+              Generate Resume
             </>
           )}
         </button>

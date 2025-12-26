@@ -147,6 +147,27 @@ COMMON_WORDS = {
     'Other', 'Another', 'Each', 'Every', 'All', 'Both', 'Either', 'Neither',
     'Would', 'Could', 'Should', 'Might', 'Must', 'Shall', 'Will', 'Can',
     'May', 'Might', 'Cannot', 'Should', 'Would', 'Could', 'Company', 'Team',
-    'Project', 'Work', 'Experience', 'Years', 'Responsibilities', 'Skills'
+    'Project', 'Work', 'Experience', 'Years', 'Responsibilities', 'Skills',
+    # Generic descriptive words that aren't technical skills
+    'Deep', 'Area', 'Based', 'Strong', 'Excellent', 'Good', 'Great', 'High',
+    'Level', 'Senior', 'Junior', 'Lead', 'Principal', 'Staff', 'Entry',
+    'Mid', 'Advanced', 'Expert', 'Proficient', 'Familiar', 'Knowledge',
+    'Understanding', 'Ability', 'Capable', 'Skilled', 'Experienced', 'Proven',
+    'Track', 'Record', 'History', 'Background', 'Previous', 'Prior', 'Past'
+}
+
+# Generic words to filter out (case-insensitive)
+GENERIC_WORDS = {
+    'deep', 'area', 'based', 'strong', 'excellent', 'good', 'great', 'high',
+    'level', 'senior', 'junior', 'lead', 'principal', 'staff', 'entry',
+    'mid', 'advanced', 'expert', 'proficient', 'familiar', 'knowledge',
+    'understanding', 'ability', 'capable', 'skilled', 'experienced', 'proven',
+    'track', 'record', 'history', 'background', 'previous', 'prior', 'past',
+    'years', 'year', 'month', 'months', 'day', 'days', 'time', 'times',
+    'work', 'works', 'working', 'worked', 'job', 'jobs', 'position', 'positions',
+    'role', 'roles', 'responsibility', 'responsibilities', 'duty', 'duties',
+    'task', 'tasks', 'project', 'projects', 'team', 'teams', 'company', 'companies',
+    'organization', 'organizations', 'business', 'businesses', 'industry', 'industries',
+    'field', 'fields', 'domain', 'domains', 'sector', 'sectors', 'market', 'markets'
 }
 

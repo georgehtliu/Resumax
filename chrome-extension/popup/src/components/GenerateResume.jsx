@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, startTransition } from 'react';
 import JobMatcher from './JobMatcher';
 import SelectedResumeEditor from './SelectedResumeEditor';
 import LatexPreviewModal from './LatexPreviewModal';
@@ -95,42 +95,67 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
         bulletsPerCustom: Math.max(1, sectionCaps.custom || 0),
       });
 
-      const selectedResume = cloneStructuredResume(apiResponse?.selectedResume);
-      const flattenedBullets = flattenSelectedResume(selectedResume);
+      // Use startTransition to mark state updates as non-urgent
+      // This allows React to keep the UI responsive during heavy processing
+      const processResume = () => {
+        const selectedResume = cloneStructuredResume(apiResponse?.selectedResume);
+        
+        // Always ensure skills are included from master resume (API may not return them)
+        // Use skills from API response if present, otherwise use from master resume
+        selectedResume.skills = selectedResume.skills && selectedResume.skills.length > 0
+          ? selectedResume.skills
+          : (structuredResume.skills || []);
+        
+        const flattenedBullets = flattenSelectedResume(selectedResume);
 
-      setOptimizationResult({
-        mode: apiResponse?.mode || 'select',
-        selectedBullets: flattenedBullets,
-        selectedResume,
-        gaps: apiResponse?.gaps || [],
-        jobDescription: trimmedDescription,
-        fitsOnePage: apiResponse?.fitsOnePage,
-        totalLineCount: apiResponse?.totalLineCount,
-        maxLines: apiResponse?.maxLines,
-        processingTime: typeof apiResponse?.processing_time === 'number'
-          ? apiResponse.processing_time
-          : undefined,
-        rawResponse: apiResponse,
-        sectionCaps,
-      });
+        // Use startTransition for non-urgent state updates
+        startTransition(() => {
+          setOptimizationResult({
+            mode: apiResponse?.mode || 'select',
+            selectedBullets: flattenedBullets,
+            selectedResume,
+            gaps: apiResponse?.gaps || [],
+            jobDescription: trimmedDescription,
+            fitsOnePage: apiResponse?.fitsOnePage,
+            totalLineCount: apiResponse?.totalLineCount,
+            maxLines: apiResponse?.maxLines,
+            processingTime: typeof apiResponse?.processing_time === 'number'
+              ? apiResponse.processing_time
+              : undefined,
+            rawResponse: apiResponse,
+            sectionCaps,
+          });
 
-      setCustomizedResume(selectedResume);
+          setCustomizedResume(selectedResume);
+          
+          // Call onSelectionComplete after state is set
+          if (typeof onSelectionComplete === 'function') {
+            onSelectionComplete({
+              selectedResume,
+              response: apiResponse,
+              jobDescription: trimmedDescription
+            });
+          }
+        });
+      };
+
+      // Yield to browser to keep UI responsive, then process
+      if (typeof requestIdleCallback !== 'undefined') {
+        requestIdleCallback(processResume, { timeout: 100 });
+      } else {
+        // Fallback for browsers without requestIdleCallback
+        setTimeout(processResume, 0);
+      }
 
       setCurrentJob((prev) => ({
         description: trimmedDescription,
         source: prev?.source || 'manual',
       }));
 
-      // Scan keywords after selection
-      scanKeywordsForResume(structuredResume, trimmedDescription);
-
-      if (typeof onSelectionComplete === 'function') {
-        onSelectionComplete({
-          selectedResume,
-          response: apiResponse,
-          jobDescription: trimmedDescription
-        });
-      }
+      // Scan keywords after selection - defer to avoid blocking UI
+      setTimeout(() => {
+        scanKeywordsForResume(structuredResume, trimmedDescription);
+      }, 100);
     } catch (error) {
       console.error('Error selecting bullets:', error);
       alert(error?.message || 'Unable to select bullets. Please try again.');
@@ -256,6 +281,7 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
         education: resumeData.education || [],
         projects: resumeData.projects || [],
         customSections: resumeData.customSections || [],
+        skills: resumeData.skills || [],
         gaps: optimizationResult.gaps,
         jobDescription: optimizationResult.jobDescription,
         fitsOnePage: optimizationResult.fitsOnePage,
@@ -373,7 +399,7 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
             resume={customizedResume || optimizationResult.selectedResume}
             onUpdate={handleResumeUpdate}
             showPersonalInfo={false}
-            showSkills={false}
+            showSkills={true}
             showEducation={false}
             summary={{
               fitsOnePage: optimizationResult.fitsOnePage,
@@ -449,24 +475,37 @@ function flattenSelectedResume(selectedResume) {
 
   const resultBullets = [];
 
+  // Optimized: use flatMap for better performance
   const appendBullets = (items = [], sectionType) => {
-    items.forEach((item) => {
+    if (!Array.isArray(items) || items.length === 0) {
+      return;
+    }
+    
+    for (const item of items) {
       const bulletList = Array.isArray(item.selectedBullets) && item.selectedBullets.length > 0
         ? item.selectedBullets
         : Array.isArray(item.bullets)
           ? item.bullets
           : [];
 
-      bulletList.forEach((bullet) => {
+      if (bulletList.length === 0) {
+        continue;
+      }
+
+      // Pre-compute common values to avoid repeated lookups
+      const parentTitle = item.company || item.school || item.name || item.title || '';
+      const parentRole = item.role || item.degree || item.subtitle || '';
+      
+      for (const bullet of bulletList) {
         resultBullets.push({
           ...bullet,
           sectionType,
           parentId: item.id,
-          parentTitle: item.company || item.school || item.name || item.title || '',
-          parentRole: item.role || item.degree || item.subtitle || '',
+          parentTitle,
+          parentRole,
         });
-      });
-    });
+      }
+    }
   };
 
   appendBullets(selectedResume.experiences, 'experience');
@@ -605,7 +644,11 @@ function computeSectionCaps(resume) {
   const reductionOrder = ['custom', 'education', 'project', 'experience'];
 
   let estimated = estimateTotalLines(resume, caps);
-  while (estimated > LINE_BUDGET) {
+  let iterations = 0;
+  const maxIterations = 20; // Safety limit to prevent infinite loops
+  
+  while (estimated > LINE_BUDGET && iterations < maxIterations) {
+    iterations++;
     let reduced = false;
     for (const key of reductionOrder) {
       if (caps[key] > minCaps[key]) {
@@ -645,7 +688,14 @@ function cloneStructuredResume(resume) {
   }
 
   try {
-    const cloned = JSON.parse(JSON.stringify(resume));
+    // Use structuredClone if available (faster than JSON parse/stringify)
+    // Fallback to JSON for older browsers
+    let cloned;
+    if (typeof structuredClone !== 'undefined') {
+      cloned = structuredClone(resume);
+    } else {
+      cloned = JSON.parse(JSON.stringify(resume));
+    }
 
     const normalizeBullet = (bullet, prefix, index) => {
       if (!bullet || typeof bullet !== 'object') {
@@ -675,14 +725,18 @@ function cloneStructuredResume(resume) {
         return [];
       }
 
+      // Use a single timestamp for all entries in this section to avoid repeated Date.now() calls
+      const timestamp = Date.now();
+
       return entries.map((entry, entryIndex) => {
-        const entryId = entry.id || `${sectionPrefix}-${entryIndex}-${Date.now()}`;
+        const entryId = entry.id || `${sectionPrefix}-${entryIndex}-${timestamp}`;
         const candidateBullets = Array.isArray(entry.bullets) && entry.bullets.length > 0
           ? entry.bullets
           : Array.isArray(entry.selectedBullets)
             ? entry.selectedBullets
             : [];
 
+        // Only normalize bullets once, reuse for selectedBullets if needed
         const normalizedBullets = candidateBullets.map((bullet, bulletIndex) =>
           normalizeBullet(bullet, `${entryId}-bullet`, bulletIndex)
         );

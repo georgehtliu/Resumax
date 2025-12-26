@@ -65,7 +65,7 @@ function SkillsEditor({ skills = [], onChange }) {
 
   return (
     <div className="skills-editor">
-      <div className="skills-header">
+      <div className="selected-section-header">
         <h3>Skills</h3>
         <button className="btn btn-small" onClick={handleAddGroup}>
           + Add Skill Group

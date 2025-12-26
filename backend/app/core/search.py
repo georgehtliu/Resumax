@@ -155,7 +155,14 @@ class VectorSearch:
         tech_terms = [term.lower() for term in capitalized_terms if term not in COMMON_WORDS]
         keywords.extend(tech_terms[:15])  # Limit to top 15 to catch more tech terms
         
-        return list(set(keywords))  # Remove duplicates
+        # Filter out generic words that aren't technical skills
+        from .keyword_patterns import GENERIC_WORDS
+        filtered_keywords = [
+            kw for kw in keywords 
+            if kw.lower() not in GENERIC_WORDS and len(kw) > 2
+        ]
+        
+        return list(set(filtered_keywords))  # Remove duplicates
     
     def compute_keyword_score(self, bullet: str, keywords: List[str]) -> float:
         """

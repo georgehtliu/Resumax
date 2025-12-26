@@ -10,6 +10,8 @@ in the resume, providing:
 
 from typing import List, Dict, Set, Optional
 from app.core.search import VectorSearch
+from app.core.keyword_patterns import GENERIC_WORDS
+from app.core.tech_dictionary import extract_tech_keywords, is_tech_tool, is_tech_area
 from app.schemas.rag import StructuredResume
 import re
 
@@ -102,19 +104,26 @@ class KeywordScanner:
         }
     
     def _extract_jd_keywords(self, job_description: str) -> List[str]:
-        """Extract keywords from job description."""
-        # Use existing keyword extraction logic
-        keywords = self.vector_search.extract_keywords(job_description)
+        """Extract keywords from job description using dictionary-based matching."""
+        # Use dictionary-based extraction for tech tools and areas
+        dictionary_keywords = extract_tech_keywords(job_description)
         
         # Also extract from "required" and "must have" sections
         required_keywords = self._extract_required_keywords(job_description)
         
         # Combine and deduplicate
-        all_keywords = list(set(keywords + required_keywords))
-        return all_keywords
+        all_keywords = list(set(dictionary_keywords + required_keywords))
+        
+        # Filter out generic words that aren't technical skills
+        technical_keywords = [
+            kw for kw in all_keywords 
+            if kw.lower() not in GENERIC_WORDS and len(kw) > 2
+        ]
+        
+        return technical_keywords
     
     def _extract_required_keywords(self, text: str) -> List[str]:
-        """Extract keywords from 'required' or 'must have' sections."""
+        """Extract keywords from 'required' or 'must have' sections using dictionary."""
         required_keywords = []
         
         # Find "required" or "must have" sections
@@ -127,11 +136,17 @@ class KeywordScanner:
             matches = re.finditer(pattern, text, re.IGNORECASE | re.DOTALL)
             for match in matches:
                 section_text = match.group(1)
-                # Extract keywords from this section
-                section_keywords = self.vector_search.extract_keywords(section_text)
+                # Extract keywords from this section using dictionary
+                section_keywords = extract_tech_keywords(section_text)
                 required_keywords.extend(section_keywords)
         
-        return required_keywords
+        # Filter out generic words
+        filtered_keywords = [
+            kw for kw in required_keywords 
+            if kw.lower() not in GENERIC_WORDS and len(kw) > 2
+        ]
+        
+        return filtered_keywords
     
     def _build_resume_text(self, resume: StructuredResume) -> Dict[str, str]:
         """

@@ -38,6 +38,8 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 
 const iconMap = {
@@ -73,8 +75,12 @@ const iconMap = {
   warning: AlertTriangle,
   loader: Loader2,
   checkCircle: CheckCircle,
+  'check-circle': CheckCircle, // kebab-case alias
   xCircle: XCircle,
+  'x-circle': XCircle, // kebab-case alias
   alert: AlertCircle,
+  chevronLeft: ChevronLeft,
+  chevronRight: ChevronRight,
 };
 
 export function Icon({ name, size = 20, className = '', strokeWidth = 2, ...props }) {

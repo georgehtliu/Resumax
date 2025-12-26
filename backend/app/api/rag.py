@@ -8,11 +8,13 @@ from fastapi import APIRouter, HTTPException, BackgroundTasks
 from app.schemas.rag import (
     RAGRequest, RAGResponse, SelectionRequest, SelectionResponse,
     OptimizationRequest, OptimizationResponse,
-    LatexRenderRequest, LatexRenderResponse
+    LatexRenderRequest, LatexRenderResponse,
+    KeywordScanRequest, KeywordScanResponse
 )
 from app.services.rag_service import RAGService
 from app.services.selection_service import SelectionService, calculate_total_lines, identify_gaps
 from app.services.optimization_service import OptimizationService
+from app.services.keyword_scanner import KeywordScanner
 from app.utils.latex import build_resume_latex, render_pdf_from_latex, pdf_bytes_to_base64
 import json
 import os
@@ -369,5 +371,38 @@ async def render_latex_resume(request: LatexRenderRequest):
         raise HTTPException(status_code=503, detail=str(exc))
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Failed to render LaTeX: {exc}")
+
+@router.post("/keywords/scan", response_model=KeywordScanResponse)
+async def scan_keywords(request: KeywordScanRequest):
+    """
+    Scan resume for keywords from job description.
+    
+    Extracts keywords from the job description and checks if they appear
+    in the resume, providing found keywords, missing keywords, and statistics.
+    
+    Args:
+        request: Keyword scan request with resume and job description
+        
+    Returns:
+        Keyword scan response with found/missing keywords and statistics
+    """
+    try:
+        print(f"🔍 Scanning resume for keywords from JD: {request.job_description[:50]}...")
+        
+        scanner = KeywordScanner()
+        result = scanner.scan_resume(
+            resume=request.resume,
+            job_description=request.job_description
+        )
+        
+        print(f"✅ Keyword scan completed")
+        print(f"   - Found: {result['statistics']['found_count']}/{result['statistics']['total_keywords']} keywords")
+        print(f"   - Missing: {result['statistics']['missing_count']} keywords")
+        print(f"   - Match: {result['statistics']['match_percentage']:.1f}%")
+        
+        return KeywordScanResponse(**result)
+    except Exception as e:
+        print(f"❌ Keyword scan failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to scan keywords: {str(e)}")
 
 

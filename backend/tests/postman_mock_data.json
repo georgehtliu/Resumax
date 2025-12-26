@@ -290,42 +290,24 @@
           ]
         }
       ],
-      "customSections": [
+      "skills": [
         {
-          "id": "custom-1",
-          "title": "Technical Skills",
-          "subtitle": "",
-          "bullets": [
-            {
-              "id": "bullet-43",
-              "text": "Languages: Python, JavaScript, TypeScript, Go, Java, C++, SQL, Bash, Ruby"
-            },
-            {
-              "id": "bullet-44",
-              "text": "Frontend: React, Redux, Next.js, HTML5, CSS3, WebSocket, WebRTC, D3.js"
-            },
-            {
-              "id": "bullet-45",
-              "text": "Backend: Node.js, Express, Django, Spring Boot, Ruby on Rails, GraphQL, gRPC, REST APIs"
-            },
-            {
-              "id": "bullet-46",
-              "text": "Databases: PostgreSQL, MongoDB, Redis, DynamoDB, Elasticsearch"
-            },
-            {
-              "id": "bullet-47",
-              "text": "DevOps: Docker, Kubernetes, Jenkins, AWS (EC2, S3, RDS, Lambda), CI/CD, Terraform"
-            },
-            {
-              "id": "bullet-48",
-              "text": "Tools: Git, GitHub, Jira, Confluence, Prometheus, Grafana, Splunk, Datadog"
-            },
-            {
-              "id": "bullet-49",
-              "text": "Concepts: Microservices, Distributed Systems, System Design, Machine Learning, Data Structures & Algorithms"
-            }
-          ]
+          "id": "skill-group-1",
+          "title": "Languages",
+          "skills": ["Python", "JavaScript", "TypeScript", "Go", "Java", "C++", "SQL", "Bash", "Ruby"]
         },
+        {
+          "id": "skill-group-2",
+          "title": "Frameworks",
+          "skills": ["React", "Redux", "Next.js", "Node.js", "Express", "Django", "Spring Boot", "Ruby on Rails", "GraphQL", "gRPC"]
+        },
+        {
+          "id": "skill-group-3",
+          "title": "Tools",
+          "skills": ["Docker", "Kubernetes", "Jenkins", "AWS", "Git", "GitHub", "PostgreSQL", "MongoDB", "Redis", "Prometheus", "Grafana", "Datadog"]
+        }
+      ],
+      "customSections": [
         {
           "id": "custom-2",
           "title": "Awards & Recognition",
@@ -570,25 +552,24 @@
           ]
         }
       ],
-      "customSections": [
+      "skills": [
         {
-          "id": "custom-1",
-          "title": "Technical Skills",
-          "bullets": [
-            {
-              "id": "bullet-26",
-              "text": "Languages: Python, JavaScript, Go, Java, SQL, Ruby, C++"
-            },
-            {
-              "id": "bullet-27",
-              "text": "Backend: Node.js, Express, Django, Spring Boot, Ruby on Rails, REST APIs"
-            },
-            {
-              "id": "bullet-28",
-              "text": "DevOps: Docker, Kubernetes, Jenkins, AWS, CI/CD"
-            }
-          ]
+          "id": "skill-group-1",
+          "title": "Languages",
+          "skills": ["Python", "JavaScript", "Go", "Java", "SQL", "Ruby", "C++"]
+        },
+        {
+          "id": "skill-group-2",
+          "title": "Frameworks",
+          "skills": ["Node.js", "Express", "Django", "Spring Boot", "Ruby on Rails", "REST APIs"]
+        },
+        {
+          "id": "skill-group-3",
+          "title": "Tools",
+          "skills": ["Docker", "Kubernetes", "Jenkins", "AWS", "CI/CD", "Git", "PostgreSQL", "Redis"]
         }
+      ],
+      "customSections": [
       ]
     },
     "bullets_per_experience": 3,
@@ -628,3 +609,4 @@
     "bullets_per_experience": 2
   }
 }
+
