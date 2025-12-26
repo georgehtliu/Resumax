@@ -29,19 +29,38 @@ export function estimateLatexLines(text) {
 /**
  * Get line count category for styling
  * @param {string} text - The bullet point text
- * @returns {Object} { count: number, category: 'single' | 'double' | 'overflow', warning: boolean }
+ * @returns {Object} { count: number, exactCount: number, category: 'single' | 'double' | 'overflow' | 'near-single', warning: boolean, warningMessage: string }
  */
 export function getLineCountInfo(text) {
-  const count = estimateLatexLines(text);
+  if (!text || text.trim().length === 0) {
+    return { count: 0, exactCount: 0, category: 'empty', warning: false, warningMessage: '' };
+  }
+
+  // Calculate exact decimal line count
+  const CHARS_PER_LINE = 110;
+  const effectiveLength = text.trim().length + 2;
+  const exactCount = Math.max(1, effectiveLength / CHARS_PER_LINE);
+  const count = Math.ceil(exactCount);
+  
+  // Check if bullet is between 1.01 - 1.4 lines (suggest reducing to 1 line)
+  if (exactCount > 1.01 && exactCount <= 1.4) {
+    return { 
+      count, 
+      exactCount, 
+      category: 'near-single', 
+      warning: true, 
+      warningMessage: 'Consider reducing to 1 line' 
+    };
+  }
   
   if (count === 0) {
-    return { count: 0, category: 'empty', warning: false };
+    return { count: 0, exactCount: 0, category: 'empty', warning: false, warningMessage: '' };
   } else if (count === 1) {
-    return { count: 1, category: 'single', warning: false };
+    return { count: 1, exactCount, category: 'single', warning: false, warningMessage: '' };
   } else if (count === 2) {
-    return { count: 2, category: 'double', warning: false };
+    return { count: 2, exactCount, category: 'double', warning: false, warningMessage: '' };
   } else {
-    return { count, category: 'overflow', warning: true };
+    return { count, exactCount, category: 'overflow', warning: true, warningMessage: '' };
   }
 }
 

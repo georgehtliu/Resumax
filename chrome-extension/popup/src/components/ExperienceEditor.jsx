@@ -152,6 +152,12 @@ function ExperienceEditor({ experience, onUpdate, onDelete, onAddBulletFromMaste
                             {lineInfo.count} lines <Icon name="warning" size={14} style={{ marginLeft: '4px', verticalAlign: 'middle', display: 'inline-block' }} />
                           </>
                         )}
+                        {lineInfo.warningMessage && (
+                          <span className="line-warning-message" style={{ marginLeft: '8px', color: '#f59e0b', fontSize: '12px' }}>
+                            <Icon name="warning" size={12} style={{ marginRight: '4px', verticalAlign: 'middle', display: 'inline-block' }} />
+                            {lineInfo.warningMessage}
+                          </span>
+                        )}
                       </span>
                     </div>
                     <button

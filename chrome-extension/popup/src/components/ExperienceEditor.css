@@ -127,6 +127,11 @@
   color: #51cf66;
 }
 
+.latex-line-indicator.near-single {
+  color: #f59e0b;
+  font-weight: 600;
+}
+
 .latex-line-indicator.double {
   color: #ffd43b;
 }
@@ -134,6 +139,15 @@
 .latex-line-indicator.overflow {
   color: #ff6b6b;
   font-weight: 600;
+}
+
+.line-warning-message {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+  color: #f59e0b;
+  font-size: 12px;
+  font-weight: 500;
 }
 
 .btn-icon {
