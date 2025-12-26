@@ -150,10 +150,12 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
           startDate: 'Sep 2023',
           endDate: 'Dec 2023',
           bullets: [
-            { id: 'bullet-1', text: 'Developed and maintained microservices handling 10M+ daily requests using Python, Go, and Kubernetes, ensuring 99.9% uptime' },
-            { id: 'bullet-2', text: 'Optimized database queries and caching strategies, reducing API response time by 40% and saving $50K annually in infrastructure costs' },
-            { id: 'bullet-3', text: 'Implemented comprehensive CI/CD pipelines using Jenkins, Docker, and Kubernetes, reducing deployment time by 60% and enabling daily releases' },
-            { id: 'bullet-4', text: 'Designed and built RESTful and gRPC APIs serving 5M+ requests per day with sub-100ms latency, improving mobile app performance by 30%' }
+            { id: 'bullet-1', text: 'Scaled Go/Python microservices for 10M+ daily requests while keeping uptime at 99.9%' },
+            { id: 'bullet-2', text: 'Optimized database queries and caching strategies, reducing API response time by 40% and saving $50K annually in infrastructure costs through smarter resource allocation' },
+            { id: 'bullet-3', text: 'Built CI/CD pipelines using Jenkins, Docker, and Kubernetes, cutting deploy time 60%' },
+            { id: 'bullet-4', text: 'Designed RESTful and gRPC APIs serving 5M+ requests daily with sub-100ms latency, improving mobile app performance by 30% and reducing user-reported errors' },
+            { id: 'bullet-5', text: 'Led code reviews and mentored two interns, improving code quality and team velocity' },
+            { id: 'bullet-6', text: 'Implemented distributed tracing and monitoring using Prometheus and Grafana, enabling faster debugging and reducing incident resolution time by 45% across all microservices' }
           ]
         },
         {
@@ -163,10 +165,12 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
           startDate: 'May 2023',
           endDate: 'Aug 2023',
           bullets: [
-            { id: 'bullet-5', text: 'Built React components for Facebook Marketplace improving user interface accessibility and mobile responsiveness, increasing conversion rate by 15%' },
-            { id: 'bullet-6', text: 'Implemented real-time notification system using WebSocket connections and Redis, reducing latency by 30% and improving user engagement' },
-            { id: 'bullet-7', text: 'Optimized GraphQL API endpoints and data fetching strategies, reducing server load by 25% and improving page load times' },
-            { id: 'bullet-8', text: 'Developed A/B testing framework for feature rollouts, enabling data-driven product decisions and reducing risk of regressions' }
+            { id: 'bullet-5', text: 'Built React components for Facebook Marketplace improving accessibility and mobile responsiveness' },
+            { id: 'bullet-6', text: 'Implemented real-time notification system using WebSocket connections and Redis, reducing latency by 30% and improving user engagement metrics by 25% through faster updates' },
+            { id: 'bullet-7', text: 'Optimized GraphQL API endpoints and data fetching strategies, reducing server load by 25%' },
+            { id: 'bullet-8', text: 'Developed A/B testing framework for feature rollouts, enabling data-driven product decisions and reducing risk of regressions while increasing experiment velocity by 40%' },
+            { id: 'bullet-9', text: 'Shipped WCAG AA compliant UI components that increased conversion rate by 15%' },
+            { id: 'bullet-10', text: 'Created automated screenshot testing suite reducing regression bugs by 50% and improving release confidence' }
           ]
         },
         {
@@ -176,9 +180,12 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
           startDate: 'Sep 2022',
           endDate: 'Dec 2022',
           bullets: [
-            { id: 'bullet-9', text: 'Developed internal tools using Java and Spring Boot to automate deployment processes, reducing manual work by 40 hours per week' },
-            { id: 'bullet-10', text: 'Built monitoring and alerting system for AWS services using CloudWatch and Lambda, improving incident detection time by 50%' },
-            { id: 'bullet-11', text: 'Optimized database queries and implemented caching layer using DynamoDB and ElastiCache, reducing query latency by 35%' }
+            { id: 'bullet-11', text: 'Developed internal tools using Java and Spring Boot to automate deployment processes' },
+            { id: 'bullet-12', text: 'Built monitoring and alerting system for AWS services using CloudWatch and Lambda, improving incident detection time by 50% and reducing on-call burden through smarter alert routing' },
+            { id: 'bullet-13', text: 'Optimized database queries and implemented caching layer using DynamoDB and ElastiCache' },
+            { id: 'bullet-14', text: 'Reduced query latency by 35% through query optimization and strategic cache placement, saving $20K monthly in database costs and improving user experience' },
+            { id: 'bullet-15', text: 'Containerized legacy batch jobs onto Fargate, lowering ops overhead by 60%' },
+            { id: 'bullet-16', text: 'Implemented blue/green deployment strategy eliminating release downtime and reducing rollback time from 30 minutes to under 5 minutes' }
           ]
         },
         {
@@ -188,9 +195,12 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
           startDate: 'Jan 2022',
           endDate: 'Apr 2022',
           bullets: [
-            { id: 'bullet-12', text: 'Built scalable payment processing system using Ruby on Rails and PostgreSQL, handling 1M+ transactions daily with 99.99% reliability' },
-            { id: 'bullet-13', text: 'Implemented distributed caching solution using Redis Cluster, reducing database load by 60% and improving response times by 45%' },
-            { id: 'bullet-14', text: 'Developed RESTful APIs for merchant dashboard, enabling real-time analytics and business insights for 100K+ merchants' }
+            { id: 'bullet-17', text: 'Built scalable payment processing system using Ruby on Rails and PostgreSQL' },
+            { id: 'bullet-18', text: 'Handled 1M+ transactions daily with 99.99% reliability through robust error handling and transaction retry logic, ensuring merchant payment success rates exceeded industry standards' },
+            { id: 'bullet-19', text: 'Implemented distributed caching solution using Redis Cluster, reducing database load by 60%' },
+            { id: 'bullet-20', text: 'Improved response times by 45% through strategic cache placement and smart invalidation strategies, directly improving merchant dashboard load times and user satisfaction' },
+            { id: 'bullet-21', text: 'Developed RESTful APIs for merchant dashboard enabling real-time analytics for 100K+ merchants' },
+            { id: 'bullet-22', text: 'Built fraud detection integration reducing fraudulent transactions by 30% and saving merchants $500K in chargebacks' }
           ]
         },
         {
@@ -200,9 +210,12 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
           startDate: 'May 2021',
           endDate: 'Aug 2021',
           bullets: [
-            { id: 'bullet-15', text: 'Contributed to Azure cloud services development using C# and .NET, implementing features used by millions of enterprise customers' },
-            { id: 'bullet-16', text: 'Built automated testing framework reducing manual QA time by 50% and increasing test coverage from 60% to 85%' },
-            { id: 'bullet-17', text: 'Optimized SQL queries and database schema design, improving query performance by 40% and reducing storage costs by 25%' }
+            { id: 'bullet-23', text: 'Contributed to Azure cloud services development using C# and .NET' },
+            { id: 'bullet-24', text: 'Implemented features used by millions of enterprise customers, improving service reliability by 20% and reducing support tickets through better error handling and user feedback loops' },
+            { id: 'bullet-25', text: 'Built automated testing framework reducing manual QA time by 50%' },
+            { id: 'bullet-26', text: 'Increased test coverage from 60% to 85% through comprehensive unit and integration tests, catching 40% more bugs before production and reducing hotfix deployments' },
+            { id: 'bullet-27', text: 'Optimized SQL queries and database schema design, improving query performance by 40%' },
+            { id: 'bullet-28', text: 'Reduced storage costs by 25% through intelligent data partitioning and archival strategies, saving the team $100K annually in infrastructure expenses' }
           ]
         },
         {
@@ -212,9 +225,12 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
           startDate: 'Sep 2020',
           endDate: 'Dec 2020',
           bullets: [
-            { id: 'bullet-18', text: 'Developed fraud detection algorithms using machine learning models, reducing false positives by 30% and improving detection accuracy' },
-            { id: 'bullet-19', text: 'Built real-time payment processing pipeline using Kafka and microservices architecture, handling 10K+ transactions per second' },
-            { id: 'bullet-20', text: 'Implemented comprehensive logging and monitoring using Datadog and ELK stack, improving debugging efficiency by 50%' }
+            { id: 'bullet-29', text: 'Developed fraud detection algorithms using machine learning models' },
+            { id: 'bullet-30', text: 'Reduced false positives by 30% and improved detection accuracy through feature engineering and model tuning, preventing $2M in fraudulent transactions while maintaining low false positive rates' },
+            { id: 'bullet-31', text: 'Built real-time payment processing pipeline using Kafka and microservices architecture' },
+            { id: 'bullet-32', text: 'Handled 10K+ transactions per second with sub-100ms latency through optimized message queuing and parallel processing, ensuring seamless payment experiences during peak traffic' },
+            { id: 'bullet-33', text: 'Implemented comprehensive logging and monitoring using Datadog and ELK stack' },
+            { id: 'bullet-34', text: 'Improved debugging efficiency by 50% through structured logging and custom dashboards, reducing incident resolution time and enabling faster feature development' }
           ]
         },
         {
@@ -224,9 +240,12 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
           startDate: 'Jan 2020',
           endDate: 'Apr 2020',
           bullets: [
-            { id: 'bullet-21', text: 'Built data visualization dashboard using React and D3.js, enabling analysts to process and visualize large-scale datasets efficiently' },
-            { id: 'bullet-22', text: 'Developed ETL pipelines using Python and Apache Spark, processing terabytes of data daily with 99.9% reliability' },
-            { id: 'bullet-23', text: 'Implemented distributed data processing system using Kubernetes, scaling to handle 100x data volume increases' }
+            { id: 'bullet-35', text: 'Built data visualization dashboard using React and D3.js' },
+            { id: 'bullet-36', text: 'Enabled analysts to process and visualize large-scale datasets efficiently, reducing analysis time from hours to minutes and improving decision-making through interactive visualizations' },
+            { id: 'bullet-37', text: 'Developed ETL pipelines using Python and Apache Spark, processing terabytes of data daily' },
+            { id: 'bullet-38', text: 'Achieved 99.9% reliability through robust error handling and automated retry mechanisms, ensuring data consistency and minimizing manual intervention in data processing workflows' },
+            { id: 'bullet-39', text: 'Implemented distributed data processing system using Kubernetes' },
+            { id: 'bullet-40', text: 'Scaled to handle 100x data volume increases through horizontal scaling and optimized resource allocation, supporting business growth without proportional infrastructure costs' }
           ]
         },
         {
@@ -236,9 +255,12 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
           startDate: 'May 2019',
           endDate: 'Aug 2019',
           bullets: [
-            { id: 'bullet-24', text: 'Developed banking APIs using Java and Spring Framework, ensuring PCI-DSS compliance and handling sensitive financial data' },
-            { id: 'bullet-25', text: 'Built automated testing suite using JUnit and Mockito, increasing code coverage from 45% to 80% and reducing production bugs by 60%' },
-            { id: 'bullet-26', text: 'Collaborated with cross-functional teams to deliver mobile banking features, improving user satisfaction scores by 25%' }
+            { id: 'bullet-41', text: 'Developed banking APIs using Java and Spring Framework, ensuring PCI-DSS compliance' },
+            { id: 'bullet-42', text: 'Handled sensitive financial data with zero security breaches through encryption, access controls, and comprehensive audit logging, passing all security audits with full compliance' },
+            { id: 'bullet-43', text: 'Built automated testing suite using JUnit and Mockito, increasing code coverage from 45% to 80%' },
+            { id: 'bullet-44', text: 'Reduced production bugs by 60% through comprehensive test coverage and integration testing, improving system stability and reducing emergency hotfix deployments' },
+            { id: 'bullet-45', text: 'Collaborated with cross-functional teams to deliver mobile banking features' },
+            { id: 'bullet-46', text: 'Improved user satisfaction scores by 25% through iterative design improvements and faster feature delivery, directly impacting customer retention and app store ratings' }
           ]
         }
       ],

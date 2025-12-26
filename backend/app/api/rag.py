@@ -229,7 +229,7 @@ async def select_bullets(request: SelectionRequest):
         
         # Calculate total lines
         total_lines = calculate_total_lines(selected_resume)
-        max_lines = 50
+        max_lines = 42
         fits_one_page = total_lines <= max_lines
         
         # Identify gaps
@@ -291,7 +291,7 @@ async def optimize_resume_structured(request: OptimizationRequest, background_ta
         
         # Calculate total lines
         total_lines = calculate_total_lines(optimized_resume)
-        max_lines = 50
+        max_lines = 42
         fits_one_page = total_lines <= max_lines
         
         # Identify gaps

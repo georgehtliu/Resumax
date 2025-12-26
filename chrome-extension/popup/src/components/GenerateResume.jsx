@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import JobMatcher from './JobMatcher';
-import OptimizationPanel from './OptimizationPanel';
 import SelectedResumeEditor from './SelectedResumeEditor';
 import LatexPreviewModal from './LatexPreviewModal';
 import { storageService } from '../services/storage';
@@ -24,7 +23,6 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [customizedBullets, setCustomizedBullets] = useState(null);
   const [customizedResume, setCustomizedResume] = useState(null);
-  const [optimizationMode, setOptimizationMode] = useState('select'); // 'select' or 'optimize'
   const [showLatexPreview, setShowLatexPreview] = useState(false);
   const [latexSource, setLatexSource] = useState('');
   const [latexPdfBase64, setLatexPdfBase64] = useState(null);
@@ -135,46 +133,6 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
     }
   }
 
-  /**
-   * Handle optimization request (with rewriting)
-   */
-  async function handleOptimize(jobDescription) {
-    setLoading(true);
-    try {
-      // Mock optimization - will connect to backend later
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Collect bullets from all sections
-      const allBullets = [
-        ...(Array.isArray(masterResume.experiences) ? masterResume.experiences.flatMap(exp => Array.isArray(exp?.bullets) ? exp.bullets : []) : []),
-        ...(Array.isArray(masterResume.education) ? masterResume.education.flatMap(edu => Array.isArray(edu?.bullets) ? edu.bullets : []) : []),
-        ...(Array.isArray(masterResume.projects) ? masterResume.projects.flatMap(proj => Array.isArray(proj?.bullets) ? proj.bullets : []) : []),
-        ...(Array.isArray(masterResume.customSections) ? masterResume.customSections.flatMap(section => Array.isArray(section?.bullets) ? section.bullets : []) : [])
-      ];
-
-      const mockResult = {
-        mode: 'optimize', // Indicates this includes rewriting
-        selectedBullets: allBullets
-          .slice(0, 12)
-          .map(bullet => ({
-            ...bullet,
-            relevanceScore: Math.random() * 0.3 + 0.7,
-            rewritten: bullet.text + ' (optimized)', // Mock - would be optimized by LLM
-            original: bullet.text
-          })),
-        gaps: ['Cloud deployment', 'Machine learning'],
-        jobDescription: jobDescription
-      };
-
-      setOptimizationResult(mockResult);
-      setCustomizedResume(null);
-    } catch (error) {
-      console.error('Error optimizing:', error);
-      alert('Error optimizing resume');
-    } finally {
-      setLoading(false);
-    }
-  }
 
   /**
    * Handle bullet customization updates
@@ -262,33 +220,20 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
 
     setSaving(true);
     try {
-      const isSelectMode = optimizationResult.mode === 'select';
-
-      let savedResume;
-      if (isSelectMode) {
-        const resumeData = cloneStructuredResume(customizedResume || optimizationResult.selectedResume);
-        savedResume = {
-          mode: 'select',
-          experiences: resumeData.experiences || [],
-          education: resumeData.education || [],
-          projects: resumeData.projects || [],
-          customSections: resumeData.customSections || [],
-          gaps: optimizationResult.gaps,
-          jobDescription: optimizationResult.jobDescription,
-          fitsOnePage: optimizationResult.fitsOnePage,
-          totalLineCount: optimizationResult.totalLineCount,
-          maxLines: optimizationResult.maxLines,
-          selectedBullets: flattenSelectedResume(resumeData)
-        };
-      } else {
-        const bulletsToSave = customizedBullets || optimizationResult.selectedBullets;
-        savedResume = {
-          selectedBullets: bulletsToSave,
-          gaps: optimizationResult.gaps,
-          mode: optimizationResult.mode,
-          jobDescription: optimizationResult.jobDescription
-        };
-      }
+      const resumeData = cloneStructuredResume(customizedResume || optimizationResult.selectedResume);
+      const savedResume = {
+        mode: 'select',
+        experiences: resumeData.experiences || [],
+        education: resumeData.education || [],
+        projects: resumeData.projects || [],
+        customSections: resumeData.customSections || [],
+        gaps: optimizationResult.gaps,
+        jobDescription: optimizationResult.jobDescription,
+        fitsOnePage: optimizationResult.fitsOnePage,
+        totalLineCount: optimizationResult.totalLineCount,
+        maxLines: optimizationResult.maxLines,
+        selectedBullets: flattenSelectedResume(resumeData)
+      };
 
       // Save to Supabase
       try {
@@ -345,59 +290,10 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
             : 'Extract or paste a job description, then select the best resume points.'}
         </p>
         
-        {/* Mode Selection */}
-        <div className="optimization-mode-selector">
-          <div className="mode-option">
-            <input
-              type="radio"
-              id="mode-select"
-              name="optimization-mode"
-              value="select"
-              checked={optimizationMode === 'select'}
-              onChange={(e) => setOptimizationMode(e.target.value)}
-            />
-            <label htmlFor="mode-select">
-              <div className="mode-label">
-                <span className="mode-icon">
-                  <Icon name="clipboard" size={24} />
-                </span>
-                <div className="mode-content">
-                  <div className="mode-title">Select Best Bullets</div>
-                  <div className="mode-description">Fast selection without rewriting</div>
-                </div>
-              </div>
-            </label>
-          </div>
-          
-          <div className="mode-option">
-            <input
-              type="radio"
-              id="mode-optimize"
-              name="optimization-mode"
-              value="optimize"
-              checked={optimizationMode === 'optimize'}
-              onChange={(e) => setOptimizationMode(e.target.value)}
-            />
-            <label htmlFor="mode-optimize">
-              <div className="mode-label">
-                <span className="mode-icon">
-                  <Icon name="sparkles" size={24} />
-                </span>
-                <div className="mode-content">
-                  <div className="mode-title">Optimize & Rewrite</div>
-                  <div className="mode-description">Selection + AI rewriting (slower)</div>
-                </div>
-              </div>
-            </label>
-          </div>
-        </div>
-        
         <JobMatcher
           jobDescription={currentJob?.description || ''}
           onExtract={hideExtract ? undefined : handleExtractJobDescription}
           onSelect={handleSelect}
-          onOptimize={handleOptimize}
-          optimizationMode={optimizationMode}
           loading={loading}
         />
       </div>
@@ -406,9 +302,7 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
       {optimizationResult && (
         <div className="section">
           <div className="section-header-with-action">
-            <h2>
-              {optimizationResult.mode === 'optimize' ? 'Optimized Resume' : 'Selected Resume'}
-            </h2>
+            <h2>Selected Resume</h2>
             <button
               className="btn btn-primary"
               onClick={() => setShowSaveDialog(true)}
@@ -428,31 +322,19 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
             )}
           </div>
           
-          {optimizationResult.mode === 'select' ? (
-            <SelectedResumeEditor
-              resume={customizedResume || optimizationResult.selectedResume}
-              onUpdate={handleResumeUpdate}
-                showPersonalInfo={false}
-                showSkills={false}
-                showEducation={false}
-              summary={{
-                fitsOnePage: optimizationResult.fitsOnePage,
-                totalLineCount: optimizationResult.totalLineCount,
-                maxLines: optimizationResult.maxLines,
-                processingTime: optimizationResult.processingTime
-              }}
-            />
-          ) : (
-            <OptimizationPanel
-              result={optimizationResult}
-              onClose={() => {
-                setOptimizationResult(null);
-                setCustomizedBullets(null);
-                setCustomizedResume(null);
-              }}
-              onBulletsUpdate={handleBulletsUpdate}
-            />
-          )}
+          <SelectedResumeEditor
+            resume={customizedResume || optimizationResult.selectedResume}
+            onUpdate={handleResumeUpdate}
+            showPersonalInfo={false}
+            showSkills={false}
+            showEducation={false}
+            summary={{
+              fitsOnePage: optimizationResult.fitsOnePage,
+              totalLineCount: optimizationResult.totalLineCount,
+              maxLines: optimizationResult.maxLines,
+              processingTime: optimizationResult.processingTime
+            }}
+          />
         </div>
       )}
 
@@ -552,7 +434,7 @@ const LINE_BUDGET = 42;
 
 function estimateBulletLines(text = '') {
   const effectiveLength = (text?.length || 0) + 2;
-  const lines = Math.max(1, Math.ceil(effectiveLength / 140));
+  const lines = Math.max(1, Math.ceil(effectiveLength / 110));
   return Math.min(lines, 3);
 }
 
@@ -588,7 +470,7 @@ function estimateSkillsLines(skillGroups = []) {
   let total = 2; // section header + spacing
   skillGroups.forEach((group) => {
     const text = (group.skills || []).join(', ');
-    total += Math.max(1, Math.ceil((text.length || 0) / 90));
+    total += Math.max(1, Math.ceil((text.length || 0) / 110));
   });
   return total;
 }

@@ -325,23 +325,11 @@ function App() {
               endDate: 'Present',
               bullets: [
                 { id: 'bullet-1', text: 'Scaled Go/Python microservices for 10M+ daily requests while keeping uptime at 99.9%' },
-                { id: 'bullet-2', text: 'Cut API latency 40% by tuning SQL and cache layers, saving $50K in annual infra costs' },
+                { id: 'bullet-2', text: 'Cut API latency 40% by tuning SQL and cache layers, saving $50K in annual infra costs through smarter resource allocation and query optimization strategies' },
                 { id: 'bullet-3', text: 'Led three engineers to launch recommendations that raised engagement 25% and revenue $2M' },
-                { id: 'bullet-4', text: 'Automated Jenkins and Docker pipelines enabling daily releases and trimming deploy time 60%' },
+                { id: 'bullet-4', text: 'Automated Jenkins and Docker pipelines enabling daily releases and trimming deploy time 60%, reducing manual errors and increasing team productivity through streamlined workflows' },
                 { id: 'bullet-5', text: 'Built REST and gRPC services for 5M+ calls with sub-100ms latency to speed the mobile app' },
-                { id: 'bullet-6', text: 'Partnered with PM and design to lock in technical specs, architecture, and success metrics' },
-                { id: 'bullet-7', text: 'Mentored two junior engineers through reviews and design sessions, boosting velocity 20%' },
-                { id: 'bullet-8', text: 'Created React WebSocket analytics dashboards so product could monitor live user behavior' },
-                { id: 'bullet-52', text: 'Ran chaos drills with auto rollback, slashing MTTR from 45 minutes down to 12 minutes' },
-                { id: 'bullet-53', text: 'Added adaptive rate limits and circuit breakers to prevent cascading failures at peak load' },
-                { id: 'bullet-54', text: 'Migrated messaging from self-hosted Kafka to Pub/Sub, reducing cost 18% and improving SLAs' },
-                { id: 'bullet-55', text: 'Published SLO dashboards with burn alerts that lowered customer-facing errors by 35%' },
-                { id: 'bullet-56', text: 'Built LaunchDarkly feature flag workflows with automated tests to protect 5% canaries' },
-                { id: 'bullet-57', text: 'Enforced mutual TLS and fine-grained IAM to pass SOC 2 audits with zero security findings' },
-                { id: 'bullet-58', text: 'Batched protobuf payloads over gRPC to cut pipeline network usage by 28%' },
-                { id: 'bullet-59', text: 'Built service templates and golden paths that cut new microservice bootstrap time to four days' },
-                { id: 'bullet-60', text: 'Deployed incident triage bots that auto-resolved 40% of low severity alerts without humans' },
-                { id: 'bullet-61', text: 'Led cross-team load tests simulating 5x peak to validate capacity for Black Friday traffic' }
+                { id: 'bullet-6', text: 'Mentored two junior engineers through reviews and design sessions, boosting velocity 20% and improving code quality standards across the team through knowledge sharing' }
               ]
             },
             {
@@ -352,20 +340,11 @@ function App() {
               endDate: 'Aug 2021',
               bullets: [
                 { id: 'bullet-9', text: 'Shipped accessible Marketplace UI components that lifted conversion by 15%' },
-                { id: 'bullet-10', text: 'Built WebSocket plus Redis alerts trimming latency 30% and boosting engagement' },
+                { id: 'bullet-10', text: 'Built WebSocket plus Redis alerts trimming latency 30% and boosting engagement through real-time updates and improved user experience metrics' },
                 { id: 'bullet-11', text: 'Optimized GraphQL queries to cut server load 25% and speed page renders' },
-                { id: 'bullet-12', text: 'Drove reviews and docs that raised code quality and quickened onboarding' },
-                { id: 'bullet-13', text: 'Launched A/B framework enabling data-led releases and reducing regression risk' },
-                { id: 'bullet-62', text: 'Shrank upload payloads 60% with client resizing and cache headers to lower CDN cost' },
-                { id: 'bullet-63', text: 'Adopted Storybook for shared UI kits, cutting regression bugs in consumer surfaces 45%' },
-                { id: 'bullet-64', text: 'Delivered WCAG AA compliant flows with full keyboard navigation support' },
-                { id: 'bullet-65', text: 'Instrumented funnels, fixing pricing friction and growing conversion by 9%' },
-                { id: 'bullet-66', text: 'Automated screenshot diff testing to protect weekly launch quality' },
-                { id: 'bullet-67', text: 'Wrapped experiment APIs to cut launch boilerplate 70% and speed team delivery' },
-                { id: 'bullet-68', text: 'Implemented optimistic UI patterns to drop perceived latency from 400ms to 120ms' },
-                { id: 'bullet-69', text: 'Added client spam heuristics blocking 15K fake listings each week before backend' },
-                { id: 'bullet-70', text: 'Documented setup and npm workspaces, reducing intern onboarding from three days to one' },
-                { id: 'bullet-71', text: 'Ran weekly launch reviews ensuring guardrails and logging were ready before ship' }
+                { id: 'bullet-12', text: 'Launched A/B framework enabling data-led releases and reducing regression risk while increasing experiment velocity and team confidence in deployments' },
+                { id: 'bullet-13', text: 'Delivered WCAG AA compliant flows with full keyboard navigation support' },
+                { id: 'bullet-14', text: 'Implemented optimistic UI patterns to drop perceived latency from 400ms to 120ms, directly improving user satisfaction scores and reducing bounce rates through faster interactions' }
               ]
             },
             {
@@ -375,20 +354,12 @@ function App() {
               startDate: 'Jun 2020',
               endDate: 'Aug 2020',
               bullets: [
-                { id: 'bullet-14', text: 'Automated Java Spring tooling that saved 40 weekly hours on deployment prep' },
-                { id: 'bullet-15', text: 'Built CloudWatch and Lambda alerts that halved incident detection time' },
-                { id: 'bullet-16', text: 'Tuned DynamoDB and ElastiCache to cut query latency by 35%' },
-                { id: 'bullet-17', text: 'Partnered with senior engineers on resilient distributed system designs' },
-                { id: 'bullet-72', text: 'Containerized legacy batch jobs onto Fargate to lower ops overhead' },
-                { id: 'bullet-73', text: 'Implemented blue/green deployment strategy to eliminate release downtime' },
-                { id: 'bullet-74', text: 'Published CloudFormation modules standardizing VPC and IAM provisioning' },
-                { id: 'bullet-75', text: 'Instrumented Lambda logging and X-Ray traces to trim RCA time by 30%' },
-                { id: 'bullet-76', text: 'Automated AWS Config checks to keep 100% tagging and encryption compliance' },
-                { id: 'bullet-77', text: 'Optimized S3 lifecycle rules to reduce monthly storage spend by 12%' },
-                { id: 'bullet-78', text: 'Authored resilience runbooks so L1 support could resolve 25% of incidents' },
-                { id: 'bullet-79', text: 'Integrated PagerDuty alerts and thresholds that improved signal-to-noise 50%' },
-                { id: 'bullet-80', text: 'Stress tested services and delivered capacity plans adopted by three partner teams' },
-                { id: 'bullet-81', text: 'Onboarded two enterprise clients while meeting internal security benchmarks' }
+                { id: 'bullet-15', text: 'Automated Java Spring tooling that saved 40 weekly hours on deployment prep' },
+                { id: 'bullet-16', text: 'Built CloudWatch and Lambda alerts that halved incident detection time, reducing MTTR from 45 minutes to under 20 minutes through proactive monitoring' },
+                { id: 'bullet-17', text: 'Tuned DynamoDB and ElastiCache to cut query latency by 35%' },
+                { id: 'bullet-18', text: 'Containerized legacy batch jobs onto Fargate to lower ops overhead by 60% and improve resource utilization, enabling better cost management and scalability' },
+                { id: 'bullet-19', text: 'Implemented blue/green deployment strategy to eliminate release downtime' },
+                { id: 'bullet-20', text: 'Published CloudFormation modules standardizing VPC and IAM provisioning, reducing setup time from days to hours and ensuring consistent security configurations across all environments' }
               ]
             }
           ],

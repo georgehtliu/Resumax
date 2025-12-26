@@ -11,7 +11,7 @@ import './JobMatcher.css';
  * - Triggering selection or optimization based on mode
  * - Displaying job description in collapsible textbox
  */
-function JobMatcher({ jobDescription, onExtract, onSelect, onOptimize, optimizationMode, loading }) {
+function JobMatcher({ jobDescription, onExtract, onSelect, loading }) {
   const [manualJD, setManualJD] = useState(jobDescription || '');
   const [extractionStatus, setExtractionStatus] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
@@ -52,11 +52,9 @@ function JobMatcher({ jobDescription, onExtract, onSelect, onOptimize, optimizat
       return;
     }
 
-    // Call appropriate handler based on mode
-    if (optimizationMode === 'select' && onSelect) {
+    // Call select handler
+    if (onSelect) {
       onSelect(jd);
-    } else if (optimizationMode === 'optimize' && onOptimize) {
-      onOptimize(jd);
     }
   }
 
@@ -165,21 +163,17 @@ function JobMatcher({ jobDescription, onExtract, onSelect, onOptimize, optimizat
           onClick={handleProcess}
           disabled={loading || !manualJD.trim()}
         >
-          {loading 
-            ? (optimizationMode === 'optimize' ? 'Optimizing...' : 'Selecting...')
-            : (optimizationMode === 'optimize' 
-                ? (
-                  <>
-                    <Icon name="sparkles" size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-                    Optimize & Rewrite
-                  </>
-                )
-                : (
-                  <>
-                    <Icon name="clipboard" size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-                    Select Best Bullets
-                  </>
-                ))}
+          {loading ? (
+            <>
+              <Icon name="clipboard" size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+              Selecting...
+            </>
+          ) : (
+            <>
+              <Icon name="clipboard" size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+              Select Best Bullets
+            </>
+          )}
         </button>
       </div>
     </div>

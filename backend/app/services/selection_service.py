@@ -3,9 +3,12 @@ Selection Service - Selects bullets per experience without rewriting.
 
 This service handles the fast selection endpoint that ranks bullets by relevance
 and selects the top N bullets per section without any LLM rewriting.
+
+Now includes profile-based adaptive selection that adjusts strategy based on
+resume characteristics (density, distribution, experience patterns).
 """
 
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict
 import math
 import heapq
 import numpy as np
@@ -16,17 +19,16 @@ from app.schemas.rag import (
     SelectedProject, SelectedCustomSection, SelectedBullet, Bullet, Experience
 )
 
-def estimate_latex_lines(text: str, chars_per_line: int = 145) -> int:
+def estimate_latex_lines(text: str, chars_per_line: int = 110) -> int:
     """
     Estimate how many lines a bullet point will take in LaTeX.
     
     Uses a simple heuristic: characters per line in Jake's Resume format.
-    Updated to match actual resume capacity - with \small font and adjusted margins,
-    ~140-150 chars per line is realistic.
+    Standard character count per line for resume formatting.
     
     Args:
         text: Bullet point text
-        chars_per_line: Average characters per line in LaTeX (default 145 for \small font)
+        chars_per_line: Average characters per line in LaTeX (default 110)
         
     Returns:
         Estimated number of lines
@@ -62,6 +64,260 @@ PRESTIGIOUS_COMPANIES = {
     'boston consulting group', 'bcg', 'deloitte', 'pwc', 'ey', 'kpmg'
 }
 
+
+class ResumeProfileDetector:
+    """
+    Detects resume profile based on content characteristics.
+    Focuses on constraint management, not user types.
+    """
+    
+    MAX_LINES = 42
+    HEADER_LINES = 3  # Personal info + spacing
+    SKILLS_LINES = 2
+    
+    @staticmethod
+    def detect_profile(resume: StructuredResume) -> Dict:
+        """
+        Returns profile characteristics:
+        {
+            'density': 'high' | 'medium' | 'low',
+            'distribution': 'experience_heavy' | 'project_heavy' | 'education_heavy' | 'balanced',
+            'experience_pattern': 'many_short' | 'few_deep' | 'many_deep' | 'standard' | 'none',
+            'compression_needed': float,  # 0.0-1.0, how much compression needed
+            'available_lines': int  # Lines available after fixed sections
+        }
+        """
+        # Calculate total content
+        total_experience_lines = sum(
+            len(exp.bullets) * 1.5 + 2  # ~1.5 lines per bullet + header
+            for exp in resume.experiences
+        )
+        total_project_lines = sum(
+            len(proj.bullets) * 1.5 + 2
+            for proj in resume.projects
+        )
+        total_education_lines = sum(
+            len(edu.bullets) * 1.5 + 2
+            for edu in resume.education
+        )
+        total_custom_lines = sum(
+            len(sec.bullets) * 1.5 + 2
+            for sec in resume.customSections
+        )
+        
+        total_content = total_experience_lines + total_project_lines + total_education_lines + total_custom_lines
+        
+        # Dimension 1: Density
+        if total_content > 60:
+            density = 'high'
+        elif total_content > 30:
+            density = 'medium'
+        else:
+            density = 'low'
+        
+        # Dimension 2: Distribution
+        total_variable = total_experience_lines + total_project_lines + total_education_lines + total_custom_lines
+        if total_variable == 0:
+            distribution = 'balanced'
+        else:
+            exp_ratio = total_experience_lines / total_variable
+            proj_ratio = total_project_lines / total_variable
+            edu_ratio = total_education_lines / total_variable
+            
+            if exp_ratio > 0.7:
+                distribution = 'experience_heavy'
+            elif proj_ratio > 0.5:
+                distribution = 'project_heavy'
+            elif edu_ratio > 0.4:
+                distribution = 'education_heavy'
+            else:
+                distribution = 'balanced'
+        
+        # Dimension 3: Experience Pattern
+        num_experiences = len(resume.experiences)
+        if num_experiences == 0:
+            experience_pattern = 'none'
+        else:
+            avg_bullets = sum(len(exp.bullets) for exp in resume.experiences) / num_experiences
+            
+            if num_experiences >= 4 and avg_bullets < 3:
+                experience_pattern = 'many_short'
+            elif num_experiences <= 3 and avg_bullets >= 5:
+                experience_pattern = 'few_deep'
+            elif num_experiences >= 4 and avg_bullets >= 4:
+                experience_pattern = 'many_deep'
+            else:
+                experience_pattern = 'standard'
+        
+        # Calculate compression needed
+        available_lines = ResumeProfileDetector.MAX_LINES - ResumeProfileDetector.HEADER_LINES - ResumeProfileDetector.SKILLS_LINES
+        compression_needed = max(0, min(1.0, (total_content - available_lines) / total_content)) if total_content > 0 else 0.0
+        
+        return {
+            'density': density,
+            'distribution': distribution,
+            'experience_pattern': experience_pattern,
+            'compression_needed': compression_needed,
+            'available_lines': available_lines,
+            'total_content': total_content
+        }
+
+
+class AdaptiveSpaceAllocator:
+    """
+    Allocates space based on profile characteristics.
+    General strategy: Maximize relevance within constraint.
+    """
+    
+    @staticmethod
+    def allocate_space(profile: Dict) -> Dict:
+        """
+        Returns space allocation:
+        {
+            'experiences': int,
+            'projects': int,
+            'education': int,
+            'custom': int,
+            'strategy': str  # Compression strategy
+        }
+        """
+        available = profile['available_lines']
+        density = profile['density']
+        distribution = profile['distribution']
+        exp_pattern = profile['experience_pattern']
+        
+        # Base allocation based on distribution
+        if distribution == 'experience_heavy':
+            # Prioritize experiences
+            exp_lines = int(available * 0.75)
+            proj_lines = int(available * 0.15)
+            edu_lines = int(available * 0.08)
+            custom_lines = available - exp_lines - proj_lines - edu_lines
+            
+        elif distribution == 'project_heavy':
+            # Prioritize projects
+            exp_lines = int(available * 0.40)
+            proj_lines = int(available * 0.45)
+            edu_lines = int(available * 0.10)
+            custom_lines = available - exp_lines - proj_lines - edu_lines
+            
+        elif distribution == 'education_heavy':
+            # Prioritize education (rare but possible)
+            exp_lines = int(available * 0.50)
+            proj_lines = int(available * 0.20)
+            edu_lines = int(available * 0.25)
+            custom_lines = available - exp_lines - proj_lines - edu_lines
+            
+        else:  # balanced
+            # Even distribution
+            exp_lines = int(available * 0.55)
+            proj_lines = int(available * 0.30)
+            edu_lines = int(available * 0.10)
+            custom_lines = available - exp_lines - proj_lines - edu_lines
+        
+        # Adjust based on experience pattern
+        if exp_pattern == 'many_short':
+            # Strategy: Fit more experiences with fewer bullets
+            strategy = 'compress_bullets_per_exp'
+        elif exp_pattern == 'few_deep':
+            # Strategy: Can afford more bullets per experience
+            strategy = 'allow_more_bullets'
+        elif exp_pattern == 'many_deep':
+            # Strategy: Aggressive compression, prioritize relevance
+            strategy = 'aggressive_compression'
+        else:
+            strategy = 'standard'
+        
+        # Adjust for density
+        if density == 'high':
+            # Reduce all allocations slightly for buffer
+            exp_lines = int(exp_lines * 0.95)
+            proj_lines = int(proj_lines * 0.95)
+            edu_lines = int(edu_lines * 0.95)
+        
+        return {
+            'experiences': exp_lines,
+            'projects': proj_lines,
+            'education': edu_lines,
+            'custom': custom_lines,
+            'strategy': strategy
+        }
+
+
+class CompressionStrategy:
+    """
+    Different compression strategies based on profile.
+    """
+    
+    @staticmethod
+    def get_bullets_per_experience(profile: Dict, allocation: Dict, num_experiences: int) -> int:
+        """Determine initial bullets per experience."""
+        strategy = allocation['strategy']
+        exp_pattern = profile['experience_pattern']
+        
+        if strategy == 'compress_bullets_per_exp':
+            # Many short experiences: 1-2 bullets each
+            if num_experiences >= 6:
+                return 1
+            elif num_experiences >= 4:
+                return 2
+            else:
+                return 2
+        
+        elif strategy == 'allow_more_bullets':
+            # Few deep experiences: 3-4 bullets each
+            if num_experiences <= 2:
+                return 4
+            else:
+                return 3
+        
+        elif strategy == 'aggressive_compression':
+            # Many deep: Start with 2, compress aggressively
+            return 2
+        
+        else:  # standard
+            return 3
+    
+    @staticmethod
+    def get_squeeze_behavior(strategy: str) -> Dict:
+        """
+        Returns squeeze phase behavior:
+        {
+            'min_bullets_per_exp': int,  # Minimum bullets before removing experience
+            'prefer_remove_experience': bool,  # Remove whole experiences vs bullets
+            'allow_one_liner': bool,  # Allow experiences with 0 bullets (header only)
+            'compression_factor': float  # How aggressive (0.0-1.0)
+        }
+        """
+        behaviors = {
+            'compress_bullets_per_exp': {
+                'min_bullets_per_exp': 1,  # Can go down to 1 bullet
+                'prefer_remove_experience': True,  # Prefer removing whole experiences
+                'allow_one_liner': False,
+                'compression_factor': 0.7  # Moderate compression
+            },
+            'allow_more_bullets': {
+                'min_bullets_per_exp': 2,  # Keep at least 2 bullets
+                'prefer_remove_experience': False,  # Prefer removing bullets
+                'allow_one_liner': False,
+                'compression_factor': 0.9  # Less aggressive
+            },
+            'aggressive_compression': {
+                'min_bullets_per_exp': 1,  # Can go to 1 bullet
+                'prefer_remove_experience': False,  # Remove bullets globally
+                'allow_one_liner': True,  # Allow header-only for must-haves
+                'compression_factor': 0.5  # Very aggressive
+            },
+            'standard': {
+                'min_bullets_per_exp': 1,
+                'prefer_remove_experience': False,
+                'allow_one_liner': False,
+                'compression_factor': 0.8
+            }
+        }
+        return behaviors.get(strategy, behaviors['standard'])
+
+
 class SelectionService:
     """
     Service for selecting bullets without rewriting using a hybrid algorithm.
@@ -85,13 +341,16 @@ class SelectionService:
     - Adds back highest-scoring deleted bullets if significantly under limit
     
     Returns structured resume with selected bullets that maximizes relevance
-    while fitting within one page (50 lines).
+    while fitting within one page (42 lines).
     """
     
     def __init__(self):
         """Initialize the selection service."""
         self.vector_search = VectorSearch()
-        self.max_lines = 50  # One page limit
+        self.max_lines = 42  # One page limit
+        self.profile_detector = ResumeProfileDetector()
+        self.space_allocator = AdaptiveSpaceAllocator()
+        self.compression_strategy = CompressionStrategy()
     
     async def select_bullets(
         self,
@@ -104,11 +363,12 @@ class SelectionService:
     ) -> SelectedResume:
         """
         Select top bullets per section based on relevance.
+        Now uses profile-based adaptive selection.
         
         Args:
             resume: Structured resume with all bullets
             job_description: Job description to match against
-            bullets_per_experience: Number of bullets to select per experience
+            bullets_per_experience: Number of bullets to select per experience (initial, may be adjusted)
             bullets_per_education: Number of bullets to select per education
             bullets_per_project: Number of bullets to select per project
             bullets_per_custom: Number of bullets to select per custom section
@@ -118,26 +378,33 @@ class SelectionService:
         """
         print(f"📋 Selecting bullets for {len(resume.experiences)} experiences...")
 
+        # Step 1: Detect profile
+        profile = self.profile_detector.detect_profile(resume)
+        print(f"📊 Profile detected: density={profile['density']}, distribution={profile['distribution']}, pattern={profile['experience_pattern']}")
+        
+        # Step 2: Allocate space based on profile
+        space_allocation = self.space_allocator.allocate_space(profile)
+        print(f"📐 Space allocation: experiences={space_allocation['experiences']}, projects={space_allocation['projects']}, strategy={space_allocation['strategy']}")
+
         job_embedding = self._generate_job_embedding(job_description)
 
-        # Estimate space needed for other sections (education, projects, custom)
-        # We'll select these first to know exact space, then optimize experiences
-        # But for now, estimate conservatively
-        estimated_other_sections_lines = self._estimate_other_sections_lines(
-            resume, job_description, bullets_per_education,
-            bullets_per_project, bullets_per_custom, job_embedding
+        # Step 3: Adjust bullets per experience based on profile
+        adaptive_bullets_per_exp = self.compression_strategy.get_bullets_per_experience(
+            profile,
+            space_allocation,
+            len(resume.experiences)
         )
-        
-        # Reserve space for other sections (with some buffer)
-        available_lines = max(10, self.max_lines - estimated_other_sections_lines - 5)  # 5 line buffer
+        print(f"🎯 Adaptive bullets per experience: {adaptive_bullets_per_exp} (requested: {bullets_per_experience})")
 
-        # Smart experience selection using priority queue
+        # Step 4: Select experiences with profile-aware strategy
         selected_experiences = await self._select_experiences_with_priority_queue(
             resume.experiences,
             job_description,
-            bullets_per_experience,
+            adaptive_bullets_per_exp,
             job_embedding,
-            max_lines=available_lines
+            max_lines=space_allocation['experiences'],
+            profile=profile,
+            allocation=space_allocation
         )
         
         # Select from education
@@ -160,42 +427,25 @@ class SelectionService:
                 selectedBullets=selected_bullets
             ))
         
-        # Select from projects
-        selected_projects = []
-        for project in resume.projects:
-            selected_bullets = await self._select_bullets_for_section(
-                project.bullets,
-                job_description,
-                bullets_per_project,
-                job_embedding
-            )
-            
-            selected_projects.append(SelectedProject(
-                id=project.id,
-                name=project.name,
-                description=project.description,
-                technologies=project.technologies,
-                startDate=project.startDate,
-                endDate=project.endDate,
-                selectedBullets=selected_bullets
-            ))
+        # Select from projects with profile-aware limits
+        selected_projects = await self._select_projects_with_limit(
+            resume.projects,
+            job_description,
+            bullets_per_project,
+            job_embedding,
+            max_lines=space_allocation['projects'],
+            profile=profile
+        )
         
-        # Select from custom sections
-        selected_custom = []
-        for section in resume.customSections:
-            selected_bullets = await self._select_bullets_for_section(
-                section.bullets,
-                job_description,
-                bullets_per_custom,
-                job_embedding
-            )
-            
-            selected_custom.append(SelectedCustomSection(
-                id=section.id,
-                title=section.title,
-                subtitle=section.subtitle,
-                selectedBullets=selected_bullets
-            ))
+        # Select from custom sections with profile-aware limits
+        selected_custom = await self._select_custom_sections_with_limit(
+            resume.customSections,
+            job_description,
+            bullets_per_custom,
+            job_embedding,
+            max_lines=space_allocation['custom'],
+            profile=profile
+        )
         
         return SelectedResume(
             personalInfo=resume.personalInfo,
@@ -337,10 +587,13 @@ class SelectionService:
         job_description: str,
         bullets_per_experience: int,
         job_embedding: Optional[List[float]],
-        max_lines: int = 50
+        max_lines: int = 42,
+        profile: Optional[Dict] = None,
+        allocation: Optional[Dict] = None
     ) -> List[SelectedExperience]:
         """
         Hybrid algorithm: Fast initial selection + Iterative refinement ("The Squeeze").
+        Now profile-aware with adaptive compression strategies.
         
         Phase 1: Preparation & Valuation
         - Score all experiences and bullets
@@ -352,6 +605,7 @@ class SelectionService:
         
         Phase 3: The Squeeze (Fine Optimization)
         - Iteratively remove globally lowest-scoring bullets
+        - Uses profile-aware compression behavior
         - Handle orphan blocks (one-liner mode for must-haves)
         
         Phase 4: Revive (Fill Underutilized Space)
@@ -362,13 +616,28 @@ class SelectionService:
             job_description: Job description to match against
             bullets_per_experience: Number of bullets per experience (initial)
             job_embedding: Job description embedding
-            max_lines: Maximum lines allowed (default 50 for one page)
+            max_lines: Maximum lines allowed (default 42 for one page)
+            profile: Profile characteristics dict (optional)
+            allocation: Space allocation dict (optional)
             
         Returns:
             List of selected experiences with bullets
         """
         if not experiences:
             return []
+        
+        # Get compression behavior based on profile
+        squeeze_behavior = None
+        if profile and allocation:
+            squeeze_behavior = self.compression_strategy.get_squeeze_behavior(allocation['strategy'])
+        else:
+            # Default behavior
+            squeeze_behavior = {
+                'min_bullets_per_exp': 1,
+                'prefer_remove_experience': False,
+                'allow_one_liner': False,
+                'compression_factor': 0.8
+            }
         
         # ========================================================================
         # PHASE 1: Preparation & Valuation
@@ -486,9 +755,20 @@ class SelectionService:
             lowest_bullet_idx = -1
             
             for exp_idx, exp_data in enumerate(selected):
-                # Skip must-haves with only 1 bullet (protected)
-                if exp_data['is_must_have'] and len(exp_data['bullets']) == 1:
+                # Skip must-haves with only min_bullets_per_exp bullets (protected)
+                min_bullets = squeeze_behavior['min_bullets_per_exp']
+                if exp_data['is_must_have'] and len(exp_data['bullets']) <= min_bullets:
                     continue
+                
+                # Skip if below minimum bullets per experience
+                if len(exp_data['bullets']) <= min_bullets:
+                    # If prefer_remove_experience is True, we'll remove the whole experience
+                    if squeeze_behavior['prefer_remove_experience'] and not exp_data['is_must_have']:
+                        # Mark for removal
+                        continue
+                    else:
+                        # Otherwise, protect this bullet
+                        continue
                 
                 for bullet_idx, bullet in enumerate(exp_data['bullets']):
                     if bullet.relevanceScore < lowest_score:
@@ -517,10 +797,10 @@ class SelectionService:
             
             # Handle orphan blocks (experiences with 0 bullets)
             if len(exp_data['bullets']) == 0:
-                if exp_data['is_must_have']:
+                if exp_data['is_must_have'] and squeeze_behavior['allow_one_liner']:
                     # One-liner mode: Keep experience with just header (company, role, dates)
                     exp_data['line_count'] = 2  # Just header, no bullets
-                    total_lines = total_lines - exp_data['line_count'] + 2
+                    total_lines = total_lines - old_line_count + 2
                 else:
                     # Remove non-must-have orphan entirely
                     total_lines -= exp_data['line_count']  # Remove current line count
@@ -530,6 +810,23 @@ class SelectionService:
                             selected.pop(i)
                             break
                     # Break to restart loop with updated selected list
+                    break
+            # Handle case where experience is at minimum bullets and prefer_remove_experience is True
+            elif len(exp_data['bullets']) == squeeze_behavior['min_bullets_per_exp']:
+                if squeeze_behavior['prefer_remove_experience'] and not exp_data['is_must_have']:
+                    # Remove the whole experience (remove all bullets)
+                    while exp_data['bullets']:
+                        removed = exp_data['bullets'].pop()
+                        deleted_bullets.append({
+                            'bullet': Bullet(id=removed.id, text=removed.text),
+                            'score': removed.relevanceScore,
+                            'experience': exp_data['experience'],
+                            'line_count': removed.lineCount or 1
+                        })
+                    # Now it's an orphan, will be handled in next iteration
+                    total_lines -= exp_data['line_count']
+                    exp_data['line_count'] = 0
+                    # Break to restart loop
                     break
         
         # ========================================================================
@@ -881,6 +1178,160 @@ class SelectionService:
         
         company_lower = company.lower().strip()
         return any(prestigious in company_lower for prestigious in PRESTIGIOUS_COMPANIES)
+    
+    async def _select_projects_with_limit(
+        self,
+        projects: List,
+        job_description: str,
+        bullets_per_project: int,
+        job_embedding: Optional[List[float]],
+        max_lines: int,
+        profile: Dict
+    ) -> List[SelectedProject]:
+        """
+        Select projects with line limit based on profile.
+        
+        Args:
+            projects: List of projects
+            job_description: Job description
+            bullets_per_project: Initial bullets per project
+            job_embedding: Job embedding
+            max_lines: Maximum lines allowed for projects
+            profile: Profile characteristics
+            
+        Returns:
+            List of selected projects
+        """
+        if not projects:
+            return []
+        
+        selected_projects = []
+        total_lines = 0
+        
+        # Score all projects and their bullets
+        project_data = []
+        for project in projects:
+            selected_bullets = await self._select_bullets_for_section(
+                project.bullets,
+                job_description,
+                bullets_per_project,
+                job_embedding
+            )
+            
+            # Estimate lines for this project
+            bullet_lines = sum(bullet.lineCount or 1 for bullet in selected_bullets)
+            project_lines = bullet_lines + 2  # +2 for header
+            
+            project_data.append({
+                'project': project,
+                'bullets': selected_bullets,
+                'line_count': project_lines,
+                'score': sum(bullet.relevanceScore for bullet in selected_bullets) / len(selected_bullets) if selected_bullets else 0.0
+            })
+        
+        # Sort by score (highest first)
+        project_data.sort(key=lambda x: x['score'], reverse=True)
+        
+        # Select projects until we hit the line limit
+        for data in project_data:
+            if total_lines + data['line_count'] <= max_lines:
+                selected_projects.append(SelectedProject(
+                    id=data['project'].id,
+                    name=data['project'].name,
+                    description=data['project'].description,
+                    technologies=data['project'].technologies,
+                    startDate=data['project'].startDate,
+                    endDate=data['project'].endDate,
+                    selectedBullets=data['bullets']
+                ))
+                total_lines += data['line_count']
+            else:
+                # Try to fit with fewer bullets
+                if data['bullets']:
+                    # Try with 1 bullet
+                    single_bullet = [data['bullets'][0]]
+                    single_lines = (single_bullet[0].lineCount or 1) + 2
+                    if total_lines + single_lines <= max_lines:
+                        selected_projects.append(SelectedProject(
+                            id=data['project'].id,
+                            name=data['project'].name,
+                            description=data['project'].description,
+                            technologies=data['project'].technologies,
+                            startDate=data['project'].startDate,
+                            endDate=data['project'].endDate,
+                            selectedBullets=single_bullet
+                        ))
+                        total_lines += single_lines
+        
+        print(f"   Selected {len(selected_projects)}/{len(projects)} projects ({total_lines}/{max_lines} lines)")
+        return selected_projects
+    
+    async def _select_custom_sections_with_limit(
+        self,
+        custom_sections: List,
+        job_description: str,
+        bullets_per_custom: int,
+        job_embedding: Optional[List[float]],
+        max_lines: int,
+        profile: Dict
+    ) -> List[SelectedCustomSection]:
+        """
+        Select custom sections with line limit based on profile.
+        
+        Args:
+            custom_sections: List of custom sections
+            job_description: Job description
+            bullets_per_custom: Initial bullets per section
+            job_embedding: Job embedding
+            max_lines: Maximum lines allowed for custom sections
+            profile: Profile characteristics
+            
+        Returns:
+            List of selected custom sections
+        """
+        if not custom_sections:
+            return []
+        
+        selected_custom = []
+        total_lines = 0
+        
+        # Score all sections and their bullets
+        section_data = []
+        for section in custom_sections:
+            selected_bullets = await self._select_bullets_for_section(
+                section.bullets,
+                job_description,
+                bullets_per_custom,
+                job_embedding
+            )
+            
+            # Estimate lines for this section
+            bullet_lines = sum(bullet.lineCount or 1 for bullet in selected_bullets)
+            section_lines = bullet_lines + 2  # +2 for header
+            
+            section_data.append({
+                'section': section,
+                'bullets': selected_bullets,
+                'line_count': section_lines,
+                'score': sum(bullet.relevanceScore for bullet in selected_bullets) / len(selected_bullets) if selected_bullets else 0.0
+            })
+        
+        # Sort by score (highest first)
+        section_data.sort(key=lambda x: x['score'], reverse=True)
+        
+        # Select sections until we hit the line limit
+        for data in section_data:
+            if total_lines + data['line_count'] <= max_lines:
+                selected_custom.append(SelectedCustomSection(
+                    id=data['section'].id,
+                    title=data['section'].title,
+                    subtitle=data['section'].subtitle,
+                    selectedBullets=data['bullets']
+                ))
+                total_lines += data['line_count']
+        
+        print(f"   Selected {len(selected_custom)}/{len(custom_sections)} custom sections ({total_lines}/{max_lines} lines)")
+        return selected_custom
     
     def _estimate_experience_lines(self, selected_bullets: List[SelectedBullet]) -> int:
         """

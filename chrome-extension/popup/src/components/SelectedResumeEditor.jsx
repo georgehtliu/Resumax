@@ -78,7 +78,7 @@ function SelectedResumeEditor({
   const lastResumeRef = useRef(JSON.stringify(resume));
 
   const lineTotals = useMemo(() => calculateTotalLines(localResume), [localResume]);
-  const maxLines = typeof summary?.maxLines === 'number' ? summary.maxLines : 50;
+  const maxLines = typeof summary?.maxLines === 'number' ? summary.maxLines : 42;
   const fitsOnePage = lineTotals <= maxLines;
 
   // Only sync from prop if it's an external change (not from our own updates)
