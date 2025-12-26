@@ -311,6 +311,17 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
 
   return (
     <div className="generate-resume">
+      {/* Loading Overlay */}
+      {loading && (
+        <div className="resume-generating-overlay">
+          <div className="resume-generating-content">
+            <div className="resume-generating-spinner"></div>
+            <h3 className="resume-generating-title">Generating Resume</h3>
+            <p className="resume-generating-text">Selecting the best bullets for your job description...</p>
+          </div>
+        </div>
+      )}
+
       <div className="section">
         <h2>Match to Job Description</h2>
         <p className="section-description">

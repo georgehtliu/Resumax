@@ -863,7 +863,7 @@ function App() {
   }
 
   function handleSelectionComplete() {
-    openManagerPage();
+    // Tab opening removed - user no longer wants new tab to open after resume generation
   }
 
   async function handleSignUp(userData) {
