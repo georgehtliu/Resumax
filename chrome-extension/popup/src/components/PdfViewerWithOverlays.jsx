@@ -134,6 +134,9 @@ const PdfViewerWithOverlays = forwardRef(({
   const baseViewportRef = useRef(null); // Store current baseViewport to avoid closure issues
   const overlayUpdateTimerRef = useRef(null); // Debounce overlay updates
   const renderOverlaysRef = useRef(null); // Ref to renderOverlays function to avoid dependency issues
+  const highlightsRef = useRef([]); // Store highlights in ref to avoid triggering canvas re-renders
+  const selectedColorRef = useRef('#FFEB3B'); // Store selectedColor in ref
+  const isHighlightModeRef = useRef(false); // Store isHighlightMode in ref
 
   // Load PDF
   useEffect(() => {
@@ -502,16 +505,27 @@ const PdfViewerWithOverlays = forwardRef(({
       const newHighlight = {
         id: `highlight-${Date.now()}-${Math.random()}`,
         anchor: currentSelected,
-        color: selectedColor
+        color: selectedColorRef.current // Use ref instead of state
       };
       
-      setHighlights(prev => [...prev, newHighlight]);
+      // Update ref first (immediate, no re-render)
+      highlightsRef.current = [...highlightsRef.current, newHighlight];
+      
+      // Sync to state (triggers re-render only for UI that needs it, but doesn't trigger canvas re-render)
+      setHighlights(highlightsRef.current);
+      
+      // Trigger overlay update
+      if (renderOverlaysRef.current) {
+        requestAnimationFrame(() => {
+          renderOverlaysRef.current();
+        });
+      }
     }
     
     selectedTextRef.current = null;
     setSelectedText(null);
     window.getSelection().removeAllRanges();
-  }, [selectedColor, matchSelectedTextToBullet, onCommentAdd]);
+  }, [matchSelectedTextToBullet, onCommentAdd]);
 
   // Handle comment save from prompt
   const handleCommentSave = useCallback((commentText) => {
@@ -523,15 +537,27 @@ const PdfViewerWithOverlays = forwardRef(({
     const newHighlight = {
       id: `highlight-${Date.now()}-${Math.random()}`,
       anchor: commentPromptAnchor,
-      color: selectedColor
+      color: selectedColorRef.current // Use ref
     };
-    setHighlights(prev => [...prev, newHighlight]);
+    
+    // Update ref first
+    highlightsRef.current = [...highlightsRef.current, newHighlight];
+    
+    // Sync to state
+    setHighlights(highlightsRef.current);
+    
+    // Trigger overlay update
+    if (renderOverlaysRef.current) {
+      requestAnimationFrame(() => {
+        renderOverlaysRef.current();
+      });
+    }
     
     // Close prompt
     setShowCommentPrompt(false);
     setCommentPromptBullet(null);
     setCommentPromptAnchor(null);
-  }, [commentPromptBullet, commentPromptAnchor, onCommentAdd, selectedColor]);
+  }, [commentPromptBullet, commentPromptAnchor, onCommentAdd]);
 
   const handleCommentCancel = useCallback(() => {
     setShowCommentPrompt(false);
@@ -548,6 +574,9 @@ const PdfViewerWithOverlays = forwardRef(({
     const mapper = mappers[currentPage];
     const overlay = overlayRef.current;
     const currentSelectedText = selectedTextRef.current; // Use ref instead of state to avoid re-renders
+    const currentHighlights = highlightsRef.current; // Use ref instead of state
+    const currentSelectedColor = selectedColorRef.current; // Use ref
+    const currentIsHighlightMode = isHighlightModeRef.current; // Use ref
     
     // Store ref to this function so it can be called from selection handler (avoid circular dependency)
     const svg = svgRef.current;
@@ -560,8 +589,8 @@ const PdfViewerWithOverlays = forwardRef(({
     // Get container for positioning (overlay positioning is handled by positionLayersToMatchCanvas)
     const container = canvas.parentElement;
 
-    // Render user highlights
-    const pageHighlights = highlights.filter(h => h.anchor?.page === currentPage);
+    // Render user highlights - use ref instead of state
+    const pageHighlights = currentHighlights.filter(h => h.anchor?.page === currentPage);
     pageHighlights.forEach(highlight => {
       const anchor = highlight.anchor;
       if (!anchor || !anchor.bbox) return;
@@ -586,7 +615,7 @@ const PdfViewerWithOverlays = forwardRef(({
     // Use the same logic as text selection - calculate bounding box from selected DOM elements
     // This matches exactly what the browser highlights, rather than using range.getBoundingClientRect()
     // which can return incorrect dimensions for wrapped text
-    if (isHighlightMode && currentSelectedText && currentSelectedText.page === currentPage) {
+    if (currentIsHighlightMode && currentSelectedText && currentSelectedText.page === currentPage) {
       // Get the current selection and calculate bounding box from selected DOM elements
       const selection = window.getSelection();
       if (selection.rangeCount > 0) {
@@ -640,10 +669,10 @@ const PdfViewerWithOverlays = forwardRef(({
                 previewDiv.style.top = `${minY}px`;
                 previewDiv.style.width = `${maxX - minX}px`;
                 previewDiv.style.height = `${maxY - minY}px`;
-                previewDiv.style.backgroundColor = selectedColor;
+                previewDiv.style.backgroundColor = currentSelectedColor;
                 previewDiv.style.opacity = '0.3';
                 previewDiv.style.pointerEvents = 'none';
-                previewDiv.style.border = `1px dashed ${selectedColor}`;
+                previewDiv.style.border = `1px dashed ${currentSelectedColor}`;
                 
                 overlay.appendChild(previewDiv);
               }
@@ -658,10 +687,10 @@ const PdfViewerWithOverlays = forwardRef(({
             previewDiv.style.top = `${screenBbox.y}px`;
             previewDiv.style.width = `${screenBbox.width}px`;
             previewDiv.style.height = `${screenBbox.height}px`;
-            previewDiv.style.backgroundColor = selectedColor;
+            previewDiv.style.backgroundColor = currentSelectedColor;
             previewDiv.style.opacity = '0.3';
             previewDiv.style.pointerEvents = 'none';
-            previewDiv.style.border = `1px dashed ${selectedColor}`;
+            previewDiv.style.border = `1px dashed ${currentSelectedColor}`;
             
             overlay.appendChild(previewDiv);
           }
@@ -741,7 +770,8 @@ const PdfViewerWithOverlays = forwardRef(({
     
     // Store ref to this function for use in selection handler
     renderOverlaysRef.current = renderOverlays;
-  }, [comments, hoveredCommentId, mappers, currentPage, highlightedBulletId, highlights, selectedColor, isHighlightMode]);
+  }, [comments, hoveredCommentId, mappers, currentPage, highlightedBulletId]); 
+  // REMOVED: highlights, selectedColor, isHighlightMode - these are in refs now and don't trigger re-renders
 
   // Render current page
   useEffect(() => {
@@ -830,73 +860,98 @@ const PdfViewerWithOverlays = forwardRef(({
         renderTask.cancel();
       }
     };
-  }, [pdfDoc, currentPage, scale, renderTextLayer, positionLayersToMatchCanvas, renderOverlays, viewportCache, textContentCache, isHighlightMode]);
+  }, [pdfDoc, currentPage, scale, renderTextLayer, positionLayersToMatchCanvas, viewportCache, textContentCache]); 
+  // REMOVED: renderOverlays, isHighlightMode - canvas doesn't care about these, overlays render separately
 
-  // Re-render text layer when highlight mode changes (but don't re-render the whole page)
-  useEffect(() => {
-    if (pdfDoc && canvasRef.current && textContentCache[currentPage] && mappers[currentPage]) {
-      const renderPage = async () => {
-        try {
-          const page = await pdfDoc.getPage(currentPage);
-          const viewport = page.getViewport({ scale });
-          // Get base viewport from cache
-          const baseViewport = viewportCache[currentPage];
-          const textContent = textContentCache[currentPage];
-          if (textContent && baseViewport) {
-            await renderTextLayer(page, viewport, textContent, baseViewport);
-            // Reposition after re-rendering
-            requestAnimationFrame(() => {
-              positionLayersToMatchCanvas();
-            });
-          }
-        } catch (error) {
-          console.error('Error re-rendering text layer:', error);
-        }
-      };
-      renderPage();
-    }
-  }, [isHighlightMode, pdfDoc, currentPage, scale, renderTextLayer, textContentCache, viewportCache, mappers, positionLayersToMatchCanvas]);
+  // REMOVED: Text layer re-render effect - text layer doesn't need to re-render when highlight mode changes
+  // Text layer is always rendered and selection is controlled via CSS/pointer-events, not re-rendering
 
-  // Re-render overlays when comments, hover state, highlights change (but not selectedText to avoid flickering)
+  // Re-render overlays when comments, hover state change (highlights, selectedColor, isHighlightMode are in refs)
   useEffect(() => {
-    if (mappers[currentPage]) {
+    if (mappers[currentPage] && renderOverlaysRef.current) {
       // Clear any pending update
       if (overlayUpdateTimerRef.current) {
         clearTimeout(overlayUpdateTimerRef.current);
       }
       overlayUpdateTimerRef.current = setTimeout(() => {
         requestAnimationFrame(() => {
-          positionLayersToMatchCanvas();
-          renderOverlays();
+          // Only render overlays, positioning is handled separately
+          if (renderOverlaysRef.current) {
+            renderOverlaysRef.current();
+          }
         });
       }, 50); // Debounce overlay updates
     }
-  }, [comments, hoveredCommentId, currentPage, highlightedBulletId, highlights, selectedColor, isHighlightMode, mappers, positionLayersToMatchCanvas, renderOverlays]);
+  }, [comments, hoveredCommentId, currentPage, highlightedBulletId, mappers]); 
+  // REMOVED: highlights, selectedColor, isHighlightMode, positionLayersToMatchCanvas, renderOverlays
   
   // Update overlay preview when selectedText state changes (for UI, but selection is handled via ref)
   // This effect is mainly for when selection is finalized, not during dragging
   useEffect(() => {
-    if (mappers[currentPage] && isHighlightMode) {
+    if (mappers[currentPage] && isHighlightModeRef.current && renderOverlaysRef.current) {
       // Sync ref with state (when state is updated from outside, like clearing selection)
       selectedTextRef.current = selectedText;
       requestAnimationFrame(() => {
-        renderOverlays();
+        if (renderOverlaysRef.current) {
+          renderOverlaysRef.current();
+        }
       });
     }
-  }, [selectedText, isHighlightMode, mappers, currentPage, renderOverlays]);
+  }, [selectedText, mappers, currentPage]);
 
   // Reposition layers when window resizes
   useEffect(() => {
     const handleResize = () => {
       positionLayersToMatchCanvas();
-      if (mappers[currentPage]) {
-        renderOverlays();
+      if (mappers[currentPage] && renderOverlaysRef.current) {
+        requestAnimationFrame(() => {
+          if (renderOverlaysRef.current) {
+            renderOverlaysRef.current();
+          }
+        });
       }
     };
     
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [positionLayersToMatchCanvas, mappers, currentPage, renderOverlays]);
+  }, [positionLayersToMatchCanvas, mappers, currentPage]);
+
+  // Sync refs with state (for external updates, like props changing)
+  useEffect(() => {
+    highlightsRef.current = highlights;
+    // Trigger overlay update when highlights change from outside
+    if (renderOverlaysRef.current) {
+      requestAnimationFrame(() => {
+        if (renderOverlaysRef.current) {
+          renderOverlaysRef.current();
+        }
+      });
+    }
+  }, [highlights]);
+
+  useEffect(() => {
+    selectedColorRef.current = selectedColor;
+    // Trigger overlay update when color changes
+    if (renderOverlaysRef.current) {
+      requestAnimationFrame(() => {
+        if (renderOverlaysRef.current) {
+          renderOverlaysRef.current();
+        }
+      });
+    }
+  }, [selectedColor]);
+
+  useEffect(() => {
+    isHighlightModeRef.current = isHighlightMode;
+    // Trigger overlay update when highlight mode changes
+    if (renderOverlaysRef.current) {
+      requestAnimationFrame(() => {
+        if (renderOverlaysRef.current) {
+          renderOverlaysRef.current();
+        }
+      });
+    }
+  }, [isHighlightMode]);
 
   // Scroll to anchor
   const scrollToAnchor = useCallback((anchor) => {
@@ -1099,7 +1154,19 @@ const PdfViewerWithOverlays = forwardRef(({
         <div className="highlight-tool" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '16px', paddingLeft: '16px', borderLeft: '1px solid #d1d5db' }}>
           <button
             className={`pdf-control-btn ${isHighlightMode ? 'active' : ''}`}
-            onClick={() => setIsHighlightMode(!isHighlightMode)}
+            onClick={() => {
+              const newMode = !isHighlightMode;
+              setIsHighlightMode(newMode);
+              isHighlightModeRef.current = newMode;
+              // Trigger overlay update
+              if (renderOverlaysRef.current) {
+                requestAnimationFrame(() => {
+                  if (renderOverlaysRef.current) {
+                    renderOverlaysRef.current();
+                  }
+                });
+              }
+            }}
             style={isHighlightMode ? { backgroundColor: '#3b82f6', color: 'white' } : {}}
           >
             {isHighlightMode ? '✓ Highlighting' : 'Highlight'}
@@ -1112,7 +1179,18 @@ const PdfViewerWithOverlays = forwardRef(({
                   <button
                     key={color.value}
                     className="color-btn"
-                    onClick={() => setSelectedColor(color.value)}
+                    onClick={() => {
+                      setSelectedColor(color.value);
+                      selectedColorRef.current = color.value;
+                      // Trigger overlay update
+                      if (renderOverlaysRef.current) {
+                        requestAnimationFrame(() => {
+                          if (renderOverlaysRef.current) {
+                            renderOverlaysRef.current();
+                          }
+                        });
+                      }
+                    }}
                     style={{
                       width: '24px',
                       height: '24px',
