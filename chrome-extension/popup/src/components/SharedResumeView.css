@@ -16,10 +16,33 @@
 
 .resume-main-content {
   flex: 1;
-  max-width: 800px;
+  max-width: 980px;
   margin: 0 auto;
   padding: 24px;
   position: relative;
+}
+
+.resume-html-wrapper {
+  display: flex;
+  justify-content: center;
+  padding: 12px;
+  background: #e8ecf5;
+  border-radius: 12px;
+  border: 1px solid #d7deed;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.12);
+}
+
+.resume-page {
+  width: 816px; /* 8.5in at 96dpi */
+  min-height: 1056px; /* 11in at 96dpi */
+  background: white;
+  padding: 64px 56px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);
+  border: 1px solid #d7deed;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 11pt;
+  line-height: 1.25;
+  color: #0f172a;
 }
 
 .shared-resume-view.loading,

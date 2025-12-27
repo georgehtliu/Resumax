@@ -1,31 +1,8 @@
-import React, { useMemo, useEffect } from 'react';
+import React from 'react';
+import PdfViewerWithOverlays from './PdfViewerWithOverlays';
 import './LatexPreviewModal.css';
 
 function LatexPreviewModal({ open, onClose, latexSource, onCopy, onDownloadTex, pdfBase64, onRefreshPdf, loadingPdf }) {
-  const pdfUrl = useMemo(() => {
-    if (!pdfBase64) {
-      return null;
-    }
-    try {
-      const binary = atob(pdfBase64);
-      const len = binary.length;
-      const bytes = new Uint8Array(len);
-      for (let i = 0; i < len; i += 1) {
-        bytes[i] = binary.charCodeAt(i);
-      }
-      const blob = new Blob([bytes], { type: 'application/pdf' });
-      return URL.createObjectURL(blob);
-    } catch (error) {
-      console.error('Failed to convert PDF base64 to blob:', error);
-      return null;
-    }
-  }, [pdfBase64]);
-
-  useEffect(() => () => {
-    if (pdfUrl) {
-      URL.revokeObjectURL(pdfUrl);
-    }
-  }, [pdfUrl]);
 
   if (!open) {
     return null;
@@ -67,15 +44,18 @@ function LatexPreviewModal({ open, onClose, latexSource, onCopy, onDownloadTex, 
           </div>
           <div className="pdf-column">
             {loadingPdf && <div className="pdf-loading">Rendering PDF…</div>}
-            {!loadingPdf && pdfUrl && (
-              <iframe
-                className="pdf-frame"
-                src={pdfUrl}
-                title="PDF Preview"
+            {!loadingPdf && pdfBase64 && (
+              <PdfViewerWithOverlays
+                pdfBase64={pdfBase64}
+                comments={[]}
+                onTextSelect={(anchor) => {
+                  console.log('Text selected:', anchor);
+                }}
+                scale={1.0}
               />
             )}
-            {!loadingPdf && !pdfUrl && (
-              <div className="pdf-empty">Click “Render PDF” to generate a preview.</div>
+            {!loadingPdf && !pdfBase64 && (
+              <div className="pdf-empty">Click "Render PDF" to generate a preview.</div>
             )}
           </div>
         </div>
