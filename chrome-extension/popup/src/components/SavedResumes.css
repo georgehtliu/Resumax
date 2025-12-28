@@ -7,7 +7,7 @@
   flex-direction: column;
   gap: var(--space-4);
   box-sizing: border-box;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 .saved-resumes .section {

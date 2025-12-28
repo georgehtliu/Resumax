@@ -80,6 +80,7 @@ function SelectedResumeEditor({
   const carouselRef = useRef(null);
   const slideRefs = useRef([]);
   const isScrollingRef = useRef(false);
+  const updateTimerRef = useRef(null);
 
   const lineTotals = useMemo(() => calculateTotalLines(localResume), [localResume]);
   const maxLines = typeof summary?.maxLines === 'number' ? summary.maxLines : 42;
@@ -103,11 +104,27 @@ function SelectedResumeEditor({
     }
   }, [resume]);
 
+  // Debounce updates to parent to avoid re-rendering PDF on every keystroke
   useEffect(() => {
     if (onUpdate) {
-      isLocalUpdateRef.current = true;
-      onUpdate(clone(localResume));
+      // Clear any pending update
+      if (updateTimerRef.current) {
+        clearTimeout(updateTimerRef.current);
+      }
+      
+      // Debounce the update - only notify parent after user stops typing for 500ms
+      updateTimerRef.current = setTimeout(() => {
+        isLocalUpdateRef.current = true;
+        onUpdate(clone(localResume));
+      }, 500);
     }
+    
+    // Cleanup on unmount
+    return () => {
+      if (updateTimerRef.current) {
+        clearTimeout(updateTimerRef.current);
+      }
+    };
   }, [localResume, onUpdate]);
 
   const updateResume = useCallback((mutator) => {

@@ -57,7 +57,7 @@
   
   "web_accessible_resources": [
     {
-      "resources": ["popup/*", "assets/*", "oauth-callback.html"],
+      "resources": ["popup/*", "assets/*", "oauth-callback.html", "pdf.worker.min.js"],
       "matches": ["<all_urls>"]
     }
   ],
