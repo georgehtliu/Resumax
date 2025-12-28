@@ -1,25 +1,23 @@
 import React, { useState } from 'react';
-import { getLineCountInfo } from '../utils/latexLineCount';
-import { Icon } from './Icons';
+import { getLineCountInfo } from '../../utils/latexLineCount';
+import { Icon } from '../ui/Icons';
 import './SectionEditor.css';
 
 /**
- * Project Editor Component
+ * Custom Section Editor Component
  * 
  * Allows users to:
- * - Edit project details (name, description, technologies, dates)
+ * - Create custom resume sections (e.g., Certifications, Skills, Awards)
+ * - Edit section title and subtitle
  * - Add unlimited bullet points
  * - Edit/delete bullet points
  */
-function ProjectEditor({ project, onUpdate, onDelete, onAddBulletFromMaster }) {
-  const [isEditing, setIsEditing] = useState(!project.name);
+function CustomSectionEditor({ section, onUpdate, onDelete, onAddBulletFromMaster }) {
+  const [isEditing, setIsEditing] = useState(!section.title);
   const [formData, setFormData] = useState({
-    name: project.name || '',
-    description: project.description || '',
-    technologies: project.technologies || '',
-    startDate: project.startDate || '',
-    endDate: project.endDate || '',
-    bullets: project.bullets || []
+    title: section.title || '',
+    subtitle: section.subtitle || '',
+    bullets: section.bullets || []
   });
 
   function handleFieldChange(field, value) {
@@ -31,7 +29,7 @@ function ProjectEditor({ project, onUpdate, onDelete, onAddBulletFromMaster }) {
 
   function handleSave() {
     onUpdate({
-      ...project,
+      ...section,
       ...formData
     });
     setIsEditing(false);
@@ -69,55 +67,23 @@ function ProjectEditor({ project, onUpdate, onDelete, onAddBulletFromMaster }) {
       {isEditing ? (
         <div className="section-form">
           <div className="form-group">
-            <label>Project Name</label>
+            <label>Section Title</label>
             <input
               type="text"
-              value={formData.name}
-              onChange={(e) => handleFieldChange('name', e.target.value)}
-              placeholder="e.g., E-commerce Platform"
+              value={formData.title}
+              onChange={(e) => handleFieldChange('title', e.target.value)}
+              placeholder="e.g., Certifications, Skills, Awards"
             />
           </div>
 
           <div className="form-group">
-            <label>Description</label>
-            <textarea
-              value={formData.description}
-              onChange={(e) => handleFieldChange('description', e.target.value)}
-              placeholder="Brief project description..."
-              rows={2}
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Technologies</label>
+            <label>Subtitle (Optional)</label>
             <input
               type="text"
-              value={formData.technologies}
-              onChange={(e) => handleFieldChange('technologies', e.target.value)}
-              placeholder="e.g., React, Node.js, PostgreSQL"
+              value={formData.subtitle}
+              onChange={(e) => handleFieldChange('subtitle', e.target.value)}
+              placeholder="e.g., Additional information or context"
             />
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label>Start Date</label>
-              <input
-                type="text"
-                value={formData.startDate}
-                onChange={(e) => handleFieldChange('startDate', e.target.value)}
-                placeholder="e.g., Jan 2023"
-              />
-            </div>
-
-            <div className="form-group">
-              <label>End Date</label>
-              <input
-                type="text"
-                value={formData.endDate}
-                onChange={(e) => handleFieldChange('endDate', e.target.value)}
-                placeholder="e.g., Dec 2023 or Present"
-              />
-            </div>
           </div>
 
           <div className="bullets-section">
@@ -196,8 +162,8 @@ function ProjectEditor({ project, onUpdate, onDelete, onAddBulletFromMaster }) {
             <button
               className="btn btn-secondary"
               onClick={() => {
-                if (confirm('Delete this project?')) {
-                  onDelete(project.id);
+                if (confirm('Delete this section?')) {
+                  onDelete(section.id);
                 }
               }}
             >
@@ -209,18 +175,10 @@ function ProjectEditor({ project, onUpdate, onDelete, onAddBulletFromMaster }) {
         <div className="section-view">
           <div className="section-header">
             <div>
-              <h3>{formData.name || 'Untitled Project'}</h3>
-              {formData.description && (
-                <p className="section-subtitle">{formData.description}</p>
+              <h3>{formData.title || 'Untitled Section'}</h3>
+              {formData.subtitle && (
+                <p className="section-subtitle">{formData.subtitle}</p>
               )}
-              {formData.technologies && (
-                <p className="section-tech">{formData.technologies}</p>
-              )}
-              <p className="section-dates">
-                {formData.startDate && formData.endDate
-                  ? `${formData.startDate} - ${formData.endDate}`
-                  : formData.startDate || 'No dates'}
-              </p>
             </div>
             <button
               className="btn btn-small"
@@ -253,5 +211,5 @@ function ProjectEditor({ project, onUpdate, onDelete, onAddBulletFromMaster }) {
   );
 }
 
-export default ProjectEditor;
+export default CustomSectionEditor;
 

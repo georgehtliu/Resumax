@@ -104,6 +104,7 @@ class Experience(BaseModel):
     id: str = Field(..., description="Unique identifier")
     company: str = Field(..., description="Company name")
     role: str = Field(..., description="Job title/role")
+    location: Optional[str] = Field(None, description="Job location")
     startDate: Optional[str] = Field(None, description="Start date")
     endDate: Optional[str] = Field(None, description="End date")
     bullets: List[Bullet] = Field(default_factory=list, description="List of bullet points")
@@ -174,6 +175,7 @@ class SelectedExperience(BaseModel):
     id: str
     company: str
     role: str
+    location: Optional[str] = None
     startDate: Optional[str] = None
     endDate: Optional[str] = None
     selectedBullets: List[SelectedBullet] = Field(default_factory=list)

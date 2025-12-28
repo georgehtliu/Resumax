@@ -50,7 +50,7 @@
   top: 50%;
   width: calc(50% - 24px);
   height: 1px;
-  background: var(--color-gray-300);
+  background: var(--color-slate-200);
 }
 
 .divider::before {
@@ -64,7 +64,7 @@
 .jd-textarea {
   width: 100%;
   padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--color-gray-300);
+  border: 1px solid var(--color-slate-200);
   border-radius: var(--radius-md);
   font-size: var(--font-size-sm);
   font-family: inherit;
@@ -113,7 +113,7 @@
 .job-matcher-actions {
   margin-top: var(--space-5);
   padding-top: var(--space-5);
-  border-top: 1px solid var(--color-gray-200);
+  border-top: 1px solid var(--color-slate-200);
 }
 
 .btn-large {
@@ -121,12 +121,10 @@
   padding: var(--space-4) var(--space-6);
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
-  box-shadow: var(--shadow-md);
 }
 
 .btn-large:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+  transform: translateY(-1px);
 }
 
 /* Job Description Preview */
@@ -147,7 +145,7 @@
 
 .btn-toggle-expand {
   background: var(--bg-primary);
-  border: 1px solid var(--color-gray-300);
+  border: 1px solid var(--color-slate-200);
   border-radius: var(--radius-sm);
   padding: var(--space-1) var(--space-3);
   font-size: var(--font-size-xs);
@@ -166,7 +164,7 @@
 
 .jd-preview-box {
   position: relative;
-  border: 1px solid var(--color-gray-300);
+  border: 1px solid var(--color-slate-200);
   border-radius: var(--radius-md);
   background: var(--bg-tertiary);
   padding: var(--space-3) var(--space-4);
@@ -200,7 +198,7 @@
 }
 
 .btn-expand-inline {
-  background: linear-gradient(135deg, var(--color-primary-500) 0%, var(--color-purple-500) 100%);
+  background: var(--color-primary-600);
   color: var(--text-inverse);
   border: none;
   border-radius: var(--radius-sm);
@@ -210,11 +208,9 @@
   cursor: pointer;
   pointer-events: all;
   transition: all var(--transition-base);
-  box-shadow: var(--shadow-sm);
 }
 
 .btn-expand-inline:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
+  background: var(--color-primary-700);
 }
 

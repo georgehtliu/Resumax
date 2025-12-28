@@ -1,5 +1,6 @@
 .pdf-viewer-with-overlays {
   width: 100%;
+  height: 100%;
   background: white;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
@@ -59,12 +60,14 @@
 
 .pdf-canvas-container {
   position: relative;
-  overflow: hidden;
-  max-height: 800px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: none;
   background: #f3f4f6;
   display: flex;
   justify-content: center;
   padding: 20px;
+  flex: 1;
 }
 
 .pdf-canvas {

@@ -1,11 +1,11 @@
 const DEFAULT_API_BASE_URL =
-  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_RESUMAX_API_URL)
-    ? import.meta.env.VITE_RESUMAX_API_URL
+  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_RESUME_MASTER_API_URL)
+    ? import.meta.env.VITE_RESUME_MASTER_API_URL
     : 'http://localhost:8000/api/v1';
 
 function getApiBaseUrl() {
   try {
-    const stored = localStorage.getItem('resumaxApiBaseUrl');
+    const stored = localStorage.getItem('resumeMasterApiBaseUrl');
     if (stored && typeof stored === 'string' && stored.trim().length > 0) {
       return stored.trim();
     }
@@ -41,6 +41,7 @@ function normalizeExperiences(experiences = []) {
       id: exp.id || ensureBulletId(exp, 0),
       company: exp.company || '',
       role: exp.role || '',
+      location: exp.location || null,
       startDate: exp.startDate || null,
       endDate: exp.endDate || null,
       bullets: normalizeBullets(exp.bullets),

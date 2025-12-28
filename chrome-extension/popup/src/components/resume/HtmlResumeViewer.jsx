@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import { buildResumeHtml } from '../utils/resumeHtmlTemplate';
+import { buildResumeHtml } from '../../utils/resumeHtmlTemplate';
 import './HtmlResumeViewer.css';
 
 /**

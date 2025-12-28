@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import ResumeUpload from './ResumeUpload';
-import { Icon } from './Icons';
+import { Icon } from './ui/Icons';
 import './Onboarding.css';
 
 /**
@@ -78,7 +78,7 @@ function Onboarding({ onUploadComplete, onSkip }) {
   return (
     <div className="onboarding-container">
       <div className="onboarding-header">
-        <h1>Welcome to Resumax! 👋</h1>
+        <h1>Welcome to Resume Master! 👋</h1>
         <p className="subtitle">Let's get your resume set up</p>
       </div>
 

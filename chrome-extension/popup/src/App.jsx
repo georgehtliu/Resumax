@@ -1,30 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import ExperienceEditor from './components/ExperienceEditor';
-import EducationEditor from './components/EducationEditor';
-import ProjectEditor from './components/ProjectEditor';
-import CustomSectionEditor from './components/CustomSectionEditor';
-import PersonalInfoEditor from './components/PersonalInfoEditor';
-import SkillsEditor from './components/SkillsEditor';
-import Tabs from './components/Tabs';
+import ExperienceEditor from './components/editors/ExperienceEditor';
+import EducationEditor from './components/editors/EducationEditor';
+import ProjectEditor from './components/editors/ProjectEditor';
+import CustomSectionEditor from './components/editors/CustomSectionEditor';
+import PersonalInfoEditor from './components/editors/PersonalInfoEditor';
+import SkillsEditor from './components/editors/SkillsEditor';
+import Tabs from './components/ui/Tabs';
 import GenerateResume from './components/GenerateResume';
 import SavedResumes from './components/SavedResumes';
-import SignIn from './components/SignIn';
-import SignUp from './components/SignUp';
+import SignIn from './components/auth/SignIn';
+import SignUp from './components/auth/SignUp';
 import Onboarding from './components/Onboarding';
-import SideNav from './components/SideNav';
+import SideNav from './components/ui/SideNav';
 import Profile from './components/Profile';
 import ResumeCoaching from './components/ResumeCoaching';
 import About from './components/About';
 import ResumeTips from './components/ResumeTips';
 import Community from './components/Community';
-import SharedResumeView from './components/SharedResumeView';
-import ToastContainer from './components/ToastContainer';
+import SharedResumeView from './components/resume/SharedResumeView';
+import ToastContainer from './components/ui/ToastContainer';
 import { useToast } from './hooks/useToast';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { supabase } from './config/supabase';
 import { storageService } from './services/storage';
-import Skeleton, { SkeletonCard } from './components/Skeleton';
-import { Icon } from './components/Icons';
+import Skeleton, { SkeletonCard } from './components/ui/Skeleton';
+import { Icon } from './components/ui/Icons';
 import './styles/design-system.css';
 import './styles/animations.css';
 import './App.css';
@@ -68,7 +68,8 @@ function App() {
   // Check if current user is the test user
   const isTestUser = () => {
     if (typeof window !== 'undefined' && window.localStorage) {
-      return localStorage.getItem('resumax_is_test_user') === 'true';
+      // Check new key first, fallback to old key for migration
+      return localStorage.getItem('resume_master_is_test_user') === 'true' || localStorage.getItem('resumax_is_test_user') === 'true';
     }
     return false;
   };
@@ -144,6 +145,9 @@ function App() {
           if (session && !sessionError) {
             setIsSignedIn(true);
             if (typeof window !== 'undefined' && window.localStorage) {
+              localStorage.setItem('resume_master_signed_in', 'true');
+              localStorage.setItem('resume_master_user_email', session.user.email || '');
+              // Migrate old keys
               localStorage.setItem('resumax_signed_in', 'true');
               localStorage.setItem('resumax_user_email', session.user.email || '');
             }
@@ -163,12 +167,18 @@ function App() {
       if (event === 'SIGNED_IN' && session) {
         setIsSignedIn(true);
         if (typeof window !== 'undefined' && window.localStorage) {
+          localStorage.setItem('resume_master_signed_in', 'true');
+          localStorage.setItem('resume_master_user_email', session.user.email || '');
+          // Migrate old keys
           localStorage.setItem('resumax_signed_in', 'true');
           localStorage.setItem('resumax_user_email', session.user.email || '');
         }
       } else if (event === 'SIGNED_OUT') {
         setIsSignedIn(false);
         if (typeof window !== 'undefined' && window.localStorage) {
+          localStorage.removeItem('resume_master_signed_in');
+          localStorage.removeItem('resume_master_user_email');
+          // Remove old keys
           localStorage.removeItem('resumax_signed_in');
           localStorage.removeItem('resumax_user_email');
         }
@@ -180,6 +190,9 @@ function App() {
       if (session) {
         setIsSignedIn(true);
         if (typeof window !== 'undefined' && window.localStorage) {
+          localStorage.setItem('resume_master_signed_in', 'true');
+          localStorage.setItem('resume_master_user_email', session.user.email || '');
+          // Migrate old keys
           localStorage.setItem('resumax_signed_in', 'true');
           localStorage.setItem('resumax_user_email', session.user.email || '');
         }
@@ -868,6 +881,11 @@ function App() {
 
   async function handleSignUp(userData) {
     if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.setItem('resume_master_signed_in', 'true');
+      if (userData?.email) {
+        localStorage.setItem('resume_master_user_email', userData.email);
+      }
+      // Migrate old keys
       localStorage.setItem('resumax_signed_in', 'true');
       if (userData?.email) {
         localStorage.setItem('resumax_user_email', userData.email);
@@ -879,6 +897,11 @@ function App() {
 
   async function handleSignIn(userData) {
     if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.setItem('resume_master_signed_in', 'true');
+      if (userData?.email) {
+        localStorage.setItem('resume_master_user_email', userData.email);
+      }
+      // Migrate old keys
       localStorage.setItem('resumax_signed_in', 'true');
       if (userData?.email) {
         localStorage.setItem('resumax_user_email', userData.email);
@@ -887,8 +910,10 @@ function App() {
       // Check if this is the test user (123@test.com with password 123@)
       const isTest = userData?.email === '123@test.com' && userData?.password === '123@';
       if (isTest) {
+        localStorage.setItem('resume_master_is_test_user', 'true');
         localStorage.setItem('resumax_is_test_user', 'true');
       } else {
+        localStorage.removeItem('resume_master_is_test_user');
         localStorage.removeItem('resumax_is_test_user');
       }
     }
@@ -966,6 +991,10 @@ function App() {
     await supabase.auth.signOut();
     
     if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.removeItem('resume_master_signed_in');
+      localStorage.removeItem('resume_master_user_email');
+      localStorage.removeItem('resume_master_is_test_user');
+      // Remove old keys
       localStorage.removeItem('resumax_signed_in');
       localStorage.removeItem('resumax_user_email');
       localStorage.removeItem('resumax_is_test_user');
@@ -990,7 +1019,7 @@ function App() {
               <div className="popup-logo-icon">
                 <Icon name="sparkles" size={20} />
               </div>
-              <h1>Resumax</h1>
+              <h1>Resume Master</h1>
             </div>
             <p className="popup-subtitle">Redirecting to sign in...</p>
           </header>
@@ -1012,7 +1041,7 @@ function App() {
             <div className="popup-logo-icon">
               <Icon name="sparkles" size={20} />
             </div>
-            <h1>Resumax</h1>
+            <h1>Resume Master</h1>
           </div>
           <p className="popup-subtitle">Extract or paste a job description and pick the best bullets fast.</p>
           <div className="popup-header-actions">
@@ -1085,7 +1114,7 @@ function App() {
         <SideNav
           activeView={activeView}
           onViewChange={setActiveView}
-          userEmail={localStorage.getItem('resumax_user_email') || ''}
+          userEmail={localStorage.getItem('resume_master_user_email') || localStorage.getItem('resumax_user_email') || ''}
           onSignOut={handleSignOut}
         />
       )}

@@ -60,7 +60,7 @@ function SideNav({ activeView, onViewChange, userEmail, onSignOut }) {
       <div className="side-nav-header">
         <div className="side-nav-logo">
           <Rocket className="logo-icon" size={24} />
-          <span className="logo-text">Resumax</span>
+          <span className="logo-text">Resume Master</span>
         </div>
       </div>
       

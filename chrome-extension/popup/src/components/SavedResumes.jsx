@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { storageService } from '../services/storage';
 import { supabase } from '../config/supabase';
 import { useToast } from '../hooks/useToast';
-import { SkeletonList, SkeletonCard } from './Skeleton';
-import Tooltip from './Tooltip';
+import { SkeletonList, SkeletonCard } from './ui/Skeleton';
+import Tooltip from './ui/Tooltip';
 import { Trash2, FileText, Calendar } from 'lucide-react';
-import { Icon } from './Icons';
-import SelectedResumeEditor from './SelectedResumeEditor';
-import LatexPreviewModal from './LatexPreviewModal';
+import { Icon } from './ui/Icons';
+import SelectedResumeEditor from './editors/SelectedResumeEditor';
+import LatexPreviewModal from './modals/LatexPreviewModal';
 import ShareResumeButton from './ShareResumeButton';
 import { renderLatex } from '../services/api';
 import { buildLatexDocument } from '../utils/latexTemplate';
@@ -145,6 +145,7 @@ function mapExperiencesForSelectedResume(entries = []) {
         id: entryId,
         company: entry.company || '',
         role: entry.role || '',
+        location: entry.location || null,
         startDate: entry.startDate || null,
         endDate: entry.endDate || null,
         selectedBullets
@@ -745,13 +746,13 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
                 </div>
               </div>
 
-              {/* Resume Editor with Carousel */}
+              {/* Resume Editor with Tabs */}
               {editedResume && (
                 <div className="section">
                   <SelectedResumeEditor
                     resume={editedResume}
                     onUpdate={setEditedResume}
-                    showPersonalInfo={true}
+                    showPersonalInfo={false}
                     showSkills={true}
                     showEducation={true}
                   />
@@ -771,6 +772,7 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
         onRefreshPdf={renderPdfPreview}
         pdfBase64={latexPdfBase64}
         loadingPdf={renderingPdf}
+        resumeData={editedResume}
       />
 
       {/* Save As New Dialog */}

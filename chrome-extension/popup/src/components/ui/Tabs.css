@@ -2,7 +2,7 @@
 
 .tabs-container {
   display: flex;
-  border-bottom: 2px solid var(--color-gray-200);
+  border-bottom: 1px solid var(--color-slate-200);
   background: var(--bg-secondary);
   padding: 0 var(--space-4);
   gap: var(--space-1);
@@ -40,14 +40,14 @@
   transform: translateX(-50%) scaleX(0);
   width: 80%;
   height: 3px;
-  background: linear-gradient(90deg, var(--color-primary-500) 0%, var(--color-purple-500) 100%);
+  background: var(--color-primary-600);
   border-radius: var(--radius-sm) var(--radius-sm) 0 0;
   transition: transform var(--transition-base);
 }
 
 .tab:hover {
   color: var(--color-primary-600);
-  background: var(--color-gray-50);
+  background: var(--color-slate-50);
 }
 
 .tab:hover::after {

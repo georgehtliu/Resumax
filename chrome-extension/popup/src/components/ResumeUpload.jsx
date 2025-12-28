@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Icon } from './Icons';
+import { Icon } from './ui/Icons';
 import './ResumeUpload.css';
 
 /**

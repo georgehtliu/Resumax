@@ -1,7 +1,7 @@
 {
   "name": "icons",
   "version": "1.0.0",
-  "description": "This directory contains the extension icons for Resumax.",
+  "description": "This directory contains the extension icons for Resume Master.",
   "main": "generate-icons.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

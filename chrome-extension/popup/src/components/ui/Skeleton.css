@@ -3,9 +3,9 @@
 .skeleton {
   background: linear-gradient(
     90deg,
-    var(--color-gray-200) 0%,
-    var(--color-gray-100) 50%,
-    var(--color-gray-200) 100%
+    var(--color-slate-200) 0%,
+    var(--color-slate-100) 50%,
+    var(--color-slate-200) 100%
   );
   background-size: 200% 100%;
   animation: skeleton-loading 1.5s ease-in-out infinite;
@@ -25,7 +25,7 @@
 
 .skeleton-card {
   padding: var(--space-4);
-  border: 1px solid var(--color-gray-200);
+  border: 1px solid var(--color-slate-200);
   border-radius: var(--radius-lg);
   background: var(--bg-primary);
   display: flex;

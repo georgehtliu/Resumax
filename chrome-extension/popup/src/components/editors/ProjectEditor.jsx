@@ -1,25 +1,25 @@
 import React, { useState } from 'react';
-import { getLineCountInfo } from '../utils/latexLineCount';
-import { Icon } from './Icons';
+import { getLineCountInfo } from '../../utils/latexLineCount';
+import { Icon } from '../ui/Icons';
 import './SectionEditor.css';
 
 /**
- * Education Editor Component
+ * Project Editor Component
  * 
  * Allows users to:
- * - Edit education details (school, degree, field, dates)
+ * - Edit project details (name, description, technologies, dates)
  * - Add unlimited bullet points
  * - Edit/delete bullet points
  */
-function EducationEditor({ education, onUpdate, onDelete, onAddBulletFromMaster }) {
-  const [isEditing, setIsEditing] = useState(!education.school);
+function ProjectEditor({ project, onUpdate, onDelete, onAddBulletFromMaster }) {
+  const [isEditing, setIsEditing] = useState(!project.name);
   const [formData, setFormData] = useState({
-    school: education.school || '',
-    degree: education.degree || '',
-    field: education.field || '',
-    startDate: education.startDate || '',
-    endDate: education.endDate || '',
-    bullets: education.bullets || []
+    name: project.name || '',
+    description: project.description || '',
+    technologies: project.technologies || '',
+    startDate: project.startDate || '',
+    endDate: project.endDate || '',
+    bullets: project.bullets || []
   });
 
   function handleFieldChange(field, value) {
@@ -31,7 +31,7 @@ function EducationEditor({ education, onUpdate, onDelete, onAddBulletFromMaster 
 
   function handleSave() {
     onUpdate({
-      ...education,
+      ...project,
       ...formData
     });
     setIsEditing(false);
@@ -69,35 +69,33 @@ function EducationEditor({ education, onUpdate, onDelete, onAddBulletFromMaster 
       {isEditing ? (
         <div className="section-form">
           <div className="form-group">
-            <label>School/University</label>
+            <label>Project Name</label>
             <input
               type="text"
-              value={formData.school}
-              onChange={(e) => handleFieldChange('school', e.target.value)}
-              placeholder="e.g., Stanford University"
+              value={formData.name}
+              onChange={(e) => handleFieldChange('name', e.target.value)}
+              placeholder="e.g., E-commerce Platform"
             />
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label>Degree</label>
-              <input
-                type="text"
-                value={formData.degree}
-                onChange={(e) => handleFieldChange('degree', e.target.value)}
-                placeholder="e.g., B.S., M.S."
-              />
-            </div>
+          <div className="form-group">
+            <label>Description</label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => handleFieldChange('description', e.target.value)}
+              placeholder="Brief project description..."
+              rows={2}
+            />
+          </div>
 
-            <div className="form-group">
-              <label>Field of Study</label>
-              <input
-                type="text"
-                value={formData.field}
-                onChange={(e) => handleFieldChange('field', e.target.value)}
-                placeholder="e.g., Computer Science"
-              />
-            </div>
+          <div className="form-group">
+            <label>Technologies</label>
+            <input
+              type="text"
+              value={formData.technologies}
+              onChange={(e) => handleFieldChange('technologies', e.target.value)}
+              placeholder="e.g., React, Node.js, PostgreSQL"
+            />
           </div>
 
           <div className="form-row">
@@ -107,7 +105,7 @@ function EducationEditor({ education, onUpdate, onDelete, onAddBulletFromMaster 
                 type="text"
                 value={formData.startDate}
                 onChange={(e) => handleFieldChange('startDate', e.target.value)}
-                placeholder="e.g., 2018"
+                placeholder="e.g., Jan 2023"
               />
             </div>
 
@@ -117,7 +115,7 @@ function EducationEditor({ education, onUpdate, onDelete, onAddBulletFromMaster 
                 type="text"
                 value={formData.endDate}
                 onChange={(e) => handleFieldChange('endDate', e.target.value)}
-                placeholder="e.g., 2022 or Present"
+                placeholder="e.g., Dec 2023 or Present"
               />
             </div>
           </div>
@@ -198,8 +196,8 @@ function EducationEditor({ education, onUpdate, onDelete, onAddBulletFromMaster 
             <button
               className="btn btn-secondary"
               onClick={() => {
-                if (confirm('Delete this education entry?')) {
-                  onDelete(education.id);
+                if (confirm('Delete this project?')) {
+                  onDelete(project.id);
                 }
               }}
             >
@@ -211,12 +209,13 @@ function EducationEditor({ education, onUpdate, onDelete, onAddBulletFromMaster 
         <div className="section-view">
           <div className="section-header">
             <div>
-              <h3>{formData.school || 'Untitled School'}</h3>
-              <p className="section-subtitle">
-                {formData.degree && formData.field
-                  ? `${formData.degree} in ${formData.field}`
-                  : formData.degree || formData.field || 'No degree/field'}
-              </p>
+              <h3>{formData.name || 'Untitled Project'}</h3>
+              {formData.description && (
+                <p className="section-subtitle">{formData.description}</p>
+              )}
+              {formData.technologies && (
+                <p className="section-tech">{formData.technologies}</p>
+              )}
               <p className="section-dates">
                 {formData.startDate && formData.endDate
                   ? `${formData.startDate} - ${formData.endDate}`
@@ -254,5 +253,5 @@ function EducationEditor({ education, onUpdate, onDelete, onAddBulletFromMaster 
   );
 }
 
-export default EducationEditor;
+export default ProjectEditor;
 

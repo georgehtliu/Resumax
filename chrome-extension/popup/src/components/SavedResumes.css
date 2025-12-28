@@ -45,12 +45,11 @@
   flex-direction: column;
   gap: var(--space-3);
   padding: var(--space-5);
-  border: 1px solid var(--color-gray-200);
+  border: 1px solid var(--color-slate-200);
   border-radius: var(--radius-lg);
   cursor: pointer;
   transition: all var(--transition-base);
   background: var(--bg-primary);
-  box-shadow: var(--shadow-sm);
   position: relative;
   overflow: hidden;
 }
@@ -61,17 +60,15 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--color-primary-500) 0%, var(--color-purple-500) 100%);
+  height: 2px;
+  background: var(--color-primary-600);
   transform: scaleX(0);
   transition: transform var(--transition-base);
 }
 
 .resume-item:hover {
-  border-color: var(--color-primary-300);
-  background: var(--color-primary-50);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+  border-color: var(--color-slate-300);
+  background: var(--color-slate-50);
 }
 
 .resume-item:hover::before {
@@ -80,8 +77,7 @@
 
 .resume-item.selected {
   border-color: var(--color-primary-500);
-  background: linear-gradient(135deg, var(--color-primary-50) 0%, var(--color-purple-50) 100%);
-  box-shadow: var(--shadow-md);
+  background: var(--color-primary-50);
 }
 
 .resume-item.selected::before {
@@ -126,7 +122,7 @@
   align-items: center;
   margin-top: var(--space-2);
   padding-top: var(--space-3);
-  border-top: 1px solid var(--color-gray-200);
+  border-top: 1px solid var(--color-slate-200);
 }
 
 .btn-icon-small {
@@ -155,7 +151,7 @@
   padding: var(--space-4);
   border-radius: var(--radius-md);
   margin-bottom: var(--space-4);
-  border: 1px solid var(--color-gray-200);
+  border: 1px solid var(--color-slate-200);
 }
 
 .detail-row {
@@ -194,10 +190,6 @@
   font-size: var(--font-size-3xl);
   font-weight: var(--font-weight-bold);
   color: var(--text-primary);
-  background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-purple-600) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
   letter-spacing: -0.5px;
 }
 
@@ -222,9 +214,8 @@
   gap: var(--space-4);
   padding: var(--space-5);
   background: var(--bg-primary);
-  border: 1px solid var(--color-gray-200);
+  border: 1px solid var(--color-slate-200);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
   transition: all var(--transition-base);
   position: relative;
   overflow: hidden;
@@ -237,15 +228,13 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, var(--color-primary-500) 0%, var(--color-purple-500) 100%);
+  background: var(--color-primary-600);
   transform: scaleX(0);
   transition: transform var(--transition-base);
 }
 
 .saved-resumes-stats .stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-  border-color: var(--color-primary-200);
+  border-color: var(--color-slate-300);
 }
 
 .saved-resumes-stats .stat-card:hover::before {
@@ -261,15 +250,14 @@
   align-items: center;
   justify-content: center;
   color: white;
-  box-shadow: var(--shadow-sm);
 }
 
 .saved-resumes-stats .stat-icon-primary {
-  background: linear-gradient(135deg, var(--color-primary-500) 0%, var(--color-primary-600) 100%);
+  background: var(--color-primary-600);
 }
 
 .saved-resumes-stats .stat-icon-secondary {
-  background: linear-gradient(135deg, var(--color-purple-500) 0%, var(--color-purple-600) 100%);
+  background: var(--color-primary-600);
 }
 
 .saved-resumes-stats .stat-icon-tertiary {
@@ -305,8 +293,8 @@
   justify-content: center;
   text-align: center;
   padding: var(--space-16) var(--space-6);
-  background: linear-gradient(135deg, var(--color-primary-50) 0%, var(--color-purple-50) 100%);
-  border: 2px dashed var(--color-primary-300);
+  background: var(--color-primary-50);
+  border: 1px dashed var(--color-slate-300);
   border-radius: var(--radius-lg);
   margin: var(--space-4) 0;
 }
@@ -315,13 +303,12 @@
   width: 80px;
   height: 80px;
   border-radius: var(--radius-full);
-  background: linear-gradient(135deg, var(--color-primary-100) 0%, var(--color-purple-100) 100%);
+  background: var(--color-primary-100);
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: var(--space-4);
   color: var(--color-primary-600);
-  box-shadow: var(--shadow-sm);
 }
 
 .saved-resumes-empty-modern h3 {
@@ -343,7 +330,7 @@
 .saved-resumes .section-header-modern {
   margin-bottom: var(--space-6);
   padding-bottom: var(--space-4);
-  border-bottom: 1px solid var(--color-gray-200);
+  border-bottom: 1px solid var(--color-slate-200);
 }
 
 .saved-resumes .section-header-modern h2 {
@@ -359,7 +346,7 @@
   align-items: flex-start;
   margin-bottom: var(--space-6);
   padding-bottom: var(--space-4);
-  border-bottom: 1px solid var(--color-gray-200);
+  border-bottom: 1px solid var(--color-slate-200);
   gap: var(--space-4);
   flex-wrap: wrap;
 }

@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import ExperienceEditor from './ExperienceEditor';
-import EducationEditor from './EducationEditor';
-import ProjectEditor from './ProjectEditor';
-import CustomSectionEditor from './CustomSectionEditor';
-import PersonalInfoEditor from './PersonalInfoEditor';
-import SkillsEditor from './SkillsEditor';
-import Tabs from './Tabs';
+import ExperienceEditor from './editors/ExperienceEditor';
+import EducationEditor from './editors/EducationEditor';
+import ProjectEditor from './editors/ProjectEditor';
+import CustomSectionEditor from './editors/CustomSectionEditor';
+import PersonalInfoEditor from './editors/PersonalInfoEditor';
+import SkillsEditor from './editors/SkillsEditor';
+import Tabs from './ui/Tabs';
 import AutoSaveIndicator from './AutoSaveIndicator';
 import { storageService } from '../services/storage';
-import { Icon } from './Icons';
+import { Icon } from './ui/Icons';
 import './Profile.css';
 
 /**
@@ -137,6 +137,7 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
           id: 'exp-1',
           company: 'Google',
           role: 'Software Engineering Intern',
+          location: 'Mountain View, CA',
           startDate: 'Sep 2023',
           endDate: 'Dec 2023',
           bullets: [
@@ -152,6 +153,7 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
           id: 'exp-2',
           company: 'Meta',
           role: 'Software Engineering Intern',
+          location: 'Menlo Park, CA',
           startDate: 'May 2023',
           endDate: 'Aug 2023',
           bullets: [
@@ -167,6 +169,7 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
           id: 'exp-3',
           company: 'Amazon Web Services',
           role: 'Software Development Engineer Intern',
+          location: 'Seattle, WA',
           startDate: 'Sep 2022',
           endDate: 'Dec 2022',
           bullets: [
@@ -182,6 +185,7 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
           id: 'exp-4',
           company: 'Shopify',
           role: 'Backend Developer Intern',
+          location: 'Ottawa, ON',
           startDate: 'Jan 2022',
           endDate: 'Apr 2022',
           bullets: [
@@ -197,6 +201,7 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
           id: 'exp-5',
           company: 'Microsoft',
           role: 'Software Engineering Intern',
+          location: 'Redmond, WA',
           startDate: 'May 2021',
           endDate: 'Aug 2021',
           bullets: [
@@ -212,6 +217,7 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
           id: 'exp-6',
           company: 'Stripe',
           role: 'Software Engineering Intern',
+          location: 'San Francisco, CA',
           startDate: 'Sep 2020',
           endDate: 'Dec 2020',
           bullets: [
@@ -227,6 +233,7 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
           id: 'exp-7',
           company: 'Palantir',
           role: 'Software Engineering Intern',
+          location: 'Denver, CO',
           startDate: 'Jan 2020',
           endDate: 'Apr 2020',
           bullets: [
@@ -242,6 +249,7 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
           id: 'exp-8',
           company: 'RBC',
           role: 'Software Developer Intern',
+          location: 'Toronto, ON',
           startDate: 'May 2019',
           endDate: 'Aug 2019',
           bullets: [

@@ -879,6 +879,7 @@ class SelectionService:
                     id=exp.id,
                     company=exp.company,
                     role=exp.role,
+                    location=getattr(exp, 'location', None),
                     startDate=exp.startDate,
                     endDate=exp.endDate,
                     selectedBullets=data['bullets']  # Empty list for one-liner mode
