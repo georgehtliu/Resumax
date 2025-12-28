@@ -5,6 +5,116 @@ import { supabase } from '../config/supabase';
 // import PdfViewerWithOverlays from './PdfViewerWithOverlays';
 import './SharedResumeView.css';
 
+// Highlight Overlay Component - renders highlights as positioned overlays
+function HighlightOverlay({ containerRef, highlights }) {
+  const [containerRect, setContainerRect] = useState(null);
+  
+  useEffect(() => {
+    if (!containerRef.current) return;
+    
+    const updateRect = () => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        const wrapper = containerRef.current.parentElement;
+        if (wrapper) {
+          const wrapperRect = wrapper.getBoundingClientRect();
+          setContainerRect({
+            left: rect.left - wrapperRect.left,
+            top: rect.top - wrapperRect.top,
+            width: rect.width,
+            height: rect.height
+          });
+        }
+      }
+    };
+    
+    updateRect();
+    window.addEventListener('resize', updateRect);
+    window.addEventListener('scroll', updateRect, true);
+    
+    return () => {
+      window.removeEventListener('resize', updateRect);
+      window.removeEventListener('scroll', updateRect, true);
+    };
+  }, [containerRef, highlights]);
+  
+  if (!containerRect || !containerRef.current) return null;
+  
+  return (
+    <div
+      className="highlight-overlay-container"
+      style={{
+        position: 'absolute',
+        left: `${containerRect.left}px`,
+        top: `${containerRect.top}px`,
+        width: `${containerRect.width}px`,
+        height: `${containerRect.height}px`,
+        pointerEvents: 'none',
+        zIndex: 1
+      }}
+    >
+      {highlights.map(highlight => (
+        highlight.rects.map((rect, idx) => (
+          <div
+            key={`${highlight.id}-${idx}`}
+            style={{
+              position: 'absolute',
+              left: `${rect.left}px`,
+              top: `${rect.top}px`,
+              width: `${rect.width}px`,
+              height: `${rect.height}px`,
+              backgroundColor: highlight.color,
+              opacity: 0.3,
+              pointerEvents: 'none',
+              borderRadius: '2px'
+            }}
+          />
+        ))
+      ))}
+    </div>
+  );
+}
+
+// Helper function to create overlay-based highlight (doesn't modify DOM)
+// Returns highlight data with bounding rect information
+function createOverlayHighlight(range, containerElement, highlightColor) {
+  try {
+    // Get bounding rectangle of the selection relative to the container
+    const rects = range.getClientRects();
+    const containerRect = containerElement.getBoundingClientRect();
+    
+    if (rects.length === 0) {
+      return null;
+    }
+    
+    // Create highlight data with all rect positions
+    const highlightRects = Array.from(rects).map(rect => ({
+      left: rect.left - containerRect.left,
+      top: rect.top - containerRect.top,
+      width: rect.width,
+      height: rect.height
+    }));
+    
+    // Store selection text and range info for potential removal
+    const selectedText = range.toString();
+    
+    return {
+      id: `highlight-${Date.now()}-${Math.random()}`,
+      rects: highlightRects,
+      text: selectedText,
+      color: highlightColor,
+      // Store range info for removal if needed
+      startContainer: range.startContainer,
+      startOffset: range.startOffset,
+      endContainer: range.endContainer,
+      endOffset: range.endOffset
+    };
+  } catch (e) {
+    console.error('Error creating overlay highlight:', e);
+    return null;
+  }
+}
+
 // Comments Side Panel Component (Google Docs style)
 function CommentsSidePanel({
   selectedBulletId,
@@ -501,6 +611,7 @@ function SharedResumeView({ shareToken }) {
   const isResumeLoadedRef = useRef(false);
   const lastClickTimeRef = useRef(0);
   const clickTimeoutRef = useRef(null);
+  const [highlights, setHighlights] = useState([]); // Store overlay highlight data
   
   // Keep ref in sync with state
   useEffect(() => {
@@ -528,40 +639,14 @@ function SharedResumeView({ shareToken }) {
         return;
       }
 
-      // Check if text is already highlighted
-      let node = range.commonAncestorContainer;
-      while (node && node !== resumePage) {
-        if (node.nodeType === Node.ELEMENT_NODE && node.classList && node.classList.contains('highlighted-text')) {
-          // Remove highlight by replacing span with its text content
-          const textNode = document.createTextNode(node.textContent);
-          if (node.parentNode) {
-            node.parentNode.replaceChild(textNode, node);
-          }
-          selection.removeAllRanges();
-          return;
-        }
-        node = node.parentNode;
+      // Create overlay highlight (doesn't modify DOM)
+      const highlightData = createOverlayHighlight(range, resumePage, highlightColorRef.current);
+      if (highlightData) {
+        setHighlights(prev => [...prev, highlightData]);
       }
       
-      // Add highlight - read current color from ref
-      try {
-        const span = document.createElement('span');
-        span.className = 'highlighted-text';
-        span.style.backgroundColor = highlightColorRef.current;
-        span.style.padding = '2px 0';
-        span.style.borderRadius = '3px';
-        
-        // Extract and wrap the selected content
-        const contents = range.extractContents();
-        span.appendChild(contents);
-        range.insertNode(span);
-        
-        // Clear selection
-        selection.removeAllRanges();
-      } catch (e) {
-        console.error('Error highlighting text:', e);
-        selection.removeAllRanges();
-      }
+      // Clear selection
+      selection.removeAllRanges();
     };
 
     // Wait for DOM to be ready
@@ -1127,87 +1212,6 @@ function SharedResumeView({ shareToken }) {
 
   // PDF overlay comments removed - using HTML rendering for shared resumes
 
-  // Set up highlighting handler - use resume ID to track if already set up
-  // This must be before early returns (React hooks rule)
-  useEffect(() => {
-    if (!resume || !resume.resume_data) return;
-    
-    // Check if we've already set up for this resume
-    const resumeId = resume.id;
-    if (isResumeLoadedRef.current === resumeId) return;
-    
-    const handleMouseUp = () => {
-      const selection = window.getSelection();
-      if (!selection || selection.rangeCount === 0 || !selection.toString().trim()) {
-        return;
-      }
-
-      const range = selection.getRangeAt(0);
-      const resumePage = resumePageRef.current;
-      
-      if (!resumePage || !resumePage.contains(range.commonAncestorContainer)) {
-        return;
-      }
-
-      // Check if text is already highlighted
-      let node = range.commonAncestorContainer;
-      while (node && node !== resumePage) {
-        if (node.nodeType === Node.ELEMENT_NODE && node.classList && node.classList.contains('highlighted-text')) {
-          // Remove highlight by replacing span with its text content
-          const textNode = document.createTextNode(node.textContent);
-          if (node.parentNode) {
-            node.parentNode.replaceChild(textNode, node);
-          }
-          selection.removeAllRanges();
-          return;
-        }
-        node = node.parentNode;
-      }
-      
-      // Add highlight - read current color from ref
-      try {
-        const span = document.createElement('span');
-        span.className = 'highlighted-text';
-        span.style.backgroundColor = highlightColorRef.current;
-        span.style.padding = '2px 0';
-        span.style.borderRadius = '3px';
-        
-        // Extract and wrap the selected content
-        const contents = range.extractContents();
-        span.appendChild(contents);
-        range.insertNode(span);
-        
-        // Clear selection
-        selection.removeAllRanges();
-      } catch (e) {
-        console.error('Error highlighting text:', e);
-        selection.removeAllRanges();
-      }
-    };
-
-    // Wait for DOM to be ready
-    const timeoutId = setTimeout(() => {
-      const resumePage = resumePageRef.current;
-      if (resumePage && isResumeLoadedRef.current !== resumeId) {
-        resumePage.addEventListener('mouseup', handleMouseUp);
-        highlightHandlerRef.current = handleMouseUp;
-        isResumeLoadedRef.current = resumeId;
-      }
-    }, 300);
-
-    return () => {
-      clearTimeout(timeoutId);
-      const resumePage = resumePageRef.current;
-      if (resumePage && highlightHandlerRef.current) {
-        resumePage.removeEventListener('mouseup', highlightHandlerRef.current);
-        highlightHandlerRef.current = null;
-      }
-      if (isResumeLoadedRef.current === resumeId) {
-        isResumeLoadedRef.current = false;
-      }
-    };
-  }, [resume?.id]);
-
   const renderResume = () => {
     if (!resume || !resume.resume_data) return null;
 
@@ -1419,133 +1423,6 @@ function SharedResumeView({ shareToken }) {
     );
   };
 
-  // Set up highlighting handler - use resume ID to track if already set up
-  // This must be before early returns (React hooks rule)
-  useEffect(() => {
-    if (!resume || !resume.resume_data) return;
-    
-    // Check if we've already set up for this resume
-    const resumeId = resume.id;
-    if (isResumeLoadedRef.current === resumeId) return;
-    
-    const handleMouseUp = (e) => {
-      // Prevent highlighting on double-click (which selects words/sentences)
-      const now = Date.now();
-      const timeSinceLastClick = now - lastClickTimeRef.current;
-      lastClickTimeRef.current = now;
-
-      // If double-click detected (within 300ms), don't highlight
-      if (timeSinceLastClick < 300) {
-        if (clickTimeoutRef.current) {
-          clearTimeout(clickTimeoutRef.current);
-          clickTimeoutRef.current = null;
-        }
-        return;
-      }
-
-      // Don't highlight if clicking on interactive elements
-      const target = e.target;
-      if (target && (
-        target.tagName === 'BUTTON' || 
-        target.tagName === 'INPUT' || 
-        target.tagName === 'TEXTAREA' ||
-        target.tagName === 'A' ||
-        target.closest('button') ||
-        target.closest('input') ||
-        target.closest('textarea') ||
-        target.closest('a') ||
-        target.closest('.comment-marker') ||
-        target.closest('.bullet-comment-form')
-      )) {
-        return;
-      }
-
-      // Wait a bit to see if user continues selecting (delays highlighting until selection is stable)
-      if (clickTimeoutRef.current) {
-        clearTimeout(clickTimeoutRef.current);
-      }
-
-      clickTimeoutRef.current = setTimeout(() => {
-        const selection = window.getSelection();
-        if (!selection || selection.rangeCount === 0 || !selection.toString().trim()) {
-          return;
-        }
-
-        // Don't highlight if selection was cleared (user canceled)
-        if (!selection.toString().trim()) {
-          return;
-        }
-
-        const range = selection.getRangeAt(0);
-        const resumePage = resumePageRef.current;
-        
-        if (!resumePage || !resumePage.contains(range.commonAncestorContainer)) {
-          return;
-        }
-
-        // Check if text is already highlighted
-        let node = range.commonAncestorContainer;
-        while (node && node !== resumePage) {
-          if (node.nodeType === Node.ELEMENT_NODE && node.classList && node.classList.contains('highlighted-text')) {
-            // Remove highlight by replacing span with its text content
-            const textNode = document.createTextNode(node.textContent);
-            if (node.parentNode) {
-              node.parentNode.replaceChild(textNode, node);
-            }
-            selection.removeAllRanges();
-            return;
-          }
-          node = node.parentNode;
-        }
-        
-        // Add highlight - read current color from ref
-        try {
-          const span = document.createElement('span');
-          span.className = 'highlighted-text';
-          span.style.backgroundColor = highlightColorRef.current;
-          span.style.padding = '2px 0';
-          span.style.borderRadius = '3px';
-          
-          // Extract and wrap the selected content
-          const contents = range.extractContents();
-          span.appendChild(contents);
-          range.insertNode(span);
-          
-          // Clear selection
-          selection.removeAllRanges();
-        } catch (e) {
-          console.error('Error highlighting text:', e);
-          selection.removeAllRanges();
-        }
-      }, 150); // Delay to avoid interfering with double-click selection
-    };
-
-    // Wait for DOM to be ready
-    const timeoutId = setTimeout(() => {
-      const resumePage = resumePageRef.current;
-      if (resumePage && isResumeLoadedRef.current !== resumeId) {
-        resumePage.addEventListener('mouseup', handleMouseUp);
-        highlightHandlerRef.current = handleMouseUp;
-        isResumeLoadedRef.current = resumeId;
-      }
-    }, 300);
-
-    return () => {
-      clearTimeout(timeoutId);
-      if (clickTimeoutRef.current) {
-        clearTimeout(clickTimeoutRef.current);
-        clickTimeoutRef.current = null;
-      }
-      const resumePage = resumePageRef.current;
-      if (resumePage && highlightHandlerRef.current) {
-        resumePage.removeEventListener('mouseup', highlightHandlerRef.current);
-        highlightHandlerRef.current = null;
-      }
-      if (isResumeLoadedRef.current === resumeId) {
-        isResumeLoadedRef.current = false;
-      }
-    };
-  }, [resume?.id]);
 
   // Early returns must come after all hooks
   if (loading) {
@@ -1584,10 +1461,20 @@ function SharedResumeView({ shareToken }) {
 
       <div className="resume-layout">
         <div className="resume-main-content">
-          <div className="resume-html-wrapper">
-            <div className="resume-page" ref={resumePageRef}>
+          <div className="resume-html-wrapper" style={{ position: 'relative' }}>
+            <div 
+              className="resume-page" 
+              ref={resumePageRef}
+              contentEditable="false"
+              suppressContentEditableWarning={true}
+            >
               {renderResume()}
             </div>
+            {/* Highlight overlay container - positioned to match resume-page */}
+            <HighlightOverlay 
+              containerRef={resumePageRef}
+              highlights={highlights}
+            />
           </div>
 
           {resume.shareLink.allow_comments && (
