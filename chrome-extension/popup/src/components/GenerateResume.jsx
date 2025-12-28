@@ -13,6 +13,12 @@ import {
   computeSectionCaps,
   cloneStructuredResume
 } from '../utils/resumeGenerationUtils';
+import {
+  JOB_DESCRIPTION_TEMPLATES,
+  getJobDescriptionForArea,
+  getAreaDisplayName,
+  getAvailableAreas
+} from '../utils/jobDescriptionTemplates';
 import { Icon } from './ui/Icons';
 import './GenerateResume.css';
 
@@ -36,6 +42,8 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
   const [renderingPdf, setRenderingPdf] = useState(false);
   const [keywordData, setKeywordData] = useState(null);
   const [scanningKeywords, setScanningKeywords] = useState(false);
+  const [inputMode, setInputMode] = useState('paste'); // 'paste' or 'area'
+  const [selectedArea, setSelectedArea] = useState(null);
 
   /**
    * Extract job description from current tab
@@ -366,18 +374,93 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
           <div className="section-header-modern">
             <h2>Job Description</h2>
             <p className="section-description">
-              {hideExtract 
-                ? 'Paste a job description, then select the best resume points.'
-                : 'Extract or paste a job description, then select the best resume points.'}
+              Choose how you want to generate your resume
             </p>
           </div>
-          
-          <JobMatcher
-            jobDescription={currentJob?.description || ''}
-            onExtract={hideExtract ? undefined : handleExtractJobDescription}
-            onSelect={handleSelect}
-            loading={loading}
-          />
+
+          {/* Mode Selector */}
+          <div className="input-mode-selector">
+            <button
+              className={`mode-button ${inputMode === 'paste' ? 'active' : ''}`}
+              onClick={() => {
+                setInputMode('paste');
+                setSelectedArea(null);
+                setCurrentJob(null);
+              }}
+            >
+              <Icon name="file" size={16} />
+              Paste Job Description
+            </button>
+            <button
+              className={`mode-button ${inputMode === 'area' ? 'active' : ''}`}
+              onClick={() => {
+                setInputMode('area');
+                setCurrentJob(null);
+              }}
+            >
+              <Icon name="target" size={16} />
+              Select Area of Focus
+            </button>
+          </div>
+
+          {/* Paste Job Description Mode */}
+          {inputMode === 'paste' && (
+            <JobMatcher
+              jobDescription={currentJob?.description || ''}
+              onExtract={hideExtract ? undefined : handleExtractJobDescription}
+              onSelect={handleSelect}
+              loading={loading}
+            />
+          )}
+
+          {/* Area of Focus Mode */}
+          {inputMode === 'area' && (
+            <div className="area-selection">
+              <p className="area-selection-description">
+                Select a focus area to generate a resume tailored for that role. We'll use a comprehensive job description covering typical requirements for that position.
+              </p>
+              <div className="area-grid">
+                {getAvailableAreas().map((area) => (
+                  <button
+                    key={area}
+                    className={`area-card ${selectedArea === area ? 'selected' : ''}`}
+                    onClick={() => {
+                      setSelectedArea(area);
+                      const jobDescription = getJobDescriptionForArea(area);
+                      setCurrentJob({
+                        description: jobDescription,
+                        source: 'template',
+                        area: area
+                      });
+                      // Automatically trigger resume generation
+                      handleSelect(jobDescription);
+                    }}
+                    disabled={loading}
+                  >
+                    <div className="area-card-content">
+                      <h3>{getAreaDisplayName(area)}</h3>
+                      <p className="area-card-description">
+                        {area === 'backend' && 'API design, databases, microservices, cloud infrastructure'}
+                        {area === 'frontend' && 'React, Vue, UI/UX, responsive design, web performance'}
+                        {area === 'fullstack' && 'End-to-end development, full application stack expertise'}
+                        {area === 'devops' && 'CI/CD, Kubernetes, cloud infrastructure, automation'}
+                        {area === 'mobile' && 'iOS, Android, React Native, Flutter, mobile apps'}
+                        {area === 'data' && 'Data pipelines, ETL, big data, data warehousing'}
+                        {area === 'ml' && 'Machine learning, deep learning, MLOps, AI systems'}
+                        {area === 'security' && 'Cybersecurity, penetration testing, security architecture'}
+                      </p>
+                    </div>
+                    {loading && selectedArea === area && (
+                      <div className="area-loading">
+                        <Icon name="clipboard" size={16} />
+                        Generating...
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -418,6 +501,8 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
                   setLatexSource('');
                   setLatexPdfBase64(null);
                   setShowLatexPreview(false);
+                  setInputMode('paste');
+                  setSelectedArea(null);
                 }}
                 title="Generate a new resume for a different job"
               >
