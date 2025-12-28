@@ -432,8 +432,6 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
                         source: 'template',
                         area: area
                       });
-                      // Automatically trigger resume generation
-                      handleSelect(jobDescription);
                     }}
                     disabled={loading}
                   >
@@ -450,15 +448,32 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
                         {area === 'security' && 'Cybersecurity, penetration testing, security architecture'}
                       </p>
                     </div>
-                    {loading && selectedArea === area && (
-                      <div className="area-loading">
-                        <Icon name="clipboard" size={16} />
-                        Generating...
-                      </div>
-                    )}
                   </button>
                 ))}
               </div>
+              
+              {/* Generate Button */}
+              {selectedArea && currentJob?.description && (
+                <div className="job-matcher-actions">
+                  <button
+                    className="btn btn-primary btn-large btn-modern"
+                    onClick={() => handleSelect(currentJob.description)}
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <>
+                        <Icon name="loader" size={16} />
+                        Generating Resume...
+                      </>
+                    ) : (
+                      <>
+                        <Icon name="target" size={16} />
+                        Generate Resume
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
