@@ -68,3 +68,4 @@ export function findBulletContext(resume, bulletId) {
   return { sectionType: null, entryId: null };
 }
 
+

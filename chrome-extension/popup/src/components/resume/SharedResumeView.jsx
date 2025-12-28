@@ -5,6 +5,7 @@ import CommentsSidePanel from '../comments/CommentsSidePanel';
 import CommentItem from '../comments/CommentItem';
 import ResumeRenderer from './ResumeRenderer';
 import { findBulletText as findBulletTextUtil, findBulletContext as findBulletContextUtil } from '../../utils/resumeUtils';
+import { generateAnonymousUsername } from '../../utils/anonymousUsernames';
 import './SharedResumeView.css';
 
 function SharedResumeView({ shareToken }) {
@@ -17,10 +18,8 @@ function SharedResumeView({ shareToken }) {
   const [loading, setLoading] = useState(true);
   const [generalCommentText, setGeneralCommentText] = useState('');
   const [bulletCommentText, setBulletCommentText] = useState('');
-  const [generalAuthorName, setGeneralAuthorName] = useState('');
-  const [bulletAuthorName, setBulletAuthorName] = useState('');
-  const [generalIsAnonymous, setGeneralIsAnonymous] = useState(true);
-  const [bulletIsAnonymous, setBulletIsAnonymous] = useState(true);
+  const [generalIsAnonymous, setGeneralIsAnonymous] = useState(false);
+  const [bulletIsAnonymous, setBulletIsAnonymous] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   // PDF-related state removed - using HTML rendering for shared resumes
@@ -305,14 +304,9 @@ function SharedResumeView({ shareToken }) {
     
     // Use appropriate text based on whether it's a bullet comment or general comment
     const commentText = bulletId ? bulletCommentText : generalCommentText;
-    const authorName = bulletId ? bulletAuthorName : generalAuthorName;
     const isAnonymous = bulletId ? bulletIsAnonymous : generalIsAnonymous;
     
     if (!commentText.trim()) return;
-    if (isAnonymous && !authorName.trim()) {
-      setError('Please enter your name');
-      return;
-    }
 
     setSubmitting(true);
     setError('');
@@ -331,12 +325,25 @@ function SharedResumeView({ shareToken }) {
         throw new Error('Share link not found');
       }
 
+      // Determine author name
+      let authorName = null;
+      if (isAnonymous || !session) {
+        // Generate random anonymous username
+        authorName = generateAnonymousUsername();
+      } else if (session?.user) {
+        // Use user's email or metadata name
+        authorName = session.user.user_metadata?.full_name || 
+                    session.user.user_metadata?.name || 
+                    session.user.email?.split('@')[0] || 
+                    'User';
+      }
+
       const { error: insertError } = await supabase
         .from('resume_comments')
         .insert({
           shared_link_id: link.id,
           user_id: session?.user?.id || null,
-          author_name: isAnonymous ? authorName : null,
+          author_name: authorName,
           content: commentText,
           is_anonymous: isAnonymous || !session,
           bullet_id: bulletId || null,
@@ -350,11 +357,9 @@ function SharedResumeView({ shareToken }) {
       // Clear the appropriate text field
       if (bulletId) {
         setBulletCommentText('');
-        setBulletAuthorName('');
         setSelectedBulletId(null);
       } else {
         setGeneralCommentText('');
-        setGeneralAuthorName('');
       }
       loadComments();
     } catch (err) {
@@ -474,26 +479,16 @@ function SharedResumeView({ shareToken }) {
                 {error && !selectedBulletId && <div className="comment-error">{error}</div>}
                 
                 <div className="comment-form-header">
-                  <label>
+                  <label className="comment-checkbox-label">
                     <input
                       type="checkbox"
                       checked={generalIsAnonymous}
                       onChange={(e) => setGeneralIsAnonymous(e.target.checked)}
+                      className="comment-checkbox"
                     />
-                    Post as anonymous
+                    <span>Post as anonymous</span>
                   </label>
                 </div>
-
-                {generalIsAnonymous && (
-                  <input
-                    type="text"
-                    placeholder="Your name"
-                    value={generalAuthorName}
-                    onChange={(e) => setGeneralAuthorName(e.target.value)}
-                    className="comment-author-input"
-                    required
-                  />
-                )}
 
                 <textarea
                   placeholder="Add a general comment about the resume..."
@@ -504,13 +499,15 @@ function SharedResumeView({ shareToken }) {
                   rows={4}
                 />
                 
-                <button 
-                  type="submit" 
-                  className="btn-submit-comment"
-                  disabled={submitting}
-                >
-                  {submitting ? 'Posting...' : 'Post General Comment'}
-                </button>
+                <div className="comment-form-actions">
+                  <button 
+                    type="submit" 
+                    className="btn-submit-comment"
+                    disabled={submitting || !generalCommentText.trim()}
+                  >
+                    {submitting ? 'Posting...' : 'Post Comment'}
+                  </button>
+                </div>
               </form>
 
               <div className="comments-list">
@@ -539,8 +536,6 @@ function SharedResumeView({ shareToken }) {
             }
             commentText={bulletCommentText}
             setCommentText={setBulletCommentText}
-            authorName={bulletAuthorName}
-            setAuthorName={setBulletAuthorName}
             isAnonymous={bulletIsAnonymous}
             setIsAnonymous={setBulletIsAnonymous}
             submitting={submitting}
@@ -548,7 +543,6 @@ function SharedResumeView({ shareToken }) {
             onCancel={() => {
               setSelectedBulletId(null);
               setBulletCommentText('');
-              setBulletAuthorName('');
             }}
             findBulletText={findBulletText}
             findBulletContext={findBulletContext}

@@ -25,7 +25,6 @@ function SideNav({ activeView, onViewChange, userEmail, onSignOut }) {
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'generate', label: 'Generate Resume', icon: Sparkles },
     { id: 'saved', label: 'Saved Resumes', icon: FileText },
-    { id: 'community', label: 'Community', icon: Users },
     { 
       id: 'coaching', 
       label: 'Resume Coaching', 
@@ -35,6 +34,7 @@ function SideNav({ activeView, onViewChange, userEmail, onSignOut }) {
         { id: 'coaching-human', label: 'Critique with Human', icon: MessageSquare },
       ]
     },
+    { id: 'community', label: 'Community', icon: Users },
   ];
 
   const toggleExpanded = (itemId) => {

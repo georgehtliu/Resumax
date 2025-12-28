@@ -8,8 +8,6 @@ export default function CommentsSidePanel({
   onCommentSubmit,
   commentText,
   setCommentText,
-  authorName,
-  setAuthorName,
   isAnonymous,
   setIsAnonymous,
   submitting,
@@ -79,26 +77,16 @@ export default function CommentsSidePanel({
               {error && <div className="comment-error">{error}</div>}
               
               <div className="comment-form-header">
-                <label>
+                <label className="comment-checkbox-label">
                   <input
                     type="checkbox"
                     checked={isAnonymous}
                     onChange={(e) => setIsAnonymous(e.target.checked)}
+                    className="comment-checkbox"
                   />
-                  Post as anonymous
+                  <span>Post as anonymous</span>
                 </label>
               </div>
-
-              {isAnonymous && (
-                <input
-                  type="text"
-                  placeholder="Your name"
-                  value={authorName}
-                  onChange={(e) => setAuthorName(e.target.value)}
-                  className="comment-author-input"
-                  required
-                />
-              )}
 
               <textarea
                 placeholder="Add a comment..."
@@ -113,7 +101,7 @@ export default function CommentsSidePanel({
                 <button 
                   type="submit" 
                   className="btn-submit-comment"
-                  disabled={submitting}
+                  disabled={submitting || !commentText.trim()}
                 >
                   {submitting ? 'Posting...' : 'Post'}
                 </button>
@@ -160,10 +148,16 @@ export default function CommentsSidePanel({
                   >
                     <div className="side-comment-header">
                       <strong className="side-comment-author">
-                        {comment.author_name || (comment.user_id ? 'User' : 'Anonymous')}
+                        {comment.author_name || 'Anonymous'}
                       </strong>
                       <span className="side-comment-date">
-                        {new Date(comment.created_at).toLocaleDateString()}
+                        {new Date(comment.created_at).toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric',
+                          year: 'numeric',
+                          hour: 'numeric',
+                          minute: '2-digit'
+                        })}
                       </span>
                     </div>
                     <p className="side-comment-content">{comment.content}</p>
@@ -211,26 +205,16 @@ export default function CommentsSidePanel({
                   {error && <div className="comment-error">{error}</div>}
                   
                   <div className="comment-form-header">
-                    <label>
+                    <label className="comment-checkbox-label">
                       <input
                         type="checkbox"
                         checked={isAnonymous}
                         onChange={(e) => setIsAnonymous(e.target.checked)}
+                        className="comment-checkbox"
                       />
-                      Post as anonymous
+                      <span>Post as anonymous</span>
                     </label>
                   </div>
-
-                  {isAnonymous && (
-                    <input
-                      type="text"
-                      placeholder="Your name"
-                      value={authorName}
-                      onChange={(e) => setAuthorName(e.target.value)}
-                      className="comment-author-input"
-                      required
-                    />
-                  )}
 
                   <textarea
                     placeholder="Add a comment..."
@@ -245,7 +229,7 @@ export default function CommentsSidePanel({
                     <button 
                       type="submit" 
                       className="btn-submit-comment"
-                      disabled={submitting}
+                      disabled={submitting || !commentText.trim()}
                     >
                       {submitting ? 'Posting...' : 'Post'}
                     </button>

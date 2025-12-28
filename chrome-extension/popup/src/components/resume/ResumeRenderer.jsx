@@ -254,17 +254,16 @@ export default function ResumeRenderer({
       {data.skills && data.skills.length > 0 && (
         <div className="resume-section">
           <h3 className="section-title">SKILLS</h3>
-          <ul className="skills-list">
+          <ul className="entry-bullets">
             {data.skills.map((group, idx) => {
               // Ensure skills is always an array
               const skillsArray = Array.isArray(group.skills) ? group.skills : (group.skills ? [group.skills] : []);
               if (skillsArray.length === 0) return null;
-              return (
-                <li key={group.id || idx} className="skill-group">
-                  {group.title && <strong className="skill-category">{group.title}: </strong>}
-                  <span className="skill-items">{skillsArray.join(', ')}</span>
-                </li>
-              );
+              const skillText = group.title 
+                ? `${group.title}: ${skillsArray.join(', ')}`
+                : skillsArray.join(', ');
+              const bulletId = `skill-${group.id || idx}`;
+              return renderBullet(skillText, bulletId, 'skills', group.id || idx, group);
             })}
           </ul>
         </div>

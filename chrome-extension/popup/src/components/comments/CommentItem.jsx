@@ -7,10 +7,16 @@ export default function CommentItem({ comment }) {
     <div className="comment-item">
       <div className="comment-header">
         <span className="comment-author">
-          {comment.author_name || (comment.user_id ? 'User' : 'Anonymous')}
+          {comment.author_name || 'Anonymous'}
         </span>
         <span className="comment-date">
-          {new Date(comment.created_at).toLocaleString()}
+          {new Date(comment.created_at).toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric',
+            year: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit'
+          })}
         </span>
       </div>
       <div className="comment-content">{comment.content}</div>

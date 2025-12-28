@@ -282,3 +282,4 @@ export function getAvailableAreas() {
   return Object.keys(JOB_DESCRIPTION_TEMPLATES);
 }
 
+
