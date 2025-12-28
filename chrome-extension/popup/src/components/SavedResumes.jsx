@@ -771,6 +771,7 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
         onRefreshPdf={renderPdfPreview}
         pdfBase64={latexPdfBase64}
         loadingPdf={renderingPdf}
+        resumeData={editedResume}
       />
 
       {/* Save As New Dialog */}

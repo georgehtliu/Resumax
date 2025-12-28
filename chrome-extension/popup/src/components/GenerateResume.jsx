@@ -360,25 +360,28 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
         <p className="generate-resume-subtitle">Create a tailored resume for any job description</p>
       </div>
 
-      <div className="section section-modern">
-        <div className="section-header-modern">
-          <h2>Job Description</h2>
-          <p className="section-description">
-            {hideExtract 
-              ? 'Paste a job description, then select the best resume points.'
-              : 'Extract or paste a job description, then select the best resume points.'}
-          </p>
+      {/* Job Description Section - Hide after resume is generated */}
+      {!optimizationResult && (
+        <div className="section section-modern">
+          <div className="section-header-modern">
+            <h2>Job Description</h2>
+            <p className="section-description">
+              {hideExtract 
+                ? 'Paste a job description, then select the best resume points.'
+                : 'Extract or paste a job description, then select the best resume points.'}
+            </p>
+          </div>
+          
+          <JobMatcher
+            jobDescription={currentJob?.description || ''}
+            onExtract={hideExtract ? undefined : handleExtractJobDescription}
+            onSelect={handleSelect}
+            loading={loading}
+          />
         </div>
-        
-        <JobMatcher
-          jobDescription={currentJob?.description || ''}
-          onExtract={hideExtract ? undefined : handleExtractJobDescription}
-          onSelect={handleSelect}
-          loading={loading}
-        />
-      </div>
+      )}
 
-      {/* Keyword Scanner */}
+      {/* Keyword Scanner - Show when there's keyword data, even after resume is generated */}
       {(keywordData || scanningKeywords) && (
         <div className="section section-modern">
           <div className="section-header-modern">
@@ -404,6 +407,23 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
               </p>
             </div>
             <div className="section-header-actions">
+              <button
+                className="btn btn-secondary btn-modern"
+                onClick={() => {
+                  setOptimizationResult(null);
+                  setCurrentJob(null);
+                  setCustomizedBullets(null);
+                  setCustomizedResume(null);
+                  setKeywordData(null);
+                  setLatexSource('');
+                  setLatexPdfBase64(null);
+                  setShowLatexPreview(false);
+                }}
+                title="Generate a new resume for a different job"
+              >
+                <Icon name="refresh" size={16} />
+                Generate New Resume
+              </button>
               {optimizationResult.mode === 'select' && (
                 <button
                   className="btn btn-secondary btn-modern"
@@ -492,6 +512,7 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
         onRefreshPdf={renderPdfPreview}
         pdfBase64={latexPdfBase64}
         loadingPdf={renderingPdf}
+        resumeData={customizedResume || optimizationResult?.selectedResume}
       />
     </div>
   );
