@@ -240,6 +240,10 @@
   color: var(--text-tertiary);
 }
 
+.experience-location {
+  color: var(--text-secondary);
+}
+
 .bullets-preview {
   margin-top: 12px;
 }

@@ -41,6 +41,7 @@ function normalizeExperiences(experiences = []) {
       id: exp.id || ensureBulletId(exp, 0),
       company: exp.company || '',
       role: exp.role || '',
+      location: exp.location || null,
       startDate: exp.startDate || null,
       endDate: exp.endDate || null,
       bullets: normalizeBullets(exp.bullets),

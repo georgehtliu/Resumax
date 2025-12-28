@@ -82,6 +82,7 @@ class OptimizationService:
                 id=exp.id,
                 company=exp.company,
                 role=exp.role,
+                location=getattr(exp, 'location', None),
                 startDate=exp.startDate,
                 endDate=exp.endDate,
                 selectedBullets=rewritten_bullets

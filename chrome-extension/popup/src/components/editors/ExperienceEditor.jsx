@@ -17,6 +17,7 @@ function ExperienceEditor({ experience, onUpdate, onDelete, onAddBulletFromMaste
   const [formData, setFormData] = useState({
     company: experience.company || '',
     role: experience.role || '',
+    location: experience.location || '',
     startDate: experience.startDate || '',
     endDate: experience.endDate || '',
     bullets: experience.bullets || []
@@ -85,6 +86,16 @@ function ExperienceEditor({ experience, onUpdate, onDelete, onAddBulletFromMaste
               value={formData.role}
               onChange={(e) => handleFieldChange('role', e.target.value)}
               placeholder="e.g., Software Engineer"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Location</label>
+            <input
+              type="text"
+              value={formData.location}
+              onChange={(e) => handleFieldChange('location', e.target.value)}
+              placeholder="e.g., Mountain View, CA"
             />
           </div>
 
@@ -205,6 +216,9 @@ function ExperienceEditor({ experience, onUpdate, onDelete, onAddBulletFromMaste
                 {formData.startDate && formData.endDate
                   ? `${formData.startDate} - ${formData.endDate}`
                   : formData.startDate || 'No dates'}
+                {formData.location && (
+                  <span className="experience-location"> • {formData.location}</span>
+                )}
               </p>
             </div>
             <button

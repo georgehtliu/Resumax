@@ -23,6 +23,7 @@ const SECTION_CONFIG = [
     fields: [
       { name: 'company', label: 'Company', placeholder: 'e.g., Google' },
       { name: 'role', label: 'Role', placeholder: 'e.g., Software Engineer' },
+      { name: 'location', label: 'Location', placeholder: 'e.g., Mountain View, CA' },
       { name: 'startDate', label: 'Start Date', placeholder: 'e.g., Jun 2022' },
       { name: 'endDate', label: 'End Date', placeholder: 'e.g., Present' }
     ],

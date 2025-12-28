@@ -145,6 +145,7 @@ function mapExperiencesForSelectedResume(entries = []) {
         id: entryId,
         company: entry.company || '',
         role: entry.role || '',
+        location: entry.location || null,
         startDate: entry.startDate || null,
         endDate: entry.endDate || null,
         selectedBullets
