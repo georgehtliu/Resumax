@@ -51,18 +51,6 @@ export default function ResumeRenderer({
                 <span className="comment-marker-count">{bulletCommentsList.length}</span>
               </span>
             )}
-            {!hasComments && (isSelected || isHovered) && (
-              <span 
-                className="comment-marker add-comment-marker"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedBulletId(bulletId);
-                }}
-                title="Add comment"
-              >
-                <span className="comment-marker-dot">+</span>
-              </span>
-            )}
           </span>
           <span className="bullet-text">{bulletText}</span>
         </div>

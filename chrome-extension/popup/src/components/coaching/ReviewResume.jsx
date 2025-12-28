@@ -1,15 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, FileText, CheckCircle, Users } from 'lucide-react';
 import { Icon } from '../ui/Icons';
 import LoadingScreen from './LoadingScreen';
+import ReviewerView from './ReviewerView';
 import './ReviewResume.css';
 
 function ReviewResume({ onBack }) {
   const [isLoading, setIsLoading] = useState(false);
+  const [showReviewer, setShowReviewer] = useState(false);
 
   const handleConnect = () => {
     setIsLoading(true);
+    // Show reviewer view after 2 seconds
+    setTimeout(() => {
+      setIsLoading(false);
+      setShowReviewer(true);
+    }, 2000);
   };
+
+  if (showReviewer) {
+    return <ReviewerView onBack={() => setShowReviewer(false)} />;
+  }
 
   if (isLoading) {
     return (

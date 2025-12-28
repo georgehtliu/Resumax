@@ -468,6 +468,9 @@ function SharedResumeView({ shareToken }) {
             <HighlightOverlay 
               containerRef={resumePageRef}
               highlights={highlights}
+              onRemoveHighlight={(highlightId) => {
+                setHighlights(prev => prev.filter(h => h.id !== highlightId));
+              }}
             />
           </div>
 

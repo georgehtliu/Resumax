@@ -41,7 +41,7 @@ export function createOverlayHighlight(range, containerElement, highlightColor) 
 }
 
 // Highlight Overlay Component - renders highlights as positioned overlays
-export default function HighlightOverlay({ containerRef, highlights }) {
+export default function HighlightOverlay({ containerRef, highlights, onRemoveHighlight }) {
   const [containerRect, setContainerRect] = useState(null);
   
   useEffect(() => {
@@ -73,6 +73,14 @@ export default function HighlightOverlay({ containerRef, highlights }) {
     };
   }, [containerRef, highlights]);
   
+  const handleDoubleClick = (highlightId, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onRemoveHighlight) {
+      onRemoveHighlight(highlightId);
+    }
+  };
+  
   if (!containerRect || !containerRef.current) return null;
   
   return (
@@ -92,6 +100,7 @@ export default function HighlightOverlay({ containerRef, highlights }) {
         highlight.rects.map((rect, idx) => (
           <div
             key={`${highlight.id}-${idx}`}
+            onDoubleClick={(e) => handleDoubleClick(highlight.id, e)}
             style={{
               position: 'absolute',
               left: `${rect.left}px`,
@@ -100,9 +109,11 @@ export default function HighlightOverlay({ containerRef, highlights }) {
               height: `${rect.height}px`,
               backgroundColor: highlight.color,
               opacity: 0.3,
-              pointerEvents: 'none',
-              borderRadius: '2px'
+              pointerEvents: 'auto',
+              borderRadius: '2px',
+              cursor: 'pointer'
             }}
+            title="Double-click to remove highlight"
           />
         ))
       ))}
