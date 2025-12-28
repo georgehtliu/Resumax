@@ -120,7 +120,6 @@ function CommentsSidePanel({
   selectedBulletId,
   bulletComments,
   bulletsWithComments,
-  allBullets,
   onBulletClick,
   onCommentSubmit,
   commentText,
@@ -141,8 +140,6 @@ function CommentsSidePanel({
   scrollToBulletInHtml
 }) {
   const [activeBulletId, setActiveBulletId] = useState(selectedBulletId);
-  const [showAllBullets, setShowAllBullets] = useState(false);
-  const bulletItemRefs = useRef({});
 
   useEffect(() => {
     setActiveBulletId(selectedBulletId);
@@ -151,40 +148,9 @@ function CommentsSidePanel({
   const handleBulletClick = (bulletId) => {
     setActiveBulletId(bulletId);
     onBulletClick(bulletId);
-    // Scroll to bullet in Browse All Bullets section
-    scrollToBulletInList(bulletId);
-    // Also scroll to bullet in HTML resume if function is provided
+    // Scroll to bullet in HTML resume if function is provided
     if (scrollToBulletInHtml) {
       scrollToBulletInHtml(bulletId);
-    }
-  };
-
-  const scrollToBulletInList = (bulletId) => {
-    // Ensure Browse All Bullets section is open
-    if (!showAllBullets) {
-      setShowAllBullets(true);
-      // Wait for DOM to update, then scroll
-      setTimeout(() => {
-        const bulletElement = bulletItemRefs.current[bulletId];
-        if (bulletElement) {
-          bulletElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          // Add highlight effect
-          bulletElement.classList.add('highlighted');
-          setTimeout(() => {
-            bulletElement.classList.remove('highlighted');
-          }, 2000);
-        }
-      }, 100);
-    } else {
-      const bulletElement = bulletItemRefs.current[bulletId];
-      if (bulletElement) {
-        bulletElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        // Add highlight effect
-        bulletElement.classList.add('highlighted');
-        setTimeout(() => {
-          bulletElement.classList.remove('highlighted');
-        }, 2000);
-      }
     }
   };
 
@@ -196,45 +162,6 @@ function CommentsSidePanel({
       </div>
 
       <div className="side-panel-content">
-        {/* Browse All Bullets Section */}
-        {allBullets && allBullets.length > 0 && (
-          <div className="browse-bullets-section">
-            <button
-              className="browse-bullets-toggle"
-              onClick={() => setShowAllBullets(!showAllBullets)}
-            >
-              {showAllBullets ? '▼' : '▶'} Browse All Bullets ({allBullets.length})
-            </button>
-            {showAllBullets && (
-              <div className="all-bullets-list">
-                {allBullets.map(({ bulletId, bulletText, entryTitle }) => {
-                  const bulletWithComments = bulletsWithComments.find(b => b.bulletId === bulletId);
-                  const hasComments = !!bulletWithComments;
-                  return (
-                    <div
-                      key={bulletId}
-                      ref={(el) => {
-                        if (el) bulletItemRefs.current[bulletId] = el;
-                      }}
-                      className={`all-bullet-item ${activeBulletId === bulletId ? 'active' : ''} ${hasComments ? 'has-comments' : ''}`}
-                      onClick={() => handleBulletClick(bulletId)}
-                    >
-                      <div className="bullet-item-header">
-                        <span className="bullet-entry-title">{entryTitle}</span>
-                        {hasComments && bulletWithComments.comments && (
-                          <span className="bullet-comment-badge">{bulletWithComments.comments.length}</span>
-                        )}
-                      </div>
-                      <div className="bullet-item-text">
-                        {bulletText.substring(0, 100)}{bulletText.length > 100 ? '...' : ''}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
         {selectedBulletId && !bulletsWithComments.find(b => b.bulletId === selectedBulletId) && (
           <div className="side-panel-new-comment">
             <div className="new-comment-header">
@@ -250,7 +177,6 @@ function CommentsSidePanel({
               className="view-bullet-link"
               onClick={(e) => {
                 e.stopPropagation();
-                scrollToBulletInList(selectedBulletId);
                 handleBulletClick(selectedBulletId);
               }}
               title="View this bullet in the resume"
@@ -322,7 +248,7 @@ function CommentsSidePanel({
         {bulletsWithComments.length === 0 && !selectedBulletId ? (
           <div className="no-bullet-comments">
             <p>No comments on bullets yet.</p>
-            <p className="hint">Browse bullets above to add a comment.</p>
+            <p className="hint">Click on a bullet in the resume to add a comment.</p>
           </div>
         ) : (
           bulletsWithComments.map(({ bulletId, bulletText, sectionType, entryId, comments }) => (
@@ -361,7 +287,6 @@ function CommentsSidePanel({
                 className="view-bullet-link"
                 onClick={(e) => {
                   e.stopPropagation();
-                  scrollToBulletInList(bulletId);
                   handleBulletClick(bulletId);
                 }}
                       onMouseEnter={() => {
@@ -781,86 +706,6 @@ function SharedResumeView({ shareToken }) {
     }
   };
 
-  // Get all bullets from resume for browsing (must be before useEffect that uses it)
-  const getAllBullets = useCallback(() => {
-    if (!resume?.resume_data) return [];
-    const data = resume.resume_data;
-    const allBullets = [];
-    
-    // Get bullets from experiences
-    (data.experiences || []).forEach(entry => {
-      const bullets = entry.selectedBullets || entry.bullets || [];
-      bullets.forEach((bullet, idx) => {
-        const bulletId = bullet.id || `${entry.id}-bullet-${idx}`;
-        const bulletText = typeof bullet === 'string' ? bullet : (bullet.text || bullet.rewritten || '');
-        if (bulletText) {
-          allBullets.push({
-            bulletId,
-            bulletText,
-            sectionType: 'experience',
-            entryId: entry.id,
-            entryTitle: `${entry.role || ''} ${entry.company || ''}`.trim() || 'Experience'
-          });
-        }
-      });
-    });
-    
-    // Get bullets from education
-    (data.education || []).forEach(entry => {
-      const bullets = entry.selectedBullets || entry.bullets || [];
-      bullets.forEach((bullet, idx) => {
-        const bulletId = bullet.id || `${entry.id}-bullet-${idx}`;
-        const bulletText = typeof bullet === 'string' ? bullet : (bullet.text || bullet.rewritten || '');
-        if (bulletText) {
-          allBullets.push({
-            bulletId,
-            bulletText,
-            sectionType: 'education',
-            entryId: entry.id,
-            entryTitle: entry.school || 'Education'
-          });
-        }
-      });
-    });
-    
-    // Get bullets from projects
-    (data.projects || []).forEach(entry => {
-      const bullets = entry.selectedBullets || entry.bullets || [];
-      bullets.forEach((bullet, idx) => {
-        const bulletId = bullet.id || `${entry.id}-bullet-${idx}`;
-        const bulletText = typeof bullet === 'string' ? bullet : (bullet.text || bullet.rewritten || '');
-        if (bulletText) {
-          allBullets.push({
-            bulletId,
-            bulletText,
-            sectionType: 'project',
-            entryId: entry.id,
-            entryTitle: entry.name || 'Project'
-          });
-        }
-      });
-    });
-    
-    // Get bullets from custom sections
-    (data.customSections || []).forEach(entry => {
-      const bullets = entry.selectedBullets || entry.bullets || [];
-      bullets.forEach((bullet, idx) => {
-        const bulletId = bullet.id || `${entry.id}-bullet-${idx}`;
-        const bulletText = typeof bullet === 'string' ? bullet : (bullet.text || bullet.rewritten || '');
-        if (bulletText) {
-          allBullets.push({
-            bulletId,
-            bulletText,
-            sectionType: 'custom',
-            entryId: entry.id,
-            entryTitle: entry.title || 'Additional'
-          });
-        }
-      });
-    });
-    
-    return allBullets;
-  }, [resume]);
 
   // PDF rendering removed - using HTML rendering for shared resumes
 
@@ -1542,7 +1387,6 @@ function SharedResumeView({ shareToken }) {
             selectedBulletId={selectedBulletId}
             bulletComments={bulletComments}
             bulletsWithComments={getAllBulletsWithComments()}
-            allBullets={getAllBullets()}
             onBulletClick={(bulletId) => {
               scrollToBulletInHtml(bulletId);
             }}
