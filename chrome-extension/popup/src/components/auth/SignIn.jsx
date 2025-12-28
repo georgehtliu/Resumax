@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../config/supabase';
-import { Icon } from './Icons';
+import { supabase } from '../../config/supabase';
+import { Icon } from '../ui/Icons';
 import './SignIn.css';
 
 /**

@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import ExperienceEditor from './ExperienceEditor';
-import EducationEditor from './EducationEditor';
-import ProjectEditor from './ProjectEditor';
-import CustomSectionEditor from './CustomSectionEditor';
-import PersonalInfoEditor from './PersonalInfoEditor';
-import SkillsEditor from './SkillsEditor';
-import Tabs from './Tabs';
+import ExperienceEditor from './editors/ExperienceEditor';
+import EducationEditor from './editors/EducationEditor';
+import ProjectEditor from './editors/ProjectEditor';
+import CustomSectionEditor from './editors/CustomSectionEditor';
+import PersonalInfoEditor from './editors/PersonalInfoEditor';
+import SkillsEditor from './editors/SkillsEditor';
+import Tabs from './ui/Tabs';
 import AutoSaveIndicator from './AutoSaveIndicator';
 import { storageService } from '../services/storage';
-import { Icon } from './Icons';
+import { Icon } from './ui/Icons';
 import './Profile.css';
 
 /**

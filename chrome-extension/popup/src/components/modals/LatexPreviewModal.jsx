@@ -1,5 +1,5 @@
 import React from 'react';
-import PdfViewerWithOverlays from './PdfViewerWithOverlays';
+import PdfViewerWithOverlays from '../pdf/PdfViewerWithOverlays';
 import './LatexPreviewModal.css';
 
 function LatexPreviewModal({ open, onClose, latexSource, onCopy, onDownloadTex, pdfBase64, onRefreshPdf, loadingPdf }) {

@@ -1,25 +1,25 @@
 import React, { useState } from 'react';
-import { getLineCountInfo } from '../utils/latexLineCount';
-import { Icon } from './Icons';
-import './ExperienceEditor.css';
+import { getLineCountInfo } from '../../utils/latexLineCount';
+import { Icon } from '../ui/Icons';
+import './SectionEditor.css';
 
 /**
- * Experience Editor Component
+ * Project Editor Component
  * 
  * Allows users to:
- * - Edit experience details (company, role, dates)
+ * - Edit project details (name, description, technologies, dates)
  * - Add unlimited bullet points
  * - Edit/delete bullet points
- * - Reorder bullets (drag & drop - TODO)
  */
-function ExperienceEditor({ experience, onUpdate, onDelete, onAddBulletFromMaster }) {
-  const [isEditing, setIsEditing] = useState(!experience.company);
+function ProjectEditor({ project, onUpdate, onDelete, onAddBulletFromMaster }) {
+  const [isEditing, setIsEditing] = useState(!project.name);
   const [formData, setFormData] = useState({
-    company: experience.company || '',
-    role: experience.role || '',
-    startDate: experience.startDate || '',
-    endDate: experience.endDate || '',
-    bullets: experience.bullets || []
+    name: project.name || '',
+    description: project.description || '',
+    technologies: project.technologies || '',
+    startDate: project.startDate || '',
+    endDate: project.endDate || '',
+    bullets: project.bullets || []
   });
 
   function handleFieldChange(field, value) {
@@ -31,7 +31,7 @@ function ExperienceEditor({ experience, onUpdate, onDelete, onAddBulletFromMaste
 
   function handleSave() {
     onUpdate({
-      ...experience,
+      ...project,
       ...formData
     });
     setIsEditing(false);
@@ -65,26 +65,36 @@ function ExperienceEditor({ experience, onUpdate, onDelete, onAddBulletFromMaste
   }
 
   return (
-    <div className="experience-editor">
+    <div className="section-editor">
       {isEditing ? (
-        <div className="experience-form">
+        <div className="section-form">
           <div className="form-group">
-            <label>Company</label>
+            <label>Project Name</label>
             <input
               type="text"
-              value={formData.company}
-              onChange={(e) => handleFieldChange('company', e.target.value)}
-              placeholder="e.g., Google"
+              value={formData.name}
+              onChange={(e) => handleFieldChange('name', e.target.value)}
+              placeholder="e.g., E-commerce Platform"
             />
           </div>
 
           <div className="form-group">
-            <label>Role</label>
+            <label>Description</label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => handleFieldChange('description', e.target.value)}
+              placeholder="Brief project description..."
+              rows={2}
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Technologies</label>
             <input
               type="text"
-              value={formData.role}
-              onChange={(e) => handleFieldChange('role', e.target.value)}
-              placeholder="e.g., Software Engineer"
+              value={formData.technologies}
+              onChange={(e) => handleFieldChange('technologies', e.target.value)}
+              placeholder="e.g., React, Node.js, PostgreSQL"
             />
           </div>
 
@@ -95,7 +105,7 @@ function ExperienceEditor({ experience, onUpdate, onDelete, onAddBulletFromMaste
                 type="text"
                 value={formData.startDate}
                 onChange={(e) => handleFieldChange('startDate', e.target.value)}
-                placeholder="e.g., 2020"
+                placeholder="e.g., Jan 2023"
               />
             </div>
 
@@ -105,7 +115,7 @@ function ExperienceEditor({ experience, onUpdate, onDelete, onAddBulletFromMaste
                 type="text"
                 value={formData.endDate}
                 onChange={(e) => handleFieldChange('endDate', e.target.value)}
-                placeholder="e.g., 2023 or Present"
+                placeholder="e.g., Dec 2023 or Present"
               />
             </div>
           </div>
@@ -186,8 +196,8 @@ function ExperienceEditor({ experience, onUpdate, onDelete, onAddBulletFromMaste
             <button
               className="btn btn-secondary"
               onClick={() => {
-                if (confirm('Delete this experience?')) {
-                  onDelete(experience.id);
+                if (confirm('Delete this project?')) {
+                  onDelete(project.id);
                 }
               }}
             >
@@ -196,12 +206,17 @@ function ExperienceEditor({ experience, onUpdate, onDelete, onAddBulletFromMaste
           </div>
         </div>
       ) : (
-        <div className="experience-view">
-          <div className="experience-header">
+        <div className="section-view">
+          <div className="section-header">
             <div>
-              <h3>{formData.company || 'Untitled Company'}</h3>
-              <p className="experience-role">{formData.role || 'Untitled Role'}</p>
-              <p className="experience-dates">
+              <h3>{formData.name || 'Untitled Project'}</h3>
+              {formData.description && (
+                <p className="section-subtitle">{formData.description}</p>
+              )}
+              {formData.technologies && (
+                <p className="section-tech">{formData.technologies}</p>
+              )}
+              <p className="section-dates">
                 {formData.startDate && formData.endDate
                   ? `${formData.startDate} - ${formData.endDate}`
                   : formData.startDate || 'No dates'}
@@ -238,6 +253,5 @@ function ExperienceEditor({ experience, onUpdate, onDelete, onAddBulletFromMaste
   );
 }
 
-export default ExperienceEditor;
-
+export default ProjectEditor;
 

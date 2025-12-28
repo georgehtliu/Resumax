@@ -1,25 +1,25 @@
 import React, { useState } from 'react';
-import { getLineCountInfo } from '../utils/latexLineCount';
-import { Icon } from './Icons';
-import './SectionEditor.css';
+import { getLineCountInfo } from '../../utils/latexLineCount';
+import { Icon } from '../ui/Icons';
+import './ExperienceEditor.css';
 
 /**
- * Education Editor Component
+ * Experience Editor Component
  * 
  * Allows users to:
- * - Edit education details (school, degree, field, dates)
+ * - Edit experience details (company, role, dates)
  * - Add unlimited bullet points
  * - Edit/delete bullet points
+ * - Reorder bullets (drag & drop - TODO)
  */
-function EducationEditor({ education, onUpdate, onDelete, onAddBulletFromMaster }) {
-  const [isEditing, setIsEditing] = useState(!education.school);
+function ExperienceEditor({ experience, onUpdate, onDelete, onAddBulletFromMaster }) {
+  const [isEditing, setIsEditing] = useState(!experience.company);
   const [formData, setFormData] = useState({
-    school: education.school || '',
-    degree: education.degree || '',
-    field: education.field || '',
-    startDate: education.startDate || '',
-    endDate: education.endDate || '',
-    bullets: education.bullets || []
+    company: experience.company || '',
+    role: experience.role || '',
+    startDate: experience.startDate || '',
+    endDate: experience.endDate || '',
+    bullets: experience.bullets || []
   });
 
   function handleFieldChange(field, value) {
@@ -31,7 +31,7 @@ function EducationEditor({ education, onUpdate, onDelete, onAddBulletFromMaster 
 
   function handleSave() {
     onUpdate({
-      ...education,
+      ...experience,
       ...formData
     });
     setIsEditing(false);
@@ -65,39 +65,27 @@ function EducationEditor({ education, onUpdate, onDelete, onAddBulletFromMaster 
   }
 
   return (
-    <div className="section-editor">
+    <div className="experience-editor">
       {isEditing ? (
-        <div className="section-form">
+        <div className="experience-form">
           <div className="form-group">
-            <label>School/University</label>
+            <label>Company</label>
             <input
               type="text"
-              value={formData.school}
-              onChange={(e) => handleFieldChange('school', e.target.value)}
-              placeholder="e.g., Stanford University"
+              value={formData.company}
+              onChange={(e) => handleFieldChange('company', e.target.value)}
+              placeholder="e.g., Google"
             />
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label>Degree</label>
-              <input
-                type="text"
-                value={formData.degree}
-                onChange={(e) => handleFieldChange('degree', e.target.value)}
-                placeholder="e.g., B.S., M.S."
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Field of Study</label>
-              <input
-                type="text"
-                value={formData.field}
-                onChange={(e) => handleFieldChange('field', e.target.value)}
-                placeholder="e.g., Computer Science"
-              />
-            </div>
+          <div className="form-group">
+            <label>Role</label>
+            <input
+              type="text"
+              value={formData.role}
+              onChange={(e) => handleFieldChange('role', e.target.value)}
+              placeholder="e.g., Software Engineer"
+            />
           </div>
 
           <div className="form-row">
@@ -107,7 +95,7 @@ function EducationEditor({ education, onUpdate, onDelete, onAddBulletFromMaster 
                 type="text"
                 value={formData.startDate}
                 onChange={(e) => handleFieldChange('startDate', e.target.value)}
-                placeholder="e.g., 2018"
+                placeholder="e.g., 2020"
               />
             </div>
 
@@ -117,7 +105,7 @@ function EducationEditor({ education, onUpdate, onDelete, onAddBulletFromMaster 
                 type="text"
                 value={formData.endDate}
                 onChange={(e) => handleFieldChange('endDate', e.target.value)}
-                placeholder="e.g., 2022 or Present"
+                placeholder="e.g., 2023 or Present"
               />
             </div>
           </div>
@@ -198,8 +186,8 @@ function EducationEditor({ education, onUpdate, onDelete, onAddBulletFromMaster 
             <button
               className="btn btn-secondary"
               onClick={() => {
-                if (confirm('Delete this education entry?')) {
-                  onDelete(education.id);
+                if (confirm('Delete this experience?')) {
+                  onDelete(experience.id);
                 }
               }}
             >
@@ -208,16 +196,12 @@ function EducationEditor({ education, onUpdate, onDelete, onAddBulletFromMaster 
           </div>
         </div>
       ) : (
-        <div className="section-view">
-          <div className="section-header">
+        <div className="experience-view">
+          <div className="experience-header">
             <div>
-              <h3>{formData.school || 'Untitled School'}</h3>
-              <p className="section-subtitle">
-                {formData.degree && formData.field
-                  ? `${formData.degree} in ${formData.field}`
-                  : formData.degree || formData.field || 'No degree/field'}
-              </p>
-              <p className="section-dates">
+              <h3>{formData.company || 'Untitled Company'}</h3>
+              <p className="experience-role">{formData.role || 'Untitled Role'}</p>
+              <p className="experience-dates">
                 {formData.startDate && formData.endDate
                   ? `${formData.startDate} - ${formData.endDate}`
                   : formData.startDate || 'No dates'}
@@ -254,5 +238,6 @@ function EducationEditor({ education, onUpdate, onDelete, onAddBulletFromMaster 
   );
 }
 
-export default EducationEditor;
+export default ExperienceEditor;
+
 

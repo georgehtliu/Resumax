@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
-import CommentPromptModal from './CommentPromptModal';
+import CommentPromptModal from '../comments/CommentPromptModal';
 import './PdfViewerWithOverlays.css';
 
 // Set up PDF.js worker

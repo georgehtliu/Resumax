@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
-import { getLineCountInfo } from '../utils/latexLineCount';
+import { getLineCountInfo } from '../../utils/latexLineCount';
 import PersonalInfoEditor from './PersonalInfoEditor';
 import SkillsEditor from './SkillsEditor';
-import { Icon } from './Icons';
+import { Icon } from '../ui/Icons';
 import './SelectedResumeEditor.css';
 
 const DEFAULT_PERSONAL_INFO = {

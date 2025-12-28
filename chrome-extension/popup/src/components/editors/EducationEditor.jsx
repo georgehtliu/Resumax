@@ -1,23 +1,25 @@
 import React, { useState } from 'react';
-import { getLineCountInfo } from '../utils/latexLineCount';
-import { Icon } from './Icons';
+import { getLineCountInfo } from '../../utils/latexLineCount';
+import { Icon } from '../ui/Icons';
 import './SectionEditor.css';
 
 /**
- * Custom Section Editor Component
+ * Education Editor Component
  * 
  * Allows users to:
- * - Create custom resume sections (e.g., Certifications, Skills, Awards)
- * - Edit section title and subtitle
+ * - Edit education details (school, degree, field, dates)
  * - Add unlimited bullet points
  * - Edit/delete bullet points
  */
-function CustomSectionEditor({ section, onUpdate, onDelete, onAddBulletFromMaster }) {
-  const [isEditing, setIsEditing] = useState(!section.title);
+function EducationEditor({ education, onUpdate, onDelete, onAddBulletFromMaster }) {
+  const [isEditing, setIsEditing] = useState(!education.school);
   const [formData, setFormData] = useState({
-    title: section.title || '',
-    subtitle: section.subtitle || '',
-    bullets: section.bullets || []
+    school: education.school || '',
+    degree: education.degree || '',
+    field: education.field || '',
+    startDate: education.startDate || '',
+    endDate: education.endDate || '',
+    bullets: education.bullets || []
   });
 
   function handleFieldChange(field, value) {
@@ -29,7 +31,7 @@ function CustomSectionEditor({ section, onUpdate, onDelete, onAddBulletFromMaste
 
   function handleSave() {
     onUpdate({
-      ...section,
+      ...education,
       ...formData
     });
     setIsEditing(false);
@@ -67,23 +69,57 @@ function CustomSectionEditor({ section, onUpdate, onDelete, onAddBulletFromMaste
       {isEditing ? (
         <div className="section-form">
           <div className="form-group">
-            <label>Section Title</label>
+            <label>School/University</label>
             <input
               type="text"
-              value={formData.title}
-              onChange={(e) => handleFieldChange('title', e.target.value)}
-              placeholder="e.g., Certifications, Skills, Awards"
+              value={formData.school}
+              onChange={(e) => handleFieldChange('school', e.target.value)}
+              placeholder="e.g., Stanford University"
             />
           </div>
 
-          <div className="form-group">
-            <label>Subtitle (Optional)</label>
-            <input
-              type="text"
-              value={formData.subtitle}
-              onChange={(e) => handleFieldChange('subtitle', e.target.value)}
-              placeholder="e.g., Additional information or context"
-            />
+          <div className="form-row">
+            <div className="form-group">
+              <label>Degree</label>
+              <input
+                type="text"
+                value={formData.degree}
+                onChange={(e) => handleFieldChange('degree', e.target.value)}
+                placeholder="e.g., B.S., M.S."
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Field of Study</label>
+              <input
+                type="text"
+                value={formData.field}
+                onChange={(e) => handleFieldChange('field', e.target.value)}
+                placeholder="e.g., Computer Science"
+              />
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label>Start Date</label>
+              <input
+                type="text"
+                value={formData.startDate}
+                onChange={(e) => handleFieldChange('startDate', e.target.value)}
+                placeholder="e.g., 2018"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>End Date</label>
+              <input
+                type="text"
+                value={formData.endDate}
+                onChange={(e) => handleFieldChange('endDate', e.target.value)}
+                placeholder="e.g., 2022 or Present"
+              />
+            </div>
           </div>
 
           <div className="bullets-section">
@@ -162,8 +198,8 @@ function CustomSectionEditor({ section, onUpdate, onDelete, onAddBulletFromMaste
             <button
               className="btn btn-secondary"
               onClick={() => {
-                if (confirm('Delete this section?')) {
-                  onDelete(section.id);
+                if (confirm('Delete this education entry?')) {
+                  onDelete(education.id);
                 }
               }}
             >
@@ -175,10 +211,17 @@ function CustomSectionEditor({ section, onUpdate, onDelete, onAddBulletFromMaste
         <div className="section-view">
           <div className="section-header">
             <div>
-              <h3>{formData.title || 'Untitled Section'}</h3>
-              {formData.subtitle && (
-                <p className="section-subtitle">{formData.subtitle}</p>
-              )}
+              <h3>{formData.school || 'Untitled School'}</h3>
+              <p className="section-subtitle">
+                {formData.degree && formData.field
+                  ? `${formData.degree} in ${formData.field}`
+                  : formData.degree || formData.field || 'No degree/field'}
+              </p>
+              <p className="section-dates">
+                {formData.startDate && formData.endDate
+                  ? `${formData.startDate} - ${formData.endDate}`
+                  : formData.startDate || 'No dates'}
+              </p>
             </div>
             <button
               className="btn btn-small"
@@ -211,5 +254,5 @@ function CustomSectionEditor({ section, onUpdate, onDelete, onAddBulletFromMaste
   );
 }
 
-export default CustomSectionEditor;
+export default EducationEditor;
 

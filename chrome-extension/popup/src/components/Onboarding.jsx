@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import ResumeUpload from './ResumeUpload';
-import { Icon } from './Icons';
+import { Icon } from './ui/Icons';
 import './Onboarding.css';
 
 /**

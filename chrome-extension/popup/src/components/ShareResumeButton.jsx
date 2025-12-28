@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../config/supabase';
 import { storageService } from '../services/storage';
-import { Icon } from './Icons';
+import { Icon } from './ui/Icons';
 import './ShareResumeButton.css';
 
 function ShareResumeButton({ resumeId, resumeName }) {
