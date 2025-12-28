@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../config/supabase';
-import { renderLatex } from '../services/api';
-import PdfViewerWithOverlays from './PdfViewerWithOverlays';
+// PDF imports removed - using HTML rendering for shared resumes
+// import { renderLatex } from '../services/api';
+// import PdfViewerWithOverlays from './PdfViewerWithOverlays';
 import './SharedResumeView.css';
 
 // Comments Side Panel Component (Google Docs style)
@@ -26,7 +27,8 @@ function CommentsSidePanel({
   bulletAnchors,
   pdfViewerRef,
   hoveredCommentId,
-  setHoveredCommentId
+  setHoveredCommentId,
+  scrollToBulletInHtml
 }) {
   const [activeBulletId, setActiveBulletId] = useState(selectedBulletId);
   const [showAllBullets, setShowAllBullets] = useState(false);
@@ -41,6 +43,10 @@ function CommentsSidePanel({
     onBulletClick(bulletId);
     // Scroll to bullet in Browse All Bullets section
     scrollToBulletInList(bulletId);
+    // Also scroll to bullet in HTML resume if function is provided
+    if (scrollToBulletInHtml) {
+      scrollToBulletInHtml(bulletId);
+    }
   };
 
   const scrollToBulletInList = (bulletId) => {
@@ -139,7 +145,7 @@ function CommentsSidePanel({
               }}
               title="View this bullet in the resume"
             >
-              🔗 View bullet in PDF
+              🔗 View bullet
             </button>
             <form 
               onSubmit={(e) => {
@@ -241,34 +247,26 @@ function CommentsSidePanel({
                       </span>
                     </div>
                     <p className="side-comment-content">{comment.content}</p>
-                    <button
-                      className="view-bullet-link"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        scrollToBulletInList(bulletId);
-                        handleBulletClick(bulletId);
-                        // Also scroll to bullet in PDF if anchor exists
-                        if (bulletAnchors && bulletAnchors[bulletId] && pdfViewerRef && pdfViewerRef.current) {
-                          pdfViewerRef.current.scrollToAnchor(bulletAnchors[bulletId]);
-                        }
-                      }}
+              <button
+                className="view-bullet-link"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  scrollToBulletInList(bulletId);
+                  handleBulletClick(bulletId);
+                }}
                       onMouseEnter={() => {
-                        if (bulletAnchors && bulletAnchors[bulletId] && pdfViewerRef && pdfViewerRef.current && setHoveredCommentId) {
+                        if (setHoveredCommentId) {
                           setHoveredCommentId(comment.id);
-                          pdfViewerRef.current.setHoveredComment(comment.id);
                         }
                       }}
                       onMouseLeave={() => {
                         if (setHoveredCommentId) {
                           setHoveredCommentId(null);
                         }
-                        if (pdfViewerRef && pdfViewerRef.current) {
-                          pdfViewerRef.current.setHoveredComment(null);
-                        }
                       }}
                       title="View this bullet in the resume"
                     >
-                      🔗 View bullet in PDF
+                      🔗 View bullet
                     </button>
                     {comment.replies && comment.replies.length > 0 && (
                       <div className="side-comment-replies">
@@ -493,12 +491,101 @@ function SharedResumeView({ shareToken }) {
   const [bulletIsAnonymous, setBulletIsAnonymous] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [pdfBase64, setPdfBase64] = useState(null);
-  const [renderingPdf, setRenderingPdf] = useState(false);
-  const [bulletAnchors, setBulletAnchors] = useState({}); // { bulletId: anchor }
+  // PDF-related state removed - using HTML rendering for shared resumes
   const [highlightedBulletInPdf, setHighlightedBulletInPdf] = useState(null);
   const [hoveredCommentId, setHoveredCommentId] = useState(null);
-  const pdfViewerRef = useRef(null);
+  const [highlightColor, setHighlightColor] = useState('#fef08a'); // Default yellow highlight
+  const highlightColorRef = useRef('#fef08a');
+  const resumePageRef = useRef(null);
+  const highlightHandlerRef = useRef(null);
+  const isResumeLoadedRef = useRef(false);
+  const lastClickTimeRef = useRef(0);
+  const clickTimeoutRef = useRef(null);
+  
+  // Keep ref in sync with state
+  useEffect(() => {
+    highlightColorRef.current = highlightColor;
+  }, [highlightColor]);
+
+  // Set up highlighting handler - use resume ID to track if already set up
+  useEffect(() => {
+    if (!resume || !resume.resume_data) return;
+    
+    // Check if we've already set up for this resume
+    const resumeId = resume.id;
+    if (isResumeLoadedRef.current === resumeId) return;
+    
+    const handleMouseUp = () => {
+      const selection = window.getSelection();
+      if (!selection || selection.rangeCount === 0 || !selection.toString().trim()) {
+        return;
+      }
+
+      const range = selection.getRangeAt(0);
+      const resumePage = resumePageRef.current;
+      
+      if (!resumePage || !resumePage.contains(range.commonAncestorContainer)) {
+        return;
+      }
+
+      // Check if text is already highlighted
+      let node = range.commonAncestorContainer;
+      while (node && node !== resumePage) {
+        if (node.nodeType === Node.ELEMENT_NODE && node.classList && node.classList.contains('highlighted-text')) {
+          // Remove highlight by replacing span with its text content
+          const textNode = document.createTextNode(node.textContent);
+          if (node.parentNode) {
+            node.parentNode.replaceChild(textNode, node);
+          }
+          selection.removeAllRanges();
+          return;
+        }
+        node = node.parentNode;
+      }
+      
+      // Add highlight - read current color from ref
+      try {
+        const span = document.createElement('span');
+        span.className = 'highlighted-text';
+        span.style.backgroundColor = highlightColorRef.current;
+        span.style.padding = '2px 0';
+        span.style.borderRadius = '3px';
+        
+        // Extract and wrap the selected content
+        const contents = range.extractContents();
+        span.appendChild(contents);
+        range.insertNode(span);
+        
+        // Clear selection
+        selection.removeAllRanges();
+      } catch (e) {
+        console.error('Error highlighting text:', e);
+        selection.removeAllRanges();
+      }
+    };
+
+    // Wait for DOM to be ready
+    const timeoutId = setTimeout(() => {
+      const resumePage = resumePageRef.current;
+      if (resumePage && isResumeLoadedRef.current !== resumeId) {
+        resumePage.addEventListener('mouseup', handleMouseUp);
+        highlightHandlerRef.current = handleMouseUp;
+        isResumeLoadedRef.current = resumeId;
+      }
+    }, 300);
+
+    return () => {
+      clearTimeout(timeoutId);
+      const resumePage = resumePageRef.current;
+      if (resumePage && highlightHandlerRef.current) {
+        resumePage.removeEventListener('mouseup', highlightHandlerRef.current);
+        highlightHandlerRef.current = null;
+      }
+      if (isResumeLoadedRef.current === resumeId) {
+        isResumeLoadedRef.current = false;
+      }
+    };
+  }, [resume?.id]);
 
   useEffect(() => {
     if (shareToken) {
@@ -669,144 +756,30 @@ function SharedResumeView({ shareToken }) {
       });
     });
     
+    // Get bullets from custom sections
+    (data.customSections || []).forEach(entry => {
+      const bullets = entry.selectedBullets || entry.bullets || [];
+      bullets.forEach((bullet, idx) => {
+        const bulletId = bullet.id || `${entry.id}-bullet-${idx}`;
+        const bulletText = typeof bullet === 'string' ? bullet : (bullet.text || bullet.rewritten || '');
+        if (bulletText) {
+          allBullets.push({
+            bulletId,
+            bulletText,
+            sectionType: 'custom',
+            entryId: entry.id,
+            entryTitle: entry.title || 'Additional'
+          });
+        }
+      });
+    });
+    
     return allBullets;
   }, [resume]);
 
-  // Convert resume data to format needed for renderLatex API
-  const convertResumeForRender = useCallback((resumeData) => {
-    if (!resumeData) return null;
+  // PDF rendering removed - using HTML rendering for shared resumes
 
-    const data = resumeData.resume_data || resumeData;
-    
-    // Normalize personal info
-    const personalInfo = data.personalInfo || data.personal_info || {};
-    
-    const mapBullets = (bullets) =>
-      (bullets || [])
-        .filter(bullet => {
-          const text = typeof bullet === 'string' ? bullet : (bullet.text || bullet.rewritten || '');
-          return text.trim().length > 0;
-        })
-        .map(bullet => ({
-          id: bullet.id || `bullet-${Math.random()}`,
-          text: typeof bullet === 'string' ? bullet : (bullet.text || bullet.rewritten || ''),
-          relevanceScore: typeof bullet?.relevanceScore === 'number' ? bullet.relevanceScore : 0.5
-        }));
-
-    // Normalize experiences
-    const experiences = (data.experiences || [])
-      .filter(entry => {
-        const company = entry.company && entry.company.trim();
-        const role = entry.role && entry.role.trim();
-        return company && role;
-      })
-      .map(entry => ({
-        id: entry.id || `exp-${Math.random()}`,
-        company: entry.company.trim(),
-        role: entry.role.trim(),
-        startDate: entry.startDate || null,
-        endDate: entry.endDate || null,
-        selectedBullets: mapBullets(entry.selectedBullets || entry.bullets)
-      }));
-
-    // Normalize education
-    const education = (data.education || [])
-      .filter(entry => {
-        const school = entry.school && entry.school.trim();
-        const degree = entry.degree && entry.degree.trim();
-        const field = entry.field && entry.field.trim();
-        return school && degree && field;
-      })
-      .map(entry => ({
-        id: entry.id || `edu-${Math.random()}`,
-        school: entry.school.trim(),
-        degree: entry.degree.trim(),
-        field: entry.field.trim(),
-        startDate: entry.startDate || null,
-        endDate: entry.endDate || null,
-        selectedBullets: mapBullets(entry.selectedBullets || entry.bullets)
-      }));
-
-    // Normalize projects
-    const projects = (data.projects || [])
-      .filter(entry => entry.name && entry.name.trim())
-      .map(entry => ({
-        id: entry.id || `proj-${Math.random()}`,
-        name: (entry.name && entry.name.trim()) || 'Project',
-        description: entry.description || null,
-        technologies: Array.isArray(entry.technologies) 
-          ? entry.technologies.join(', ') 
-          : (entry.technologies || entry.tech || entry.skills || null),
-        startDate: entry.startDate || null,
-        endDate: entry.endDate || null,
-        selectedBullets: mapBullets(entry.selectedBullets || entry.bullets)
-      }));
-
-    // Normalize skills
-    const skills = (data.skills || []).map(group => ({
-      id: group.id || `skill-${Math.random()}`,
-      title: group.title || 'Skills',
-      skills: Array.isArray(group.skills) ? group.skills : (group.skills ? [group.skills] : [])
-    }));
-
-    // Normalize custom sections
-    const customSections = (data.customSections || [])
-      .filter(section => section.title && section.title.trim())
-      .map(section => ({
-        id: section.id || `custom-${Math.random()}`,
-        title: (section.title && section.title.trim()) || 'Additional',
-        subtitle: section.subtitle || null,
-        selectedBullets: mapBullets(section.selectedBullets || section.bullets)
-      }));
-
-    return {
-      personalInfo: {
-        firstName: personalInfo.firstName || personalInfo.first_name || '',
-        lastName: personalInfo.lastName || personalInfo.last_name || '',
-        phone: personalInfo.phone || '',
-        email: personalInfo.email || '',
-        linkedin: personalInfo.linkedin || '',
-        github: personalInfo.github || ''
-      },
-      experiences,
-      education,
-      projects,
-      skills,
-      customSections
-    };
-  }, []);
-
-  // Render PDF when resume loads
-  useEffect(() => {
-    if (resume && resume.resume_data) {
-      renderPdfPreview();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resume]);
-
-  const renderPdfPreview = async () => {
-    if (!resume || !resume.resume_data) return;
-
-    setRenderingPdf(true);
-    setPdfBase64(null);
-    try {
-      const resumeForRender = convertResumeForRender(resume);
-      if (!resumeForRender) {
-        throw new Error('Could not convert resume data');
-      }
-      const response = await renderLatex(resumeForRender);
-      if (response?.pdf_base64) {
-        setPdfBase64(response.pdf_base64);
-      } else {
-        throw new Error('LaTeX render did not return a PDF');
-      }
-    } catch (error) {
-      console.error('Render PDF failed:', error);
-      setError(error?.message || 'Failed to render PDF preview.');
-    } finally {
-      setRenderingPdf(false);
-    }
-  };
+  // PDF rendering removed - using HTML rendering for shared resumes
 
   const loadComments = async () => {
     try {
@@ -1053,6 +1026,17 @@ function SharedResumeView({ shareToken }) {
     );
   };
 
+  // Scroll to bullet in HTML view
+  const scrollToBulletInHtml = (bulletId) => {
+    const bulletElement = bulletRefs[bulletId];
+    if (bulletElement) {
+      bulletElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setSelectedBulletId(bulletId);
+      setHighlightedBulletInPdf(bulletId);
+      setTimeout(() => setHighlightedBulletInPdf(null), 3000);
+    }
+  };
+
 
   const findBulletText = useCallback((bulletId) => {
     if (!resume?.resume_data) return '';
@@ -1062,7 +1046,8 @@ function SharedResumeView({ shareToken }) {
     const sections = [
       ...(data.experiences || []),
       ...(data.education || []),
-      ...(data.projects || [])
+      ...(data.projects || []),
+      ...(data.customSections || [])
     ];
     
     for (const entry of sections) {
@@ -1140,57 +1125,88 @@ function SharedResumeView({ shareToken }) {
     return bullets;
   }, [bulletComments, findBulletText, findBulletContext]);
 
-  // Create overlay comments from bullet comments with anchors
-  const overlayComments = useMemo(() => {
-    const overlays = [];
-    Object.entries(bulletComments).forEach(([bulletId, commentsList]) => {
-      const anchor = bulletAnchors[bulletId];
-      if (anchor) {
-        commentsList.forEach(comment => {
-          overlays.push({
-            id: comment.id,
-            anchor: anchor,
-            bulletId: bulletId,
-            content: comment.content,
-            author: comment.author_name || 'Anonymous',
-            created_at: comment.created_at
-          });
-        });
-      }
-    });
-    return overlays;
-  }, [bulletComments, bulletAnchors]);
+  // PDF overlay comments removed - using HTML rendering for shared resumes
 
-  // Find anchors for bullets when PDF is ready
+  // Set up highlighting handler - use resume ID to track if already set up
+  // This must be before early returns (React hooks rule)
   useEffect(() => {
-    if (!pdfViewerRef.current || !pdfBase64 || Object.keys(bulletComments).length === 0) return;
+    if (!resume || !resume.resume_data) return;
+    
+    // Check if we've already set up for this resume
+    const resumeId = resume.id;
+    if (isResumeLoadedRef.current === resumeId) return;
+    
+    const handleMouseUp = () => {
+      const selection = window.getSelection();
+      if (!selection || selection.rangeCount === 0 || !selection.toString().trim()) {
+        return;
+      }
 
-    const findAnchors = async () => {
-      const allBullets = getAllBullets();
-      const newAnchors = {};
+      const range = selection.getRangeAt(0);
+      const resumePage = resumePageRef.current;
       
-      for (const bullet of allBullets) {
-        if (bulletComments[bullet.bulletId] && !bulletAnchors[bullet.bulletId]) {
-          try {
-            const anchor = await pdfViewerRef.current.findTextPosition(bullet.bulletText);
-            if (anchor) {
-              newAnchors[bullet.bulletId] = anchor;
-            }
-          } catch (error) {
-            console.error(`Failed to find anchor for bullet ${bullet.bulletId}:`, error);
+      if (!resumePage || !resumePage.contains(range.commonAncestorContainer)) {
+        return;
+      }
+
+      // Check if text is already highlighted
+      let node = range.commonAncestorContainer;
+      while (node && node !== resumePage) {
+        if (node.nodeType === Node.ELEMENT_NODE && node.classList && node.classList.contains('highlighted-text')) {
+          // Remove highlight by replacing span with its text content
+          const textNode = document.createTextNode(node.textContent);
+          if (node.parentNode) {
+            node.parentNode.replaceChild(textNode, node);
           }
+          selection.removeAllRanges();
+          return;
         }
+        node = node.parentNode;
       }
       
-      if (Object.keys(newAnchors).length > 0) {
-        setBulletAnchors(prev => ({ ...prev, ...newAnchors }));
+      // Add highlight - read current color from ref
+      try {
+        const span = document.createElement('span');
+        span.className = 'highlighted-text';
+        span.style.backgroundColor = highlightColorRef.current;
+        span.style.padding = '2px 0';
+        span.style.borderRadius = '3px';
+        
+        // Extract and wrap the selected content
+        const contents = range.extractContents();
+        span.appendChild(contents);
+        range.insertNode(span);
+        
+        // Clear selection
+        selection.removeAllRanges();
+      } catch (e) {
+        console.error('Error highlighting text:', e);
+        selection.removeAllRanges();
       }
     };
 
-    // Wait a bit for PDF to fully load
-    const timeoutId = setTimeout(findAnchors, 1000);
-    return () => clearTimeout(timeoutId);
-  }, [pdfBase64, bulletComments, getAllBullets]);
+    // Wait for DOM to be ready
+    const timeoutId = setTimeout(() => {
+      const resumePage = resumePageRef.current;
+      if (resumePage && isResumeLoadedRef.current !== resumeId) {
+        resumePage.addEventListener('mouseup', handleMouseUp);
+        highlightHandlerRef.current = handleMouseUp;
+        isResumeLoadedRef.current = resumeId;
+      }
+    }, 300);
+
+    return () => {
+      clearTimeout(timeoutId);
+      const resumePage = resumePageRef.current;
+      if (resumePage && highlightHandlerRef.current) {
+        resumePage.removeEventListener('mouseup', highlightHandlerRef.current);
+        highlightHandlerRef.current = null;
+      }
+      if (isResumeLoadedRef.current === resumeId) {
+        isResumeLoadedRef.current = false;
+      }
+    };
+  }, [resume?.id]);
 
   const renderResume = () => {
     if (!resume || !resume.resume_data) return null;
@@ -1260,9 +1276,13 @@ function SharedResumeView({ shareToken }) {
               <div className="resume-entry">
                 <div className="entry-header-row">
                   <div className="entry-title">
-                    <strong className="entry-role">{entry.role}</strong>
-                    {entry.company && <span className="entry-company"> ({entry.company})</span>}
-                    {location && <span className="entry-location"> {location}</span>}
+                    {entry.company && (
+                      <div className="entry-company-name">{entry.company}</div>
+                    )}
+                    <div>
+                      <strong className="entry-role">{entry.role}</strong>
+                      {location && <span className="entry-location">, {location}</span>}
+                    </div>
                   </div>
                   {(entry.startDate || entry.endDate) && (
                     <span className="entry-dates">
@@ -1358,25 +1378,176 @@ function SharedResumeView({ shareToken }) {
         {data.skills && data.skills.length > 0 && (
           <div className="resume-section">
             <h3 className="section-title">SKILLS</h3>
-            <div className="skills-list">
+            <ul className="skills-list">
               {data.skills.map((group, idx) => {
                 // Ensure skills is always an array
                 const skillsArray = Array.isArray(group.skills) ? group.skills : (group.skills ? [group.skills] : []);
+                if (skillsArray.length === 0) return null;
                 return (
-                  <div key={group.id || idx} className="skill-group">
+                  <li key={group.id || idx} className="skill-group">
                     {group.title && <strong className="skill-category">{group.title}: </strong>}
-                    <span className="skill-items">{skillsArray.length > 0 ? skillsArray.join(', ') : ''}</span>
-                  </div>
+                    <span className="skill-items">{skillsArray.join(', ')}</span>
+                  </li>
                 );
               })}
-            </div>
+            </ul>
           </div>
+        )}
+
+        {data.customSections && data.customSections.length > 0 && (
+          data.customSections.map((section, idx) => {
+            const bullets = section.selectedBullets || section.bullets || [];
+            if (bullets.length === 0) return null;
+            
+            return (
+              <div key={section.id || idx} className="resume-section">
+                <h3 className="section-title">{section.title || 'ADDITIONAL'}</h3>
+                <div className="resume-entry">
+                  <ul className="entry-bullets">
+                    {bullets.map((bullet, bulletIdx) => {
+                      const bulletId = bullet.id || `${section.id}-bullet-${bulletIdx}`;
+                      return renderBullet(bullet, bulletId, 'custom', section.id, section);
+                    })}
+                  </ul>
+                </div>
+              </div>
+            );
+          })
         )}
         </div>
       </>
     );
   };
 
+  // Set up highlighting handler - use resume ID to track if already set up
+  // This must be before early returns (React hooks rule)
+  useEffect(() => {
+    if (!resume || !resume.resume_data) return;
+    
+    // Check if we've already set up for this resume
+    const resumeId = resume.id;
+    if (isResumeLoadedRef.current === resumeId) return;
+    
+    const handleMouseUp = (e) => {
+      // Prevent highlighting on double-click (which selects words/sentences)
+      const now = Date.now();
+      const timeSinceLastClick = now - lastClickTimeRef.current;
+      lastClickTimeRef.current = now;
+
+      // If double-click detected (within 300ms), don't highlight
+      if (timeSinceLastClick < 300) {
+        if (clickTimeoutRef.current) {
+          clearTimeout(clickTimeoutRef.current);
+          clickTimeoutRef.current = null;
+        }
+        return;
+      }
+
+      // Don't highlight if clicking on interactive elements
+      const target = e.target;
+      if (target && (
+        target.tagName === 'BUTTON' || 
+        target.tagName === 'INPUT' || 
+        target.tagName === 'TEXTAREA' ||
+        target.tagName === 'A' ||
+        target.closest('button') ||
+        target.closest('input') ||
+        target.closest('textarea') ||
+        target.closest('a') ||
+        target.closest('.comment-marker') ||
+        target.closest('.bullet-comment-form')
+      )) {
+        return;
+      }
+
+      // Wait a bit to see if user continues selecting (delays highlighting until selection is stable)
+      if (clickTimeoutRef.current) {
+        clearTimeout(clickTimeoutRef.current);
+      }
+
+      clickTimeoutRef.current = setTimeout(() => {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0 || !selection.toString().trim()) {
+          return;
+        }
+
+        // Don't highlight if selection was cleared (user canceled)
+        if (!selection.toString().trim()) {
+          return;
+        }
+
+        const range = selection.getRangeAt(0);
+        const resumePage = resumePageRef.current;
+        
+        if (!resumePage || !resumePage.contains(range.commonAncestorContainer)) {
+          return;
+        }
+
+        // Check if text is already highlighted
+        let node = range.commonAncestorContainer;
+        while (node && node !== resumePage) {
+          if (node.nodeType === Node.ELEMENT_NODE && node.classList && node.classList.contains('highlighted-text')) {
+            // Remove highlight by replacing span with its text content
+            const textNode = document.createTextNode(node.textContent);
+            if (node.parentNode) {
+              node.parentNode.replaceChild(textNode, node);
+            }
+            selection.removeAllRanges();
+            return;
+          }
+          node = node.parentNode;
+        }
+        
+        // Add highlight - read current color from ref
+        try {
+          const span = document.createElement('span');
+          span.className = 'highlighted-text';
+          span.style.backgroundColor = highlightColorRef.current;
+          span.style.padding = '2px 0';
+          span.style.borderRadius = '3px';
+          
+          // Extract and wrap the selected content
+          const contents = range.extractContents();
+          span.appendChild(contents);
+          range.insertNode(span);
+          
+          // Clear selection
+          selection.removeAllRanges();
+        } catch (e) {
+          console.error('Error highlighting text:', e);
+          selection.removeAllRanges();
+        }
+      }, 150); // Delay to avoid interfering with double-click selection
+    };
+
+    // Wait for DOM to be ready
+    const timeoutId = setTimeout(() => {
+      const resumePage = resumePageRef.current;
+      if (resumePage && isResumeLoadedRef.current !== resumeId) {
+        resumePage.addEventListener('mouseup', handleMouseUp);
+        highlightHandlerRef.current = handleMouseUp;
+        isResumeLoadedRef.current = resumeId;
+      }
+    }, 300);
+
+    return () => {
+      clearTimeout(timeoutId);
+      if (clickTimeoutRef.current) {
+        clearTimeout(clickTimeoutRef.current);
+        clickTimeoutRef.current = null;
+      }
+      const resumePage = resumePageRef.current;
+      if (resumePage && highlightHandlerRef.current) {
+        resumePage.removeEventListener('mouseup', highlightHandlerRef.current);
+        highlightHandlerRef.current = null;
+      }
+      if (isResumeLoadedRef.current === resumeId) {
+        isResumeLoadedRef.current = false;
+      }
+    };
+  }, [resume?.id]);
+
+  // Early returns must come after all hooks
   if (loading) {
     return <div className="shared-resume-view loading">Loading...</div>;
   }
@@ -1395,37 +1566,28 @@ function SharedResumeView({ shareToken }) {
         <p className="resume-meta">
           Resume: {resume.name} • Shared on {new Date(resume.shareLink.created_at).toLocaleDateString()}
         </p>
+        <div className="highlight-controls">
+          <label htmlFor="highlight-color-picker" className="highlight-label">
+            Highlight Color:
+          </label>
+          <input
+            id="highlight-color-picker"
+            type="color"
+            value={highlightColor}
+            onChange={(e) => setHighlightColor(e.target.value)}
+            className="highlight-color-picker"
+            title="Select highlight color"
+          />
+          <span className="highlight-hint">Select text and it will be highlighted</span>
+        </div>
       </div>
 
       <div className="resume-layout">
         <div className="resume-main-content">
-          <div className="resume-preview">
-            {renderingPdf && (
-              <div className="pdf-loading">Rendering PDF…</div>
-            )}
-            {!renderingPdf && pdfBase64 && (
-              <PdfViewerWithOverlays
-                ref={pdfViewerRef}
-                pdfBase64={pdfBase64}
-                comments={overlayComments}
-                highlightedBulletId={highlightedBulletInPdf}
-                onTextSelect={(anchor) => {
-                  console.log('Text selected:', anchor);
-                }}
-                scale={1.0}
-              />
-            )}
-            {!renderingPdf && !pdfBase64 && error && (
-              <div className="pdf-error">
-                <p>Failed to load PDF preview: {error}</p>
-                <button onClick={renderPdfPreview} className="btn btn-primary">
-                  Retry PDF Rendering
-                </button>
-              </div>
-            )}
-            {!renderingPdf && !pdfBase64 && !error && (
-              <div className="pdf-empty">Loading PDF preview...</div>
-            )}
+          <div className="resume-html-wrapper">
+            <div className="resume-page" ref={resumePageRef}>
+              {renderResume()}
+            </div>
           </div>
 
           {resume.shareLink.allow_comments && (
@@ -1495,14 +1657,7 @@ function SharedResumeView({ shareToken }) {
             bulletsWithComments={getAllBulletsWithComments()}
             allBullets={getAllBullets()}
             onBulletClick={(bulletId) => {
-              setSelectedBulletId(bulletId);
-              // Scroll to bullet in PDF
-              const anchor = bulletAnchors[bulletId];
-              if (anchor && pdfViewerRef.current) {
-                pdfViewerRef.current.scrollToAnchor(anchor);
-                setHighlightedBulletInPdf(bulletId);
-                setTimeout(() => setHighlightedBulletInPdf(null), 3000);
-              }
+              scrollToBulletInHtml(bulletId);
             }}
             onCommentSubmit={(e, bulletId, bulletText, sectionType, entryId) => 
               submitComment(e, bulletId, bulletText, sectionType, entryId)
@@ -1522,10 +1677,11 @@ function SharedResumeView({ shareToken }) {
             }}
             findBulletText={findBulletText}
             findBulletContext={findBulletContext}
-            bulletAnchors={bulletAnchors}
-            pdfViewerRef={pdfViewerRef}
+            bulletAnchors={{}}
+            pdfViewerRef={null}
             hoveredCommentId={hoveredCommentId}
             setHoveredCommentId={setHoveredCommentId}
+            scrollToBulletInHtml={scrollToBulletInHtml}
           />
         )}
       </div>

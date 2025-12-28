@@ -52,3 +52,4 @@ export function SkeletonList({ items = 3, className = '' }) {
 
 export default Skeleton;
 
+

@@ -25,24 +25,24 @@
 .resume-html-wrapper {
   display: flex;
   justify-content: center;
-  padding: 12px;
-  background: #e8ecf5;
-  border-radius: 12px;
-  border: 1px solid #d7deed;
-  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.12);
+  padding: 24px;
+  background: #f8fafc;
+  border-radius: 8px;
+  margin-bottom: 32px;
 }
 
 .resume-page {
-  width: 816px; /* 8.5in at 96dpi */
-  min-height: 1056px; /* 11in at 96dpi */
+  width: 100%;
+  max-width: 816px; /* 8.5in at 96dpi */
   background: white;
-  padding: 64px 56px;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);
-  border: 1px solid #d7deed;
-  font-family: "Times New Roman", Times, serif;
+  padding: 48px 56px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   font-size: 11pt;
-  line-height: 1.25;
-  color: #0f172a;
+  line-height: 1.5;
+  color: #1f2937;
 }
 
 .shared-resume-view.loading,
@@ -55,7 +55,7 @@
 
 .resume-meta-header {
   margin-bottom: 24px;
-  padding: 12px 16px;
+  padding: 16px;
   background: white;
   border-radius: 8px;
   border: 1px solid #e5e7eb;
@@ -64,8 +64,58 @@
 .resume-meta {
   color: #6b7280;
   font-size: 13px;
-  margin: 0;
+  margin: 0 0 12px 0;
   text-align: center;
+}
+
+.highlight-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.highlight-label {
+  font-size: 13px;
+  color: #374151;
+  font-weight: 500;
+}
+
+.highlight-color-picker {
+  width: 40px;
+  height: 32px;
+  border: 2px solid #d1d5db;
+  border-radius: 6px;
+  cursor: pointer;
+  background: none;
+  padding: 0;
+}
+
+.highlight-color-picker::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.highlight-color-picker::-webkit-color-swatch {
+  border: none;
+  border-radius: 4px;
+}
+
+.highlight-hint {
+  font-size: 12px;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.highlighted-text {
+  cursor: pointer;
+  border-radius: 3px;
+  transition: opacity 0.2s;
+}
+
+.highlighted-text:hover {
+  opacity: 0.8;
 }
 
 /* Resume Header Section - Personal Info at Top (Jake's LaTeX style) */
@@ -78,36 +128,34 @@
 }
 
 .resume-name {
-  font-size: 24pt; /* \Huge in LaTeX ≈ 24pt */
+  font-size: 24pt;
   font-weight: 700;
-  margin: 0 0 1pt 0;
-  color: #000;
-  letter-spacing: 0;
-  font-variant: small-caps; /* \scshape */
-  line-height: 1.1;
+  margin: 0 0 4pt 0;
+  color: #111827;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
 }
 
 .resume-contact-info {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 0 4px;
-  font-size: 10pt; /* \small in LaTeX ≈ 10pt */
-  color: #000;
-  line-height: 1.2;
-  margin-top: 1pt;
+  gap: 0 8px;
+  font-size: 10pt;
+  color: #4b5563;
+  line-height: 1.4;
+  margin-top: 4pt;
 }
 
 .resume-contact-info .contact-item {
   display: inline-block;
   padding: 0;
-  text-decoration: underline;
 }
 
 .resume-contact-info .contact-item::after {
-  content: ' |';
-  margin: 0 2px;
-  color: #000;
+  content: '•';
+  margin: 0 8px;
+  color: #9ca3af;
   text-decoration: none;
 }
 
@@ -116,12 +164,13 @@
 }
 
 .resume-contact-info .contact-item a {
-  color: #000;
-  text-decoration: underline;
+  color: #4b5563;
+  text-decoration: none;
+  transition: color 0.2s;
 }
 
 .resume-contact-info .contact-item a:hover {
-  color: #000;
+  color: #2563eb;
   text-decoration: underline;
 }
 
@@ -166,10 +215,10 @@
 }
 
 .resume-content {
-  padding: 12px 48px 24px 48px; /* Tight margins like LaTeX */
-  font-size: 11pt; /* Base font size in LaTeX */
-  line-height: 1.3; /* Slightly tighter but readable */
-  color: #000;
+  padding: 0; /* Padding handled by resume-page */
+  font-size: 11pt;
+  line-height: 1.5;
+  color: #1f2937;
 }
 
 .resume-section {
@@ -186,17 +235,16 @@
 }
 
 .resume-section h3.section-title {
-  font-size: 14pt; /* \large in LaTeX ≈ 14pt */
-  font-weight: 400; /* Normal weight for small caps */
-  margin: 0 0 4pt 0; /* Reduced negative margins */
-  color: #000;
+  font-size: 13pt;
+  font-weight: 600;
+  margin: 16pt 0 6pt 0;
+  color: #111827;
   text-transform: uppercase;
-  font-variant: small-caps; /* \scshape */
   letter-spacing: 0.5px;
-  border-bottom: 1px solid #000;
-  padding-bottom: 2pt;
+  border-bottom: 1.5px solid #374151;
+  padding-bottom: 3pt;
   text-align: left;
-  line-height: 1.3;
+  line-height: 1.4;
 }
 
 .resume-entry {
@@ -226,18 +274,26 @@
 .entry-role,
 .entry-school,
 .entry-project-name {
-  font-weight: 700; /* \textbf */
-  color: #000;
-  font-size: 11pt; /* Base size */
+  font-weight: 600;
+  color: #111827;
+  font-size: 11pt;
   display: inline;
+}
+
+.entry-company-name {
+  color: #111827;
+  font-weight: 600;
+  font-size: 11pt;
+  display: block;
+  margin-bottom: 2pt;
 }
 
 .entry-company,
 .entry-degree,
 .entry-field {
-  color: #000;
-  font-weight: normal;
-  font-size: 11pt; /* Same size as role */
+  color: #4b5563;
+  font-weight: 400;
+  font-size: 11pt;
   display: inline;
 }
 
@@ -264,10 +320,10 @@
 }
 
 .entry-dates {
-  color: #000;
-  font-size: 10pt; /* \small */
+  color: #6b7280;
+  font-size: 10pt;
   font-weight: 400;
-  font-style: italic; /* \textit */
+  font-style: normal;
   white-space: nowrap;
   margin-left: 0;
 }
@@ -280,36 +336,37 @@
 }
 
 .entry-bullets {
-  margin: 4pt 0 0 14.4px; /* 0.15in = 14.4px left margin */
+  margin: 4pt 0 0 0;
   padding: 0;
+  padding-left: 20px; /* Space for bullet point */
   list-style: disc;
   list-style-position: outside;
 }
 
 .entry-bullets li {
-  margin-bottom: 1pt; /* Small spacing between items */
-  color: #000;
-  line-height: 1.25; /* Readable line height */
-  font-size: 10pt; /* \small in LaTeX */
+  margin-bottom: 3pt;
+  color: #1f2937;
+  line-height: 1.5;
+  font-size: 10pt;
   padding-left: 0;
   padding-top: 0;
   padding-bottom: 0;
+  user-select: text; /* Allow text selection */
 }
 
 /* Interactive Bullet Styling - Google Docs Style */
 .resume-bullet {
   position: relative;
   cursor: pointer;
-  padding: 1pt 0 1pt 40px; /* Minimal padding, but enough to prevent overlap */
+  padding: 1pt 0;
   margin: 0;
   border-radius: 0;
   transition: all 0.2s;
   list-style: disc;
-  display: flex;
-  align-items: flex-start;
-  gap: 0;
-  line-height: 1.25; /* Readable line height */
-  min-height: 1.25em; /* Ensure minimum height */
+  list-style-position: outside;
+  display: list-item;
+  line-height: 1.5;
+  min-height: 1.25em;
 }
 
 .resume-bullet:hover {
@@ -355,11 +412,12 @@
   align-items: flex-start;
   gap: 12px;
   width: 100%;
+  margin-left: 0;
 }
 
 .comment-marker-container {
   position: absolute;
-  left: 8px;
+  left: -32px;
   top: 50%;
   transform: translateY(-50%);
   z-index: 10;
@@ -417,12 +475,13 @@
 
 .bullet-text {
   flex: 1;
-  color: #000;
+  color: #1f2937;
   margin-left: 0;
-  font-size: 10pt; /* \small */
-  line-height: 1.25;
+  font-size: 10pt;
+  line-height: 1.5;
   word-wrap: break-word;
   overflow-wrap: break-word;
+  user-select: text; /* Allow text selection */
 }
 
 /* Bullet Comment Form */
@@ -903,20 +962,24 @@
 }
 
 .skills-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0;
-  margin: 0;
-  line-height: 1.3;
+  list-style: disc;
+  list-style-position: outside;
+  margin: 4pt 0 0 0;
+  padding: 0;
+  padding-left: 20px;
+  line-height: 1.5;
 }
 
 .skill-group {
-  font-size: 10pt; /* \small */
-  color: #000;
-  line-height: 1.3;
-  margin: 0;
-  margin-right: 12pt;
-  display: inline-block;
+  font-size: 10pt;
+  color: #1f2937;
+  line-height: 1.5;
+  margin: 0 0 1pt 0;
+  display: list-item;
+  margin-left: -20px;
+  padding-left: 20px;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 .skill-group:last-child {

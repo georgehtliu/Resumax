@@ -1,0 +1,162 @@
+.html-resume-viewer {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  position: relative;
+  background: #f5f5f5;
+}
+
+.html-resume-content {
+  width: 8.5in; /* Letter paper width */
+  min-height: 11in; /* Letter paper height */
+  margin: 0 auto;
+  padding: 0.5in;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  font-family: 'Times New Roman', serif;
+  font-size: 11pt;
+  line-height: 1.4;
+  color: #000;
+}
+
+/* Resume Heading */
+.resume-heading {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.resume-name {
+  font-size: 24pt;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0 0 8px 0;
+  font-family: 'Times New Roman', serif;
+}
+
+.resume-contact {
+  font-size: 10pt;
+  color: #333;
+}
+
+.resume-contact a {
+  color: #333;
+  text-decoration: underline;
+}
+
+.resume-contact .separator {
+  margin: 0 8px;
+}
+
+/* Resume Sections */
+.resume-section {
+  margin-bottom: 16px;
+}
+
+.resume-section-title {
+  font-size: 14pt;
+  font-weight: bold;
+  text-transform: uppercase;
+  margin: 16px 0 8px 0;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #000;
+  font-family: 'Times New Roman', serif;
+}
+
+/* Subheading Lists */
+.resume-subheading-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.resume-subheading {
+  margin-bottom: 12px;
+}
+
+.resume-subheading-header,
+.resume-subheading-subheader {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.resume-subheading-left {
+  flex: 1;
+}
+
+.resume-subheading-right {
+  text-align: right;
+  white-space: nowrap;
+  margin-left: 16px;
+}
+
+.resume-subheading-header strong {
+  font-size: 11pt;
+}
+
+.resume-subheading-subheader em {
+  font-size: 10pt;
+  font-style: italic;
+}
+
+/* Item Lists */
+.resume-item-list {
+  list-style: none;
+  padding-left: 0.15in;
+  margin: 4px 0;
+}
+
+.resume-item-list.skills-list {
+  padding-left: 0;
+}
+
+.resume-item {
+  font-size: 10pt;
+  margin: 2px 0;
+  line-height: 1.4;
+}
+
+.resume-project-heading {
+  margin-bottom: 8px;
+}
+
+.resume-project-heading .resume-subheading-header {
+  margin-bottom: 4px;
+}
+
+.resume-project-heading strong {
+  font-size: 10pt;
+}
+
+.resume-project-heading em {
+  font-size: 10pt;
+  font-style: italic;
+}
+
+/* Highlights */
+.resume-highlight {
+  background-color: #FFEB3B;
+  opacity: 0.3;
+  border-radius: 2px;
+  padding: 0 2px;
+}
+
+.html-resume-highlight-controls {
+  position: sticky;
+  top: 0;
+  background: white;
+  padding: 8px;
+  border-bottom: 1px solid #ddd;
+  z-index: 100;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.html-resume-empty {
+  padding: 40px;
+  text-align: center;
+  color: #999;
+}
+

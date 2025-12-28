@@ -124,3 +124,4 @@ function KeywordScanner({ keywordData, loading = false }) {
 
 export default KeywordScanner;
 
+
