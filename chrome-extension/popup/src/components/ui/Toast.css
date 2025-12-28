@@ -18,9 +18,8 @@
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
   background: var(--bg-primary);
-  border: 1px solid var(--color-gray-200);
+  border: 1px solid var(--color-slate-200);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
   pointer-events: auto;
   animation: slideInRight var(--transition-base);
   backdrop-filter: blur(10px);
@@ -56,13 +55,13 @@
 }
 
 .toast-close:hover {
-  background: var(--color-gray-200);
+  background: var(--color-slate-200);
   color: var(--text-primary);
 }
 
 .toast-success {
   border-color: var(--color-success);
-  background: linear-gradient(to right, var(--color-success-light), var(--bg-primary));
+  background: var(--bg-primary);
 }
 
 .toast-success .toast-icon {
@@ -71,7 +70,7 @@
 
 .toast-error {
   border-color: var(--color-error);
-  background: linear-gradient(to right, var(--color-error-light), var(--bg-primary));
+  background: var(--bg-primary);
 }
 
 .toast-error .toast-icon {
@@ -80,7 +79,7 @@
 
 .toast-info {
   border-color: var(--color-info);
-  background: linear-gradient(to right, var(--color-info-light), var(--bg-primary));
+  background: var(--bg-primary);
 }
 
 .toast-info .toast-icon {
@@ -89,7 +88,7 @@
 
 .toast-warning {
   border-color: var(--color-warning);
-  background: linear-gradient(to right, var(--color-warning-light), var(--bg-primary));
+  background: var(--bg-primary);
 }
 
 .toast-warning .toast-icon {

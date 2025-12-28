@@ -16,7 +16,7 @@
   padding: var(--space-3) var(--space-4);
   background: var(--bg-primary);
   border-radius: var(--radius-lg);
-  border: 1px solid var(--color-gray-200);
+  border: 1px solid var(--color-slate-200);
   flex-wrap: wrap;
 }
 
@@ -26,7 +26,7 @@
   justify-content: center;
   width: 40px;
   height: 40px;
-  border: 1px solid var(--color-gray-300);
+  border: 1px solid var(--color-slate-200);
   border-radius: var(--radius-md);
   background: var(--bg-primary);
   color: var(--text-primary);
@@ -58,7 +58,7 @@
   height: 10px;
   border-radius: 50%;
   border: none;
-  background: var(--color-gray-300);
+  background: var(--color-slate-300);
   cursor: pointer;
   transition: all var(--transition-base);
   padding: 0;
@@ -102,12 +102,12 @@
 }
 
 .carousel-container::-webkit-scrollbar-thumb {
-  background: var(--color-gray-300);
+  background: var(--color-slate-300);
   border-radius: 4px;
 }
 
 .carousel-container::-webkit-scrollbar-thumb:hover {
-  background: var(--color-gray-400);
+  background: var(--color-slate-400);
 }
 
 .carousel-track {
@@ -142,15 +142,13 @@
   background: linear-gradient(135deg, var(--color-primary-50) 0%, var(--color-purple-50) 100%);
   border: 1px solid var(--color-primary-200);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
   transition: all var(--transition-base);
   width: 100%;
   box-sizing: border-box;
 }
 
 .resume-summary:hover {
-  box-shadow: var(--shadow-md);
-  border-color: var(--color-primary-300);
+  border-color: var(--color-slate-300);
 }
 
 .summary-item {
@@ -182,11 +180,10 @@
 }
 
 .selected-section {
-  border: 1px solid var(--color-gray-200);
+  border: 1px solid var(--color-slate-200);
   border-radius: var(--radius-lg);
   padding: var(--space-4) var(--space-4);
   background: var(--bg-primary);
-  box-shadow: var(--shadow-sm);
   transition: all var(--transition-base);
   margin-bottom: var(--space-3);
   width: 100%;
@@ -194,7 +191,6 @@
 }
 
 .selected-section:hover {
-  box-shadow: var(--shadow-md);
   border-color: var(--color-primary-200);
   background: var(--color-primary-50);
 }
@@ -218,9 +214,7 @@
   margin: 0;
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-semibold);
-  background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-purple-600) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--text-primary);
   background-clip: text;
 }
 
@@ -231,7 +225,7 @@
   color: var(--text-secondary);
   font-size: var(--font-size-sm);
   text-align: center;
-  border: 1px dashed var(--color-gray-300);
+  border: 1px dashed var(--color-slate-300);
   transition: all var(--transition-base);
 }
 
@@ -246,19 +240,17 @@
 }
 
 .selected-entry {
-  border: 1px solid var(--color-gray-200);
+  border: 1px solid var(--color-slate-200);
   border-radius: var(--radius-md);
   padding: var(--space-4);
   margin-bottom: var(--space-3);
   background: var(--bg-primary);
   transition: all var(--transition-base);
-  box-shadow: var(--shadow-sm);
   width: 100%;
   box-sizing: border-box;
 }
 
 .selected-entry:hover {
-  box-shadow: var(--shadow-md);
   border-color: var(--color-primary-200);
   background: var(--color-primary-50);
   transform: translateY(-1px);
@@ -287,7 +279,7 @@
 .entry-field textarea {
   width: 100%;
   padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--color-gray-300);
+  border: 1px solid var(--color-slate-200);
   border-radius: var(--radius-md);
   font-size: var(--font-size-sm);
   background: var(--bg-primary);
@@ -340,7 +332,7 @@
 }
 
 .selected-bullet-row:hover {
-  background: var(--color-gray-50);
+  background: var(--color-slate-50);
   padding-left: var(--space-2);
   padding-right: var(--space-2);
   border-radius: var(--radius-sm);
@@ -367,7 +359,7 @@
 .bullet-text-group textarea {
   width: 100%;
   padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--color-gray-300);
+  border: 1px solid var(--color-slate-200);
   border-radius: var(--radius-md);
   font-size: var(--font-size-sm);
   resize: vertical;

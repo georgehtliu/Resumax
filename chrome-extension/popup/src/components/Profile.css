@@ -31,10 +31,7 @@
   color: var(--text-primary);
   margin: 0 0 var(--space-2) 0;
   letter-spacing: -0.5px;
-  background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-purple-600) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--text-primary);
 }
 
 .profile-subtitle {
@@ -56,7 +53,7 @@
   gap: var(--space-2);
   padding: var(--space-3) var(--space-5);
   background: var(--bg-primary);
-  border: 1px solid var(--color-primary-300);
+  border: 1px solid var(--color-slate-200);
   border-radius: var(--radius-md);
   color: var(--color-primary-600);
   font-size: var(--font-size-sm);
@@ -64,15 +61,12 @@
   cursor: pointer;
   transition: all var(--transition-base);
   white-space: nowrap;
-  box-shadow: var(--shadow-sm);
 }
 
 .btn-import-resume:hover {
-  background: linear-gradient(135deg, var(--color-primary-50) 0%, var(--color-purple-50) 100%);
-  border-color: var(--color-primary-400);
+  background: var(--color-primary-50);
+  border-color: var(--color-slate-300);
   color: var(--color-primary-700);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
 }
 
 .btn-import-resume:active {
@@ -93,9 +87,8 @@
   gap: var(--space-4);
   padding: var(--space-5);
   background: var(--bg-primary);
-  border: 1px solid var(--color-gray-200);
+  border: 1px solid var(--color-slate-200);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
   transition: all var(--transition-base);
   position: relative;
   overflow: hidden;
@@ -107,16 +100,14 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--color-primary-500) 0%, var(--color-purple-500) 100%);
+  height: 2px;
+  background: var(--color-primary-600);
   transform: scaleX(0);
   transition: transform var(--transition-base);
 }
 
 .stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-  border-color: var(--color-primary-200);
+  border-color: var(--color-slate-300);
 }
 
 .stat-card:hover::before {
@@ -132,15 +123,14 @@
   align-items: center;
   justify-content: center;
   color: white;
-  box-shadow: var(--shadow-sm);
 }
 
 .stat-icon-primary {
-  background: linear-gradient(135deg, var(--color-primary-500) 0%, var(--color-primary-600) 100%);
+  background: var(--color-primary-600);
 }
 
 .stat-icon-secondary {
-  background: linear-gradient(135deg, var(--color-purple-500) 0%, var(--color-purple-600) 100%);
+  background: var(--color-indigo-600);
 }
 
 .stat-icon-tertiary {
@@ -176,18 +166,17 @@
 .profile-content {
   background: var(--bg-primary);
   border-radius: var(--radius-lg);
-  border: 1px solid var(--color-gray-200);
+  border: 1px solid var(--color-slate-200);
   overflow: hidden;
-  box-shadow: var(--shadow-sm);
   transition: all var(--transition-base);
 }
 
 .profile-content:hover {
-  box-shadow: var(--shadow-md);
+  border-color: var(--color-slate-300);
 }
 
 .profile-tabs-wrapper {
-  border-bottom: 1px solid var(--color-gray-200);
+  border-bottom: 1px solid var(--color-slate-200);
   background: var(--bg-secondary);
   padding: 0 var(--space-4);
 }
@@ -218,8 +207,8 @@
   justify-content: center;
   text-align: center;
   padding: var(--space-16) var(--space-6);
-  background: linear-gradient(135deg, var(--color-primary-50) 0%, var(--color-purple-50) 100%);
-  border: 2px dashed var(--color-primary-300);
+  background: var(--color-primary-50);
+  border: 1px dashed var(--color-slate-300);
   border-radius: var(--radius-lg);
   margin: var(--space-4) 0;
 }
@@ -228,13 +217,12 @@
   width: 80px;
   height: 80px;
   border-radius: var(--radius-full);
-  background: linear-gradient(135deg, var(--color-primary-100) 0%, var(--color-purple-100) 100%);
+  background: var(--color-primary-100);
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: var(--space-4);
   color: var(--color-primary-600);
-  box-shadow: var(--shadow-sm);
 }
 
 .empty-state-modern h3 {
@@ -269,29 +257,24 @@
 }
 
 .btn-add-modern.btn-primary {
-  background: linear-gradient(135deg, var(--color-primary-500) 0%, var(--color-purple-500) 100%);
+  background: var(--color-primary-600);
   color: white;
-  box-shadow: var(--shadow-sm);
 }
 
 .btn-add-modern.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  background: var(--color-primary-700);
 }
 
 .btn-add-modern.btn-secondary {
   background: var(--bg-primary);
-  border: 1px solid var(--color-gray-300);
+  border: 1px solid var(--color-slate-200);
   color: var(--text-primary);
-  box-shadow: var(--shadow-sm);
 }
 
 .btn-add-modern.btn-secondary:hover {
-  background: var(--color-gray-50);
-  border-color: var(--color-primary-300);
+  background: var(--color-slate-50);
+  border-color: var(--color-slate-300);
   color: var(--color-primary-600);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
 }
 
 /* Responsive */

@@ -43,7 +43,6 @@
   padding: var(--space-10) var(--space-8);
   width: 100%;
   max-width: 440px;
-  box-shadow: var(--shadow-2xl);
   position: relative;
   z-index: 1;
   animation: slideUp var(--transition-slow);
@@ -58,10 +57,7 @@
   font-size: var(--font-size-3xl);
   font-weight: var(--font-weight-bold);
   margin-bottom: var(--space-2);
-  background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-purple-600) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--text-primary);
 }
 
 .sign-in-subtitle {
@@ -91,7 +87,7 @@
 .form-group input[type="text"] {
   width: 100%;
   padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--color-gray-300);
+  border: 1px solid var(--color-slate-200);
   border-radius: var(--radius-md);
   font-size: var(--font-size-sm);
   color: var(--text-primary);
@@ -199,7 +195,7 @@
   gap: var(--space-2);
   width: 100%;
   padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--color-gray-300);
+  border: 1px solid var(--color-slate-200);
   border-radius: var(--radius-md);
   background: var(--bg-primary);
   color: var(--text-primary);
@@ -228,7 +224,7 @@
 .sign-in-footer {
   text-align: center;
   padding-top: var(--space-5);
-  border-top: 1px solid var(--color-gray-200);
+  border-top: 1px solid var(--color-slate-200);
 }
 
 .sign-in-footer p {

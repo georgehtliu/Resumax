@@ -1,8 +1,8 @@
 .onboarding-container {
   width: 100%;
   min-height: 100vh;
-  padding: 48px 24px;
-  background: linear-gradient(180deg, #f0f3fb 0%, #e2e7f4 100%);
+  padding: var(--space-12) var(--space-6);
+  background: var(--bg-secondary);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -10,7 +10,7 @@
 
 .onboarding-header {
   text-align: center;
-  margin-bottom: 48px;
+  margin-bottom: var(--space-12);
   width: 100%;
   max-width: 800px;
 }
@@ -18,59 +18,53 @@
 .btn-back {
   background: transparent;
   border: none;
-  color: #5c7adf;
-  font-size: 14px;
-  font-weight: 500;
+  color: var(--color-primary-600);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  padding: 8px 0;
-  margin-bottom: 16px;
-  transition: color 0.2s;
+  padding: var(--space-2) 0;
+  margin-bottom: var(--space-4);
+  transition: color var(--transition-base);
 }
 
 .btn-back:hover {
-  color: #4a6bc7;
+  color: var(--color-primary-700);
 }
 
 .onboarding-header h1 {
-  font-size: 32px;
-  font-weight: 700;
-  color: #243352;
-  margin: 0 0 12px;
-  background: linear-gradient(135deg, #5c7adf 0%, #7ea6f9 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  margin: 0 0 var(--space-3) 0;
+  letter-spacing: -0.5px;
 }
 
 .subtitle {
-  font-size: 16px;
-  color: #64748b;
+  font-size: var(--font-size-base);
+  color: var(--text-secondary);
   margin: 0;
 }
 
 .onboarding-options {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 24px;
+  gap: var(--space-6);
   width: 100%;
   max-width: 800px;
-  margin-bottom: 32px;
+  margin-bottom: var(--space-8);
 }
 
 .option-card {
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 32px;
+  background: var(--bg-primary);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
   cursor: pointer;
-  transition: all 0.3s;
-  border: 2px solid transparent;
-  box-shadow: 0 4px 12px rgba(88, 114, 186, 0.1);
+  transition: all var(--transition-base);
+  border: 1px solid var(--color-slate-200);
 }
 
 .option-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(88, 114, 186, 0.2);
-  border-color: #5c7adf;
+  border-color: var(--color-slate-300);
 }
 
 .option-icon {
@@ -79,17 +73,17 @@
 }
 
 .option-card h3 {
-  font-size: 20px;
-  font-weight: 600;
-  color: #243352;
-  margin: 0 0 12px;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  margin: 0 0 var(--space-3) 0;
 }
 
 .option-description {
-  font-size: 14px;
-  color: #64748b;
-  line-height: 1.6;
-  margin: 0 0 20px;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  line-height: var(--line-height-relaxed);
+  margin: 0 0 var(--space-5) 0;
 }
 
 .option-features {
@@ -100,18 +94,18 @@
 
 .feature-tag {
   display: inline-block;
-  padding: 4px 12px;
-  background: #f0f4ff;
-  color: #5c7adf;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 500;
+  padding: var(--space-1) var(--space-3);
+  background: var(--color-primary-50);
+  color: var(--color-primary-600);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
 }
 
 .onboarding-footer {
   text-align: center;
-  color: #94a3b8;
-  font-size: 14px;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-sm);
   margin-top: auto;
 }
 
