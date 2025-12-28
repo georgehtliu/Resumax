@@ -745,13 +745,13 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
                 </div>
               </div>
 
-              {/* Resume Editor with Carousel */}
+              {/* Resume Editor with Tabs */}
               {editedResume && (
                 <div className="section">
                   <SelectedResumeEditor
                     resume={editedResume}
                     onUpdate={setEditedResume}
-                    showPersonalInfo={true}
+                    showPersonalInfo={false}
                     showSkills={true}
                     showEducation={true}
                   />
