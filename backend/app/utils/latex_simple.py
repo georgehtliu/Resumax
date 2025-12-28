@@ -41,3 +41,4 @@ MINIMAL_LATEX_HEADER = r"""
 \newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-5pt}}
 """
 
+

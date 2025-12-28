@@ -2,7 +2,7 @@
 
 An intelligent resume optimization system that helps software engineers tailor their resumes to specific job descriptions using AI-powered matching, rewriting, and analysis. Built as a Chrome extension with a full-stack backend API.
 
-## 🎯 Overview
+## Overview
 
 Resumax combines a **Chrome extension** (React-based UI) with a **FastAPI backend** to provide:
 
@@ -12,21 +12,21 @@ Resumax combines a **Chrome extension** (React-based UI) with a **FastAPI backen
 - **Resume Sharing & Collaboration**: Generate shareable links with interactive PDF viewer and comment system
 - **Real-Time PDF Preview**: View LaTeX-generated PDFs with visual markers linking comments to specific bullets
 
-## ✨ Key Features
+## Key Features
 
-### 🔍 Hybrid Search Engine
+### Hybrid Search Engine
 - **Semantic Search**: Vector embeddings capture meaning and context using OpenAI's `text-embedding-3-small/large`
 - **Keyword Matching**: Exact tech term matching across 300+ technology patterns
 - **Combined Ranking**: 70% semantic similarity + 30% keyword matching for optimal results
 
-### 🤖 AI Optimization
+### AI Optimization
 - **Unified Optimizer**: Single LLM call for ranking, rewriting, and gap analysis (80-90% cost reduction vs. multi-agent workflows)
 - **Dual Modes**:
   - **Strict Mode**: Only rewrites existing bullets, identifies gaps but doesn't fill them
   - **Creative Mode**: Rewrites existing bullets and suggests new bullets for identified gaps
 - **Cost Efficient**: Dev mode (~$0.01-0.02) vs. Prod mode (~$0.05-0.15) per optimization
 
-### 📱 Chrome Extension
+### Chrome Extension
 
 **Two Views:**
 
@@ -49,7 +49,7 @@ Resumax combines a **Chrome extension** (React-based UI) with a **FastAPI backen
 - **Browse All Bullets**: Side panel showing all resume bullets with comment counts and quick navigation
 - **One-Page Enforcement**: Dynamic bullet selection that adapts to fit Jake's LaTeX template
 
-### 💾 Backend API
+### Backend API
 
 **Endpoints:**
 - `POST /api/v1/select`: Fast bullet selection without rewriting (vector search only)
@@ -57,7 +57,7 @@ Resumax combines a **Chrome extension** (React-based UI) with a **FastAPI backen
 - `POST /api/v1/latex/render`: Generate LaTeX/PDF for Jake's template via `tectonic`
 - `POST /api/v1/keywords/scan`: Extract and match keywords from job descriptions
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -126,7 +126,7 @@ Resumax combines a **Chrome extension** (React-based UI) with a **FastAPI backen
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -199,11 +199,8 @@ Resumax combines a **Chrome extension** (React-based UI) with a **FastAPI backen
    - Add work experiences and bullet points
    - Generate a resume from a job description
 
-For detailed setup instructions, see:
-- [Backend README](backend/README.md)
-- [Chrome Extension README](chrome-extension/README.md)
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 Resumax/
@@ -259,12 +256,10 @@ Resumax/
 │   │   └── content-style.css       # Content script styles
 │   └── manifest.json               # Extension manifest
 │
-├── PROJECT_OVERVIEW.md              # Detailed architecture & roadmap
-├── CHROME_EXTENSION_FLOW.md         # Extension user flow documentation
 └── README.md                        # This file
 ```
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Backend
 - **FastAPI** - Modern Python web framework with automatic API docs
@@ -289,7 +284,7 @@ Resumax/
 - **Unit Tests** - Hybrid search, keyword extraction, scoring
 - **Integration Tests** - Full RAG pipeline
 
-## 💡 How It Works
+## How It Works
 
 ### 1. Master Resume (Profile Tab)
 
@@ -350,15 +345,11 @@ Public resume view with interactive comment system:
 8. **Real-Time Updates**: Comments appear instantly via Supabase subscriptions
 9. **PDF Bullet Detection**: Automatically finds bullet positions in PDF and draws visual connections
 
-## 📚 Documentation
+## Documentation
 
-- **[PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md)** - Complete architecture, cost optimization, and roadmap
-- **[CHROME_EXTENSION_FLOW.md](CHROME_EXTENSION_FLOW.md)** - Detailed user workflow and UI flow
-- **[Backend README](backend/README.md)** - Backend setup, API endpoints, and usage
-- **[Chrome Extension README](chrome-extension/README.md)** - Extension setup and development guide
-- **[Backend Testing Guide](backend/TESTING_GUIDE.md)** - How to run and write tests
+For detailed documentation, see the inline code comments and API documentation at `http://localhost:8000/docs` when the backend is running.
 
-## 🧪 Testing
+## Testing
 
 ### Backend Tests
 
@@ -382,7 +373,7 @@ Manual testing via Chrome DevTools and extension popup. Test flows:
 - Saved resume management
 - Resume sharing and comments
 
-## 🎓 Learning Goals
+## Learning Goals
 
 This project demonstrates:
 
@@ -396,18 +387,18 @@ This project demonstrates:
 - **PDF.js** integration for interactive PDF viewing
 - **Real-time updates** using Supabase subscriptions
 
-## 📝 License
+## License
 
 MIT License - See LICENSE file for details
 
-## 🤝 Contributing
+## Contributing
 
 This is a learning project. Feel free to fork, modify, and experiment!
 
-## 📧 Contact
+## Contact
 
 For questions or suggestions, open an issue or contact the maintainer.
 
 ---
 
-**Built with ❤️ for software engineers who want to optimize their resumes efficiently.**
+**Built for software engineers who want to optimize their resumes efficiently.**
