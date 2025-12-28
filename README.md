@@ -8,9 +8,12 @@ Resume Master combines a **Chrome extension** (React-based UI) with a **FastAPI 
 
 - **Master Resume Management**: Build and maintain unlimited bullet points across all resume sections
 - **AI-Powered Optimization**: Match and rewrite bullets for specific job descriptions using hybrid search (semantic + keyword matching)
+- **Resume Coaching**: Get feedback from AI Coach or connect with human reviewers for personalized critiques
+- **Real-Time Collaboration**: WebSocket-based live collaboration with queue-based matching, live chat, highlighting, and commenting
 - **One-Page Resume Generation**: Automatically select bullets that fit within one page using Jake's LaTeX template
 - **Resume Sharing & Collaboration**: Generate shareable links with interactive PDF viewer and comment system
 - **Real-Time PDF Preview**: View LaTeX-generated PDFs with visual markers linking comments to specific bullets
+- **Community Features**: Connect with other software engineers, share tips, and browse shared resumes
 
 ## Key Features
 
@@ -49,13 +52,54 @@ Resume Master combines a **Chrome extension** (React-based UI) with a **FastAPI 
 - **Browse All Bullets**: Side panel showing all resume bullets with comment counts and quick navigation
 - **One-Page Enforcement**: Dynamic bullet selection that adapts to fit Jake's LaTeX template
 
+### Resume Coaching
+
+**AI Coach:**
+- Instant AI-powered feedback on resume bullet points
+- Intelligent suggestions for improvement
+- Gap analysis to identify missing skills or experiences
+- Real-time optimization recommendations
+
+**Human Critique:**
+- Queue-based matching system connecting reviewers with reviewees
+- Real-time collaboration through WebSocket connections
+- Live chat for instant communication
+- Interactive highlighting on resume sections
+- Contextual comments linked to specific bullet points
+- Anonymous review system for privacy
+- See [WebSocket Collaboration Documentation](./WEBSOCKET_COLLABORATION.md) for implementation details
+
+### Real-Time Collaboration Features
+
+**WebSocket-Based System:**
+- **Queue Matching**: Automatic pairing of reviewers and reviewees
+- **Live Chat**: Real-time messaging during review sessions
+- **Interactive Highlighting**: Select and highlight text that both parties see instantly
+- **Synchronized Comments**: Comments appear in real-time for both participants
+- **Session Management**: Handle connections, disconnections, and reconnections gracefully
+
+### Community Features
+
+- Browse shared resumes from the community
+- Share your own resumes for feedback
+- Access resume tips and best practices
+- Learn from others' experiences
+
 ### Backend API
 
-**Endpoints:**
+**REST Endpoints:**
 - `POST /api/v1/select`: Fast bullet selection without rewriting (vector search only)
 - `POST /api/v1/optimize`: Selection plus AI rewriting with gap analysis
 - `POST /api/v1/latex/render`: Generate LaTeX/PDF for Jake's template via `tectonic`
 - `POST /api/v1/keywords/scan`: Extract and match keywords from job descriptions
+
+**WebSocket Endpoints (Coming Soon):**
+- `WS /ws/{user_id}`: WebSocket connection for real-time collaboration
+  - Queue joining and matching
+  - Real-time chat messaging
+  - Highlight synchronization
+  - Comment synchronization
+  - See [WebSocket Collaboration Documentation](./WEBSOCKET_COLLABORATION.md) for details
 
 ## Architecture
 
@@ -68,9 +112,10 @@ Resume Master combines a **Chrome extension** (React-based UI) with a **FastAPI 
 │  │   (3-Tab Interface)  │  │   (Full-Screen App)   │          │
 │  │                      │  │                       │          │
 │  │  • Master Resume     │  │  • Side Navigation    │          │
-│  │  • Generate Resume   │  │  • Profile             │          │
-│  │  • Saved Resumes    │  │  • Generate Resume     │          │
-│  │                      │  │  • Saved Resumes     │          │
+│  │  • Generate Resume   │  │  • Profile            │          │
+│  │  • Saved Resumes     │  │  • Generate Resume    │          │
+│  │                      │  │  • Saved Resumes      │          │
+│  │                      │  │  • Resume Coaching    │          │
 │  │                      │  │  • Community          │          │
 │  └──────────┬──────────┘  └──────────┬───────────┘          │
 │             │                          │                       │
@@ -82,48 +127,107 @@ Resume Master combines a **Chrome extension** (React-based UI) with a **FastAPI 
 │  │  • LatexPreviewModal                        │              │
 │  │  • SharedResumeView                         │              │
 │  │  • PdfViewerWithMarkers                     │              │
+│  │  • ReviewerView / RevieweeView              │              │
+│  │  • QueueMatching Component                  │              │
+│  │  • useWebSocket Hook                        │              │
 │  └─────────────────────┼──────────────────────┘              │
-└────────────────────────┼──────────────────────────────────────┘
-                          │
-                          │ HTTP API Calls
-                          │
-                          ▼
+└────────────┬───────────┼───────────────┬──────────────────────┘
+             │           │               │
+             │           │               │
+    ┌────────▼──────┐   │        ┌──────▼──────────────┐
+    │  HTTP REST    │   │        │  WebSocket          │
+    │  API Calls    │   │        │  Connections        │
+    └────────┬──────┘   │        └──────┬──────────────┘
+             │          │               │
+             │          │               │
+             └──────────┼───────────────┘
+                        │
+                        ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                    Backend API (FastAPI)                       │
 │                                                                 │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐        │
-│  │   Selection  │  │ Optimization │  │  LaTeX       │        │
-│  │   Service    │  │   Service    │  │  Renderer    │        │
-│  │              │  │              │  │              │        │
-│  │ • Vector     │  │ • LLM        │  │ • Template   │        │
-│  │   Search     │  │   Rewriting  │  │   Builder    │        │
-│  │ • Keyword    │  │ • Gap        │  │ • PDF        │        │
-│  │   Matching   │  │   Analysis   │  │   Compiler   │        │
-│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘        │
-│         │                 │                  │                 │
-│         └─────────────────┴──────────────────┘                 │
-│                          │                                     │
-│  ┌───────────────────────┼───────────────────────┐            │
-│  │         Core Services                          │            │
-│  │  • RAG Service (Orchestration)                │            │
-│  │  • Keyword Scanner                             │            │
-│  │  • LLM Service (OpenAI wrapper)               │            │
-│  └───────────────────────┼───────────────────────┘            │
-└──────────────────────────┼────────────────────────────────────┘
+│  ┌──────────────────────────────────────────────────────────┐ │
+│  │  REST API Endpoints                                      │ │
+│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐ │ │
+│  │  │   Selection  │  │ Optimization │  │  LaTeX       │ │ │
+│  │  │   Service    │  │   Service    │  │  Renderer    │ │ │
+│  │  │              │  │              │  │              │ │ │
+│  │  │ • Vector     │  │ • LLM        │  │ • Template   │ │ │
+│  │  │   Search     │  │   Rewriting  │  │   Builder    │ │ │
+│  │  │ • Keyword    │  │ • Gap        │  │ • PDF        │ │ │
+│  │  │   Matching   │  │   Analysis   │  │   Compiler   │ │ │
+│  │  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘ │ │
+│  │         │                 │                  │         │ │
+│  │         └─────────────────┴──────────────────┘         │ │
+│  │                          │                             │ │
+│  │  ┌───────────────────────┼───────────────────────┐     │ │
+│  │  │         Core Services                        │     │ │
+│  │  │  • RAG Service (Orchestration)              │     │ │
+│  │  │  • Keyword Scanner                           │     │ │
+│  │  │  • LLM Service (OpenAI wrapper)             │     │ │
+│  │  │  • Unified Optimizer                        │     │ │
+│  │  └───────────────────────┼───────────────────────┘     │ │
+│  └──────────────────────────┼─────────────────────────────┘ │
+│                              │                               │
+│  ┌───────────────────────────▼─────────────────────────────┐ │
+│  │  WebSocket API Endpoints (Coming Soon)                 │ │
+│  │  ┌──────────────────┐  ┌──────────────────┐           │ │
+│  │  │  Queue Service   │  │  Room Service    │           │ │
+│  │  │                  │  │                  │           │ │
+│  │  │ • Reviewer Queue │  │ • Room Mgmt      │           │ │
+│  │  │ • Reviewee Queue │  │ • Connection     │           │ │
+│  │  │ • Matching Logic │  │   Tracking       │           │ │
+│  │  │ • Pair Creation  │  │ • Broadcast      │           │ │
+│  │  └──────────────────┘  └──────────────────┘           │ │
+│  │                                                       │ │
+│  │  WebSocket Handler:                                   │ │
+│  │  • Queue joining/matching                            │ │
+│  │  • Real-time chat messaging                          │ │
+│  │  • Highlight synchronization                         │ │
+│  │  • Comment synchronization                           │ │
+│  └───────────────────────────────────────────────────────┘ │
+└───────────────────────────┬───────────────────────────────────┘
                             │
-                            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    External Services                            │
-│                                                                 │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐        │
-│  │   OpenAI     │  │   Supabase   │  │   Tectonic   │        │
-│  │   API        │  │   (Database) │  │   (LaTeX     │        │
-│  │              │  │              │  │   Compiler)  │        │
-│  │ • Embeddings │  │ • Resumes    │  │              │        │
-│  │ • LLM        │  │ • Comments   │  │              │        │
-│  │              │  │ • Shares      │  │              │        │
-│  └──────────────┘  └──────────────┘  └──────────────┘        │
-└─────────────────────────────────────────────────────────────────┘
+                            │
+        ┌───────────────────┼───────────────────┐
+        │                   │                   │
+        ▼                   ▼                   ▼
+┌───────────────┐  ┌──────────────┐  ┌──────────────┐
+│   OpenAI      │  │   Supabase   │  │   ChromaDB   │
+│   API         │  │   (Database) │  │   (Vector    │
+│               │  │              │  │    Store)    │
+│ • Embeddings  │  │ • Resumes    │  │              │
+│ • LLM         │  │ • Comments   │  │ • Resume     │
+│ • GPT-4o-mini │  │ • Shares     │  │   Points     │
+│ • GPT-4-turbo │  │ • Users      │  │ • Embeddings │
+│               │  │ • Real-time  │  │ • Semantic   │
+│               │  │   Subscriptions│ │   Search    │
+└───────────────┘  └──────────────┘  └──────────────┘
+        │
+        │
+        ▼
+┌──────────────┐
+│   Tectonic   │
+│   (LaTeX     │
+│   Compiler)  │
+│              │
+│ • PDF        │
+│   Generation │
+└──────────────┘
+     │
+     │ (Optional for production)
+     │
+     ▼
+┌──────────────┐
+│   Redis      │
+│   (Optional) │
+│              │
+│ • Queue      │
+│   Management │
+│ • Pub/Sub    │
+│   (Multi-    │
+│   server)    │
+└──────────────┘
 ```
 
 ## Quick Start
@@ -267,6 +371,8 @@ ResumeMaster/
 - **NumPy** - Vector operations and similarity calculations
 - **Pydantic** - Data validation and serialization
 - **Tectonic** - LaTeX to PDF compilation
+- **WebSockets** - Real-time communication for collaboration features (coming soon)
+- **Redis** - Queue management and distributed state (optional, for production)
 
 ### Frontend (Chrome Extension)
 - **React** - UI framework
@@ -303,7 +409,29 @@ Users build a comprehensive "super resume" with unlimited bullet points:
 - LaTeX line count indicators for one-page constraint
 - Auto-save to Chrome local storage
 
-### 2. Generate New Resume
+### 2. Resume Coaching
+
+Get feedback on your resume through two channels:
+
+**AI Coach:**
+1. Select a resume you want to review
+2. AI analyzes bullet points for impact, clarity, and relevance
+3. Receive instant suggestions for improvements
+4. Get gap analysis identifying missing skills or experiences
+
+**Human Critique:**
+1. Choose "Have My Resume Reviewed" or "Review Resume"
+2. Join the matching queue (reviewer or reviewee)
+3. Get automatically matched with a partner
+4. Collaborate in real-time with:
+   - Live chat messaging
+   - Interactive text highlighting
+   - Contextual comments on bullet points
+   - Synchronized viewing experience
+
+See [WebSocket Collaboration Documentation](./WEBSOCKET_COLLABORATION.md) for technical details.
+
+### 3. Generate New Resume
 
 Users create tailored resumes for specific job descriptions:
 
@@ -320,7 +448,7 @@ Users create tailored resumes for specific job descriptions:
 - Adapts to experience-heavy or project-heavy profiles
 - Ensures one-page compliance
 
-### 3. Saved Resumes
+### 4. Saved Resumes
 
 Users manage and edit previously saved resumes:
 
@@ -331,7 +459,7 @@ Users manage and edit previously saved resumes:
 - **LaTeX Preview**: Preview LaTeX source and PDF before export
 - **Share Resume**: Generate permanent shareable link
 
-### 4. Resume Sharing & Comments
+### 5. Resume Sharing & Comments
 
 Public resume view with interactive comment system:
 
@@ -348,6 +476,10 @@ Public resume view with interactive comment system:
 ## Documentation
 
 For detailed documentation, see the inline code comments and API documentation at `http://localhost:8000/docs` when the backend is running.
+
+### Feature Documentation
+
+- **[WebSocket Real-Time Collaboration](./WEBSOCKET_COLLABORATION.md)** - Implementation plan for connecting Reviewer Mode and Reviewee Mode through WebSocket connections, including queue-based matching and real-time collaboration features.
 
 ## Testing
 

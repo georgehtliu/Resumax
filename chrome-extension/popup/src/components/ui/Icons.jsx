@@ -42,6 +42,11 @@ import {
   ChevronRight,
   Code,
   Award,
+  MessageSquare,
+  Share2,
+  Globe,
+  Activity,
+  Wifi,
 } from 'lucide-react';
 
 const iconMap = {
@@ -85,6 +90,13 @@ const iconMap = {
   chevronRight: ChevronRight,
   code: Code,
   award: Award,
+  messageSquare: MessageSquare,
+  'message-square': MessageSquare,
+  share: Share2,
+  share2: Share2,
+  globe: Globe,
+  activity: Activity,
+  wifi: Wifi,
 };
 
 export function Icon({ name, size = 20, className = '', strokeWidth = 2, ...props }) {

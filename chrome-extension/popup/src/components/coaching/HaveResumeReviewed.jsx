@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, MessageSquare, CheckCircle, FileText, Calendar } from 'lucide-react';
 import { supabase } from '../../config/supabase';
 import LoadingScreen from './LoadingScreen';
+import RevieweeView from './RevieweeView';
 import './HaveResumeReviewed.css';
 
 function HaveResumeReviewed({ onBack }) {
@@ -9,6 +10,7 @@ function HaveResumeReviewed({ onBack }) {
   const [loading, setLoading] = useState(true);
   const [selectedResumeId, setSelectedResumeId] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showRevieweeView, setShowRevieweeView] = useState(false);
 
   useEffect(() => {
     loadSavedResumes();
@@ -50,7 +52,16 @@ function HaveResumeReviewed({ onBack }) {
   const handleSubmit = () => {
     if (!selectedResumeId) return;
     setIsSubmitting(true);
+    // Show reviewee view after 2 seconds
+    setTimeout(() => {
+      setIsSubmitting(false);
+      setShowRevieweeView(true);
+    }, 2000);
   };
+
+  if (showRevieweeView) {
+    return <RevieweeView onBack={() => setShowRevieweeView(false)} resumeId={selectedResumeId} />;
+  }
 
   if (isSubmitting) {
     return (
