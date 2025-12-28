@@ -4,23 +4,23 @@ import './About.css';
 
 /**
  * About Page Component
- * Describes what Resumax is about
+ * Describes what Resume Master is about
  */
 function About() {
   return (
     <div className="about-page">
       <div className="about-header">
-        <h1>About Resumax</h1>
+        <h1>About Resume Master</h1>
         <p className="about-subtitle">AI-Powered Resume Optimization for Software Engineers</p>
       </div>
 
       <div className="about-content">
         <section className="about-section">
-          <h2>What is Resumax?</h2>
+          <h2>What is Resume Master?</h2>
           <p>
-            Resumax is an AI-powered Chrome extension designed to help software engineers create 
+            Resume Master is an AI-powered Chrome extension designed to help software engineers create 
             tailored resumes for specific job applications. Instead of maintaining multiple resume 
-            versions, Resumax lets you build a comprehensive master resume with all your experiences, 
+            versions, Resume Master lets you build a comprehensive master resume with all your experiences, 
             projects, and achievements, then intelligently selects and optimizes the most relevant 
             points for each job description.
           </p>
@@ -83,7 +83,7 @@ function About() {
             </li>
             <li>
               <strong>Provide a Job Description</strong>
-              <p>Extract job descriptions from job boards or paste them directly. Resumax analyzes the requirements and keywords.</p>
+              <p>Extract job descriptions from job boards or paste them directly. Resume Master analyzes the requirements and keywords.</p>
             </li>
             <li>
               <strong>AI Selects Best Matches</strong>
@@ -99,7 +99,7 @@ function About() {
         <section className="about-section">
           <h2>Built for Software Engineers</h2>
           <p>
-            Resumax is specifically designed with software engineers in mind. We understand the unique 
+            Resume Master is specifically designed with software engineers in mind. We understand the unique 
             challenges of technical resume writing and have optimized our tool to work with Jake's Resume 
             LaTeX template, which is widely recognized in the tech industry for its clean, professional 
             format that passes ATS (Applicant Tracking Systems) while remaining human-readable.

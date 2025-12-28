@@ -241,7 +241,7 @@ function SignIn({ onSignIn, onSwitchToSignUp }) {
     <div className="sign-in-container">
       <div className="sign-in-card">
         <div className="sign-in-header">
-          <h1>Welcome to Resumax</h1>
+          <h1>Welcome to Resume Master</h1>
           <p className="sign-in-subtitle">Sign in to manage your resumes</p>
         </div>
 

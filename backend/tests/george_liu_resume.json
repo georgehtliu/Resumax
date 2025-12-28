@@ -124,7 +124,7 @@
     "projects": [
       {
         "id": "proj-1",
-        "name": "Resumax",
+        "name": "Resume Master",
         "description": "AI-powered resume optimization tool",
         "technologies": "FastAPI, React, Python, LangChain, OpenAI API",
         "startDate": null,
@@ -297,7 +297,7 @@
       "projects": [
         {
           "id": "proj-1",
-          "name": "Resumax",
+          "name": "Resume Master",
           "description": "AI-powered resume optimization tool",
           "technologies": "FastAPI, React, Python, LangChain, OpenAI API",
           "startDate": null,

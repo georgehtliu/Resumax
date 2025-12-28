@@ -1,10 +1,10 @@
-# Resumax - AI Resume Optimizer
+# Resume Master - AI Resume Optimizer
 
 An intelligent resume optimization system that helps software engineers tailor their resumes to specific job descriptions using AI-powered matching, rewriting, and analysis. Built as a Chrome extension with a full-stack backend API.
 
 ## Overview
 
-Resumax combines a **Chrome extension** (React-based UI) with a **FastAPI backend** to provide:
+Resume Master combines a **Chrome extension** (React-based UI) with a **FastAPI backend** to provide:
 
 - **Master Resume Management**: Build and maintain unlimited bullet points across all resume sections
 - **AI-Powered Optimization**: Match and rewrite bullets for specific job descriptions using hybrid search (semantic + keyword matching)
@@ -203,7 +203,7 @@ Resumax combines a **Chrome extension** (React-based UI) with a **FastAPI backen
 ## Project Structure
 
 ```
-Resumax/
+ResumeMaster/
 ├── backend/                          # FastAPI backend
 │   ├── app/
 │   │   ├── api/

@@ -66,7 +66,7 @@ function ResumeTips() {
       items: [
         {
           title: 'Tailor for Each Application',
-          description: 'Use Resumax to select the most relevant bullet points for each job. Highlight experiences that match the job requirements.',
+          description: 'Use Resume Master to select the most relevant bullet points for each job. Highlight experiences that match the job requirements.',
           important: true
         },
         {
@@ -137,7 +137,7 @@ function ResumeTips() {
         },
         {
           title: 'Include Keywords from Job Description',
-          description: 'Naturally incorporate keywords from the job posting. Resumax helps identify these and match your experiences.',
+          description: 'Naturally incorporate keywords from the job posting. Resume Master helps identify these and match your experiences.',
         },
         {
           title: 'Avoid Complex Formatting',
@@ -190,7 +190,7 @@ function ResumeTips() {
       <div className="tips-footer">
         <div className="footer-note">
           <Icon name="lightbulb" size={18} style={{ marginRight: '6px', verticalAlign: 'middle', display: 'inline-block' }} />
-          <strong>Pro Tip:</strong> Use Resumax to maintain a comprehensive master resume with all your achievements, 
+          <strong>Pro Tip:</strong> Use Resume Master to maintain a comprehensive master resume with all your achievements, 
           then automatically select the most relevant points for each job application. This ensures you never miss 
           highlighting the right experience for the right role.
         </div>
