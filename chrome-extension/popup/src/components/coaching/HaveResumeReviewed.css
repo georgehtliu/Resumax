@@ -1,0 +1,260 @@
+.have-resume-reviewed-page {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-6, 24px);
+}
+
+.have-resume-reviewed-header {
+  margin-bottom: var(--space-8, 32px);
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  padding: var(--space-2, 8px) var(--space-3, 12px);
+  background: var(--bg-secondary, #f8fafc);
+  border: 1px solid var(--color-slate-200, #e2e8f0);
+  border-radius: var(--radius-md, 6px);
+  color: var(--text-secondary, #475569);
+  font-size: var(--font-size-sm, 14px);
+  font-weight: var(--font-weight-medium, 500);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-bottom: var(--space-4, 16px);
+}
+
+.back-button:hover {
+  background: var(--bg-tertiary, #f1f5f9);
+  border-color: var(--color-slate-300, #cbd5e1);
+  color: var(--text-primary, #0f172a);
+}
+
+.have-resume-reviewed-header h1 {
+  font-size: var(--font-size-3xl, 30px);
+  font-weight: var(--font-weight-bold, 700);
+  color: var(--text-primary, #0f172a);
+  margin: 0 0 var(--space-2, 8px) 0;
+  letter-spacing: -0.5px;
+}
+
+.page-subtitle {
+  font-size: var(--font-size-base, 16px);
+  color: var(--text-secondary, #475569);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.have-resume-reviewed-content {
+  display: flex;
+  justify-content: center;
+}
+
+.have-resume-reviewed-card {
+  background: var(--bg-primary, #ffffff);
+  border: 1px solid var(--color-slate-200, #e2e8f0);
+  border-radius: var(--radius-lg, 12px);
+  padding: var(--space-8, 32px);
+  max-width: 600px;
+  width: 100%;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
+  text-align: center;
+  position: relative;
+}
+
+.card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  background: var(--color-primary-50, #eff6ff);
+  border-radius: var(--radius-lg, 12px);
+  margin-bottom: var(--space-4, 16px);
+  color: var(--color-primary-600, #2563eb);
+}
+
+.have-resume-reviewed-card h2 {
+  font-size: var(--font-size-2xl, 24px);
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--text-primary, #0f172a);
+  margin: 0 0 var(--space-3, 12px) 0;
+}
+
+.card-description {
+  font-size: var(--font-size-base, 16px);
+  color: var(--text-secondary, #475569);
+  line-height: 1.6;
+  margin: 0 0 var(--space-6, 24px) 0;
+}
+
+.feature-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 12px);
+  margin-bottom: var(--space-6, 24px);
+  text-align: left;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 12px);
+  font-size: var(--font-size-sm, 14px);
+  color: var(--text-secondary, #475569);
+}
+
+.feature-icon {
+  color: var(--color-primary-600, #2563eb);
+  flex-shrink: 0;
+}
+
+.resume-selection-section {
+  margin-top: var(--space-6, 24px);
+  padding-top: var(--space-6, 24px);
+  border-top: 1px solid var(--color-slate-200, #e2e8f0);
+}
+
+.selection-title {
+  font-size: var(--font-size-lg, 18px);
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--text-primary, #0f172a);
+  margin: 0 0 var(--space-4, 16px) 0;
+}
+
+.loading-resumes {
+  text-align: center;
+  padding: var(--space-4, 16px);
+  color: var(--text-secondary, #475569);
+  font-size: var(--font-size-sm, 14px);
+}
+
+.no-resumes {
+  text-align: center;
+  padding: var(--space-6, 24px);
+  color: var(--text-secondary, #475569);
+}
+
+.no-resumes svg {
+  margin-bottom: var(--space-2, 8px);
+  color: var(--text-tertiary, #94a3b8);
+}
+
+.no-resumes p {
+  margin: 0;
+  font-size: var(--font-size-sm, 14px);
+}
+
+.resume-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2, 8px);
+  margin-bottom: var(--space-6, 24px);
+}
+
+.resume-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 12px);
+  padding: var(--space-3, 12px) var(--space-4, 16px);
+  background: var(--bg-secondary, #f8fafc);
+  border: 1px solid var(--color-slate-200, #e2e8f0);
+  border-radius: var(--radius-md, 6px);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.resume-option:hover {
+  background: var(--bg-tertiary, #f1f5f9);
+  border-color: var(--color-slate-300, #cbd5e1);
+}
+
+.resume-option.selected {
+  background: var(--color-primary-50, #eff6ff);
+  border-color: var(--color-primary-300, #93c5fd);
+}
+
+.resume-option-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: var(--bg-primary, #ffffff);
+  border: 1px solid var(--color-slate-200, #e2e8f0);
+  border-radius: var(--radius-md, 6px);
+  color: var(--text-secondary, #475569);
+  flex-shrink: 0;
+}
+
+.resume-option.selected .resume-option-icon {
+  background: var(--color-primary-100, #dbeafe);
+  border-color: var(--color-primary-300, #93c5fd);
+  color: var(--color-primary-600, #2563eb);
+}
+
+.resume-option-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.resume-option-name {
+  font-size: var(--font-size-sm, 14px);
+  font-weight: var(--font-weight-medium, 500);
+  color: var(--text-primary, #0f172a);
+  margin-bottom: var(--space-1, 4px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.resume-option-date {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1, 4px);
+  font-size: var(--font-size-xs, 12px);
+  color: var(--text-tertiary, #94a3b8);
+}
+
+.resume-option-check {
+  display: flex;
+  align-items: center;
+  color: var(--color-primary-600, #2563eb);
+  flex-shrink: 0;
+}
+
+.submit-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  padding: var(--space-3, 12px) var(--space-6, 24px);
+  background: var(--color-primary-600, #2563eb);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md, 6px);
+  font-size: var(--font-size-base, 16px);
+  font-weight: var(--font-weight-semibold, 600);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  width: 100%;
+  justify-content: center;
+  margin-top: var(--space-4, 16px);
+}
+
+.submit-button:hover:not(:disabled) {
+  background: var(--color-primary-700, #1d4ed8);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.submit-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.submit-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+

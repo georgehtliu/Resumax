@@ -1,0 +1,86 @@
+.loading-screen {
+  width: 100%;
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8, 32px);
+}
+
+.loading-content {
+  text-align: center;
+  max-width: 500px;
+}
+
+.loading-spinner-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--space-6, 24px);
+}
+
+.loading-spinner {
+  color: var(--color-primary-600, #2563eb);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-title {
+  font-size: var(--font-size-2xl, 24px);
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--text-primary, #0f172a);
+  margin: 0 0 var(--space-3, 12px) 0;
+}
+
+.loading-message {
+  font-size: var(--font-size-base, 16px);
+  color: var(--text-secondary, #475569);
+  margin: 0 0 var(--space-6, 24px) 0;
+  line-height: 1.5;
+}
+
+.loading-dots {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-2, 8px);
+  margin-top: var(--space-4, 16px);
+}
+
+.loading-dots .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary-600, #2563eb);
+  animation: dot-bounce 1.4s ease-in-out infinite;
+}
+
+.loading-dots .dot:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.loading-dots .dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loading-dots .dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes dot-bounce {
+  0%, 80%, 100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+

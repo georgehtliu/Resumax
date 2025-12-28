@@ -25,6 +25,9 @@ import { supabase } from './config/supabase';
 import { storageService } from './services/storage';
 import Skeleton, { SkeletonCard } from './components/ui/Skeleton';
 import { Icon } from './components/ui/Icons';
+import HumanCritiqueSelection from './components/coaching/HumanCritiqueSelection';
+import ReviewResume from './components/coaching/ReviewResume';
+import HaveResumeReviewed from './components/coaching/HaveResumeReviewed';
 import './styles/design-system.css';
 import './styles/animations.css';
 import './App.css';
@@ -53,6 +56,7 @@ function App() {
 
   const [activeTab, setActiveTab] = useState(() => (isManagerView ? 'generate' : 'generate'));
   const [activeView, setActiveView] = useState(() => (isManagerView ? 'about' : 'generate'));
+  const [humanCritiqueView, setHumanCritiqueView] = useState('selection'); // 'selection', 'review', 'get-reviewed'
   const [refreshSaved, setRefreshSaved] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -92,6 +96,13 @@ function App() {
 
   // Toast notifications
   const { toasts, removeToast, success, error: showError } = useToast();
+
+  // Reset human critique view when switching away from coaching-human
+  useEffect(() => {
+    if (activeView !== 'coaching-human') {
+      setHumanCritiqueView('selection');
+    }
+  }, [activeView]);
 
   // Keyboard shortcuts
   useKeyboardShortcuts([
@@ -1215,23 +1226,27 @@ function App() {
 
           {activeView === 'coaching-human' && (
             <div className="view-container">
-              <div className="view-header">
-                <h1>Critique with Human</h1>
-                <p className="view-subtitle">Get personalized feedback from experienced professionals</p>
-              </div>
-              <div className="view-content">
-                <div className="coaching-placeholder">
-                  <div className="placeholder-icon">
-                    <Icon name="users" size={48} />
-                  </div>
-                  <h2>Human Critique Coming Soon</h2>
-                  <p>Connect with professional resume reviewers for personalized feedback.</p>
-                  <p className="placeholder-subtext">
-                    Get detailed critiques from experienced recruiters and career coaches
-                    to make your resume stand out.
-                  </p>
-                </div>
-              </div>
+              {humanCritiqueView === 'selection' && (
+                <HumanCritiqueSelection 
+                  onSelectOption={(option) => {
+                    if (option === 'review') {
+                      setHumanCritiqueView('review');
+                    } else if (option === 'get-reviewed') {
+                      setHumanCritiqueView('get-reviewed');
+                    }
+                  }}
+                />
+              )}
+              {humanCritiqueView === 'review' && (
+                <ReviewResume 
+                  onBack={() => setHumanCritiqueView('selection')}
+                />
+              )}
+              {humanCritiqueView === 'get-reviewed' && (
+                <HaveResumeReviewed 
+                  onBack={() => setHumanCritiqueView('selection')}
+                />
+              )}
             </div>
           )}
 
