@@ -46,6 +46,13 @@ export async function saveResume(resumeData) {
   try {
     const userId = session.user.id;
     console.log('💾 Saving resume data to Supabase for user:', userId);
+    console.log('📥 Raw input data:', {
+      experiences: resumeData.experiences?.length || 0,
+      education: resumeData.education?.length || 0,
+      projects: resumeData.projects?.length || 0,
+      customSections: resumeData.customSections?.length || 0,
+      skills: resumeData.skills?.length || 0
+    });
     const normalized = normalizeResume(resumeData);
     console.log('📊 Normalized data:', {
       experiences: normalized.experiences?.length || 0,
@@ -54,6 +61,11 @@ export async function saveResume(resumeData) {
       customSections: normalized.customSections?.length || 0,
       skills: normalized.skills?.length || 0
     });
+    console.log('📊 Normalized data details:', JSON.stringify({
+      education: normalized.education?.slice(0, 1), // First item only for debugging
+      projects: normalized.projects?.slice(0, 1),
+      skills: normalized.skills?.slice(0, 1)
+    }, null, 2));
 
     // 1. Save/Update personal_info
     const { data: existingPersonalInfo } = await supabase
@@ -96,7 +108,9 @@ export async function saveResume(resumeData) {
 
     // 2. Delete all existing experiences, education, projects, custom_sections for this user
     // (This ensures we have a clean state before inserting new data)
+    // Note: resume_points should be cascade deleted when parent records are deleted
     console.log('🗑️ Deleting existing data...');
+    
     const { error: deleteExpError } = await supabase
       .from('experiences')
       .delete()
@@ -132,6 +146,16 @@ export async function saveResume(resumeData) {
       console.error('❌ Error deleting custom_sections:', deleteCustomError);
       throw deleteCustomError;
     }
+
+    const { error: deleteSkillsError } = await supabase
+      .from('skill_groups')
+      .delete()
+      .eq('user_id', userId);
+    if (deleteSkillsError) {
+      console.error('❌ Error deleting skill_groups:', deleteSkillsError);
+      throw deleteSkillsError;
+    }
+    // Note: skills will be cascade deleted when skill_groups are deleted
     console.log('✅ Deleted existing data');
 
     // 3. Insert experiences with resume_points
@@ -154,28 +178,54 @@ export async function saveResume(resumeData) {
         throw expError;
       }
 
+      if (!newExp || !newExp.id) {
+        console.error('❌ Experience inserted but no ID returned:', newExp);
+        throw new Error('Failed to get experience ID after insert');
+      }
+
       // Insert resume_points for this experience
       if (exp.bullets && Array.isArray(exp.bullets) && exp.bullets.length > 0) {
-        const points = exp.bullets.map(bullet => ({
-          experience_id: newExp.id,
-          text_content: bullet.text || '',
-          is_non_negotiable: bullet.isNonNegotiable || false
-        }));
+        const points = exp.bullets
+          .filter(bullet => bullet && bullet.text && bullet.text.trim().length > 0)
+          .map(bullet => ({
+            experience_id: newExp.id,
+            text_content: bullet.text.trim(),
+            is_non_negotiable: bullet.isNonNegotiable || false
+          }));
 
         if (points.length > 0) {
+          console.log(`    📝 Inserting ${points.length} resume_points for experience ID: ${newExp.id}`);
+          
+          // Verify the experience exists before inserting resume_points
+          const { data: verifyExp, error: verifyError } = await supabase
+            .from('experiences')
+            .select('id')
+            .eq('id', newExp.id)
+            .single();
+          
+          if (verifyError || !verifyExp) {
+            console.error('❌ Experience not found after insert:', newExp.id);
+            throw new Error(`Experience ${newExp.id} not found - cannot insert resume_points`);
+          }
+          
           const { error: pointsError } = await supabase
             .from('resume_points')
             .insert(points);
           if (pointsError) {
-            console.error('❌ Error inserting resume_points for experience:', pointsError, points);
+            console.error('❌ Error inserting resume_points for experience:', pointsError);
+            console.error('  Experience ID:', newExp.id);
+            console.error('  Experience data:', newExp);
+            console.error('  Points data:', points);
             throw pointsError;
           }
+          console.log(`    ✅ Inserted ${points.length} resume_points for experience ID: ${newExp.id}`);
         }
       }
     }
     console.log('✅ Inserted experiences');
 
     // 4. Insert education with resume_points
+    console.log(`📝 Inserting ${normalized.education?.length || 0} education entries...`);
     for (const edu of normalized.education || []) {
       const { data: newEdu, error: eduError } = await supabase
         .from('education')
@@ -195,6 +245,12 @@ export async function saveResume(resumeData) {
         throw eduError;
       }
 
+      if (!newEdu || !newEdu.id) {
+        console.error('❌ Education inserted but no ID returned:', newEdu);
+        throw new Error('Failed to get education ID after insert');
+      }
+      console.log(`  ✅ Inserted education "${edu.school || edu.institution || ''}" with ID: ${newEdu.id}`);
+
       // Insert resume_points for this education
       if (edu.bullets && Array.isArray(edu.bullets) && edu.bullets.length > 0) {
         const points = edu.bullets.map(bullet => ({
@@ -204,15 +260,24 @@ export async function saveResume(resumeData) {
         }));
 
         if (points.length > 0) {
+          console.log(`    📝 Inserting ${points.length} resume_points for education ID: ${newEdu.id}`);
           const { error: pointsError } = await supabase
             .from('resume_points')
             .insert(points);
-          if (pointsError) throw pointsError;
+          if (pointsError) {
+            console.error('❌ Error inserting resume_points for education:', pointsError);
+            console.error('  Education ID:', newEdu.id);
+            console.error('  Points data:', points);
+            throw pointsError;
+          }
+          console.log(`    ✅ Inserted ${points.length} resume_points for education ID: ${newEdu.id}`);
         }
       }
     }
+    console.log('✅ Inserted education');
 
     // 5. Insert projects with resume_points
+    console.log(`📝 Inserting ${normalized.projects?.length || 0} projects...`);
     for (const proj of normalized.projects || []) {
       const { data: newProj, error: projError } = await supabase
         .from('projects')
@@ -233,6 +298,12 @@ export async function saveResume(resumeData) {
         throw projError;
       }
 
+      if (!newProj || !newProj.id) {
+        console.error('❌ Project inserted but no ID returned:', newProj);
+        throw new Error('Failed to get project ID after insert');
+      }
+      console.log(`  ✅ Inserted project "${proj.name || ''}" with ID: ${newProj.id}`);
+
       // Insert resume_points for this project
       if (proj.bullets && Array.isArray(proj.bullets) && proj.bullets.length > 0) {
         const points = proj.bullets.map(bullet => ({
@@ -242,15 +313,24 @@ export async function saveResume(resumeData) {
         }));
 
         if (points.length > 0) {
+          console.log(`    📝 Inserting ${points.length} resume_points for project ID: ${newProj.id}`);
           const { error: pointsError } = await supabase
             .from('resume_points')
             .insert(points);
-          if (pointsError) throw pointsError;
+          if (pointsError) {
+            console.error('❌ Error inserting resume_points for project:', pointsError);
+            console.error('  Project ID:', newProj.id);
+            console.error('  Points data:', points);
+            throw pointsError;
+          }
+          console.log(`    ✅ Inserted ${points.length} resume_points for project ID: ${newProj.id}`);
         }
       }
     }
+    console.log('✅ Inserted projects');
 
     // 6. Insert custom_sections with resume_points
+    console.log(`📝 Inserting ${normalized.customSections?.length || 0} custom sections...`);
     for (const custom of normalized.customSections || []) {
       const { data: newCustom, error: customError } = await supabase
         .from('custom_sections')
@@ -267,6 +347,12 @@ export async function saveResume(resumeData) {
         throw customError;
       }
 
+      if (!newCustom || !newCustom.id) {
+        console.error('❌ Custom section inserted but no ID returned:', newCustom);
+        throw new Error('Failed to get custom section ID after insert');
+      }
+      console.log(`  ✅ Inserted custom section "${custom.title || ''}" with ID: ${newCustom.id}`);
+
       // Insert resume_points for this custom section
       if (custom.bullets && Array.isArray(custom.bullets) && custom.bullets.length > 0) {
         const points = custom.bullets.map(bullet => ({
@@ -276,42 +362,90 @@ export async function saveResume(resumeData) {
         }));
 
         if (points.length > 0) {
+          console.log(`    📝 Inserting ${points.length} resume_points for custom section ID: ${newCustom.id}`);
           const { error: pointsError } = await supabase
             .from('resume_points')
             .insert(points);
-          if (pointsError) throw pointsError;
+          if (pointsError) {
+            console.error('❌ Error inserting resume_points for custom section:', pointsError);
+            console.error('  Custom section ID:', newCustom.id);
+            console.error('  Points data:', points);
+            throw pointsError;
+          }
+          console.log(`    ✅ Inserted ${points.length} resume_points for custom section ID: ${newCustom.id}`);
         }
       }
     }
+    console.log('✅ Inserted custom sections');
 
-    // 7. Save skills as JSONB in a saved_resume entry (since there's no skills table)
-    // We'll use the saved_resumes table with a special name for skills
-    const skillsData = { skills: normalized.skills || [] };
-    const { data: existingSkills } = await supabase
-      .from('saved_resumes')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('name', '__SKILLS__')
-      .single();
+    // 7. Insert skill_groups with skills
+    console.log(`📝 Inserting ${normalized.skills?.length || 0} skill groups...`);
+    if (normalized.skills && normalized.skills.length > 0) {
+      for (const skillGroup of normalized.skills) {
+        // Validate skill group has at least a title
+        if (!skillGroup.title || typeof skillGroup.title !== 'string' || skillGroup.title.trim().length === 0) {
+          console.warn('⚠️ Skipping skill group with no title:', skillGroup);
+          continue;
+        }
 
-    if (existingSkills) {
-      const { error } = await supabase
-        .from('saved_resumes')
-        .update({
-          resume_data: skillsData,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', existingSkills.id);
-      if (error) throw error;
+        // Insert skill group
+        const { data: newSkillGroup, error: skillGroupError } = await supabase
+          .from('skill_groups')
+          .insert({
+            user_id: userId,
+            title: skillGroup.title.trim(),
+            display_order: skillGroup.display_order || 0
+          })
+          .select()
+          .single();
+        
+        if (skillGroupError) {
+          console.error('❌ Error inserting skill_group:', skillGroupError);
+          console.error('  Skill group data:', skillGroup);
+          throw skillGroupError;
+        }
+
+        if (!newSkillGroup || !newSkillGroup.id) {
+          console.error('❌ Skill group inserted but no ID returned:', newSkillGroup);
+          throw new Error('Failed to get skill group ID after insert');
+        }
+        console.log(`  ✅ Inserted skill group "${skillGroup.title}" with ID: ${newSkillGroup.id}`);
+
+        // Insert skills for this group
+        if (skillGroup.skills && Array.isArray(skillGroup.skills) && skillGroup.skills.length > 0) {
+          // Map and filter skills
+          const skillsToInsert = skillGroup.skills
+            .map((skill, index) => ({
+              skill_group_id: newSkillGroup.id,
+              name: typeof skill === 'string' ? skill.trim() : String(skill).trim(),
+              display_order: index
+            }))
+            .filter(skill => skill.name.length > 0); // Filter out empty skills
+
+          if (skillsToInsert.length > 0) {
+            console.log(`    📝 Inserting ${skillsToInsert.length} skills for skill group "${skillGroup.title}"`);
+            const { error: skillsInsertError } = await supabase
+              .from('skills')
+              .insert(skillsToInsert);
+            
+            if (skillsInsertError) {
+              console.error('❌ Error inserting skills:', skillsInsertError);
+              console.error('  Skill group ID:', newSkillGroup.id);
+              console.error('  Skill group title:', skillGroup.title);
+              console.error('  Skills data:', skillsToInsert);
+              throw skillsInsertError;
+            }
+            console.log(`    ✅ Inserted ${skillsToInsert.length} skills for skill group "${skillGroup.title}"`);
+          } else {
+            console.log(`    ℹ️ No valid skills to insert for skill group "${skillGroup.title}"`);
+          }
+        } else {
+          console.log(`    ℹ️ Skill group "${skillGroup.title}" has no skills`);
+        }
+      }
+      console.log('✅ Inserted skill groups');
     } else {
-      const { error } = await supabase
-        .from('saved_resumes')
-        .insert({
-          user_id: userId,
-          name: '__SKILLS__',
-          resume_data: skillsData
-        });
-      if (error) throw error;
+      console.log('ℹ️ No skill groups to insert');
     }
 
     // Also save to Chrome storage as backup
@@ -459,24 +593,32 @@ export async function getResume() {
       console.log('ℹ️ No personal_info found');
     }
 
-    // 2. Get skills (stored in saved_resumes with special name)
-    const { data: skillsData, error: skillsError } = await supabase
-      .from('saved_resumes')
-      .select('resume_data')
+    // 2. Get skill_groups with skills
+    const { data: skillGroups, error: skillsError } = await supabase
+      .from('skill_groups')
+      .select(`
+        *,
+        skills (*)
+      `)
       .eq('user_id', userId)
-      .eq('name', '__SKILLS__')
-      .single();
+      .order('created_at', { ascending: true });
 
-    if (skillsError && skillsError.code !== 'PGRST116') {
-      console.error('❌ Error loading skills:', skillsError);
-    } else if (skillsData && skillsData.resume_data) {
-      const skills = typeof skillsData.resume_data === 'string'
-        ? JSON.parse(skillsData.resume_data)
-        : skillsData.resume_data;
-      resumeData.skills = skills.skills || [];
-      console.log('✅ Loaded skills:', resumeData.skills.length, 'groups');
+    if (skillsError) {
+      console.error('❌ Error loading skill_groups:', skillsError);
+      throw skillsError;
+    }
+
+    if (skillGroups && Array.isArray(skillGroups)) {
+      resumeData.skills = skillGroups.map(sg => ({
+        id: sg.id,
+        title: sg.title || '',
+        skills: (Array.isArray(sg.skills) ? sg.skills : []).map(skill => skill.name || '').filter(Boolean)
+      }));
+      console.log('✅ Loaded skill_groups:', resumeData.skills.length, 'groups');
+      console.log('   Total skills:', resumeData.skills.reduce((sum, sg) => sum + (sg.skills?.length || 0), 0));
     } else {
-      console.log('ℹ️ No skills found');
+      console.log('ℹ️ No skill_groups found');
+      resumeData.skills = [];
     }
 
     // 3. Get experiences with resume_points
@@ -707,12 +849,10 @@ export async function clearResume() {
       .eq('user_id', userId);
     if (customError) throw customError;
 
-    // Delete skills entry
     const { error: skillsError } = await supabase
-      .from('saved_resumes')
+      .from('skill_groups')
       .delete()
-      .eq('user_id', userId)
-      .eq('name', '__SKILLS__');
+      .eq('user_id', userId);
     if (skillsError) throw skillsError;
 
     // Note: We keep personal_info as it's user profile data, not resume-specific

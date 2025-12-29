@@ -96,7 +96,35 @@ CREATE TABLE projects (
 );
 ```
 
-### 6. `custom_sections`
+### 6. `skill_groups`
+Skill groups (Languages, Frameworks, Tools, etc.).
+
+```sql
+CREATE TABLE skill_groups (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    display_order INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+### 7. `skills`
+Individual skills belonging to skill groups.
+
+```sql
+CREATE TABLE skills (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    skill_group_id UUID REFERENCES skill_groups(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    display_order INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+### 8. `custom_sections`
 Custom sections (certifications, awards, etc.).
 
 ```sql
@@ -110,7 +138,7 @@ CREATE TABLE custom_sections (
 );
 ```
 
-### 7. `resume_points`
+### 9. `resume_points`
 Unlimited bullet points for experiences, education, projects, and custom sections.
 
 ```sql
@@ -237,6 +265,8 @@ CREATE TABLE job_descriptions (
 CREATE INDEX idx_experiences_user ON experiences(user_id);
 CREATE INDEX idx_education_user ON education(user_id);
 CREATE INDEX idx_projects_user ON projects(user_id);
+CREATE INDEX idx_skill_groups_user ON skill_groups(user_id);
+CREATE INDEX idx_skills_skill_group ON skills(skill_group_id);
 CREATE INDEX idx_custom_sections_user ON custom_sections(user_id);
 CREATE INDEX idx_resume_points_experience ON resume_points(experience_id);
 CREATE INDEX idx_resume_points_education ON resume_points(education_id);
@@ -265,6 +295,8 @@ auth.users (Supabase)
     │   └── resume_points (1:many)
     ├── projects (1:many)
     │   └── resume_points (1:many)
+    ├── skill_groups (1:many)
+    │   └── skills (1:many)
     ├── custom_sections (1:many)
     │   └── resume_points (1:many)
     ├── saved_resumes (1:many)

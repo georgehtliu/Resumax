@@ -1220,7 +1220,8 @@ function App() {
           {activeView === 'profile' && (
             <Profile
               resume={resume}
-              onResumeUpdate={saveResumeData}
+              onResumeUpdate={(updatedResume) => setResume(updatedResume)}
+              onSave={saveResumeData}
               calculateTotalBullets={calculateTotalBullets}
             />
           )}

@@ -45,9 +45,54 @@
   font-size: 0.88rem;
 }
 
+.personal-info-save-section {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-light, #d8dfee);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.personal-info-save-section .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.25rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.personal-info-save-section .btn-primary {
+  background: var(--primary, #3b6aff);
+  color: white;
+}
+
+.personal-info-save-section .btn-primary:hover {
+  background: var(--primary-dark, #2d5ae6);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 106, 255, 0.3);
+}
+
+.personal-info-save-section .btn-primary:active {
+  transform: translateY(0);
+}
+
 @media (max-width: 768px) {
   .personal-info-row {
     grid-template-columns: 1fr;
+  }
+  
+  .personal-info-save-section {
+    justify-content: stretch;
+  }
+  
+  .personal-info-save-section .btn {
+    width: 100%;
+    justify-content: center;
   }
 }
 
