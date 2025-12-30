@@ -2,7 +2,7 @@
 
 An intelligent resume optimization system that helps software engineers create tailored, impactful resumes for each job application using AI-powered analysis and feedback.
 
-Problem
+### Problem
 
 Job market is rough now, and people just raw dog mass apply with one resume. Let's be real.. sometimes we get lazy and are not tryna tailor it for EACH job (probably takes around 10 or so mins)!! Furthermore, we often times have too many bullets and are not too sure which to include (looking at Waterloo students), while satisfying the unspoken 1-page rule. We also are too technologically advanced to be submitting resumes with grammar mistakes, inconsistent formatting, and worst of all unparseable resumes!! This tool allows you to input a Master Resume (however many points you like per experience/project) and can generate a resume (with an ATS-proven template) that selects the best points depending job description.
 
