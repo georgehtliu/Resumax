@@ -212,7 +212,7 @@ UI component for queue status and matching.
 
 ## Implementation Phases
 
-### Phase 1: Backend Infrastructure ✅
+### Phase 1: Backend Infrastructure ⬜ (Not Started)
 **Priority: High**
 
 1. Add WebSocket dependencies to `requirements.txt`
@@ -240,8 +240,10 @@ UI component for queue status and matching.
    - Include WebSocket router
    - Configure CORS for WebSocket connections
 
-### Phase 2: Frontend WebSocket Integration ✅
+### Phase 2: Frontend WebSocket Integration ⬜ (Not Started)
 **Priority: High**
+
+**Note:** `ReviewerView.jsx` and `RevieweeView.jsx` already exist with mock data - these need to be updated to use WebSocket.
 
 1. Create `chrome-extension/popup/src/hooks/useWebSocket.js`
    - WebSocket connection management
@@ -265,7 +267,7 @@ UI component for queue status and matching.
    - Replace mock highlights with WebSocket
    - Add comment resolution sync
 
-### Phase 3: Real-Time Features ✅
+### Phase 3: Real-Time Features ⬜ (Not Started)
 **Priority: Medium**
 
 1. Chat Messaging
@@ -284,13 +286,19 @@ UI component for queue status and matching.
    - Comment resolution (reviewee)
    - Comment deletion
 
-### Phase 4: State Persistence ✅
+### Phase 4: State Persistence ⬜ (Not Started)
 **Priority: Medium**
 
 1. Database Integration
    - Store room state in Supabase/PostgreSQL
    - Sync WebSocket events to database
    - Load previous state on reconnection
+   - **Database Tables Needed:**
+     - `collaboration_rooms` - Track active review sessions
+     - `collaboration_messages` - Store chat messages
+     - `collaboration_highlights` - Store highlights on resumes
+     - `collaboration_comments` - Store comments linked to bullets/highlights
+     - See Database Schema section below for details
 
 2. Session Management
    - Handle disconnections gracefully
@@ -509,6 +517,92 @@ export const WS_CONFIG = {
    - Move from local state to WebSocket-synced state
    - Handle optimistic updates
    - Sync on reconnection
+
+## Database Schema (Phase 4)
+
+The following tables should be added to Supabase/PostgreSQL for persistent collaboration state:
+
+### `collaboration_rooms`
+Stores active review sessions.
+
+```sql
+CREATE TABLE collaboration_rooms (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    room_id VARCHAR(255) UNIQUE NOT NULL,
+    reviewer_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+    reviewee_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+    resume_id UUID REFERENCES saved_resumes(id) ON DELETE CASCADE,
+    status VARCHAR(50) DEFAULT 'active',  -- 'active', 'completed', 'cancelled'
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    ended_at TIMESTAMP WITH TIME ZONE,
+    UNIQUE(room_id)
+);
+
+CREATE INDEX idx_rooms_reviewer ON collaboration_rooms(reviewer_id);
+CREATE INDEX idx_rooms_reviewee ON collaboration_rooms(reviewee_id);
+CREATE INDEX idx_rooms_resume ON collaboration_rooms(resume_id);
+```
+
+### `collaboration_messages`
+Stores chat messages in review sessions.
+
+```sql
+CREATE TABLE collaboration_messages (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    room_id UUID REFERENCES collaboration_rooms(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+    sender_role VARCHAR(50) NOT NULL,  -- 'reviewer' | 'reviewee'
+    message TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX idx_messages_room ON collaboration_messages(room_id);
+CREATE INDEX idx_messages_user ON collaboration_messages(user_id);
+```
+
+### `collaboration_highlights`
+Stores highlights on resumes.
+
+```sql
+CREATE TABLE collaboration_highlights (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    room_id UUID REFERENCES collaboration_rooms(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+    highlight_data JSONB NOT NULL,  -- Stores range, color, position data
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    deleted_at TIMESTAMP WITH TIME ZONE
+);
+
+CREATE INDEX idx_highlights_room ON collaboration_highlights(room_id);
+CREATE INDEX idx_highlights_user ON collaboration_highlights(user_id);
+```
+
+### `collaboration_comments`
+Stores comments on bullet points.
+
+```sql
+CREATE TABLE collaboration_comments (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    room_id UUID REFERENCES collaboration_rooms(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+    sender_role VARCHAR(50) NOT NULL,  -- 'reviewer' | 'reviewee'
+    bullet_id VARCHAR(255),
+    content TEXT NOT NULL,
+    highlight_id UUID REFERENCES collaboration_highlights(id) ON DELETE SET NULL,
+    is_resolved BOOLEAN DEFAULT false,
+    resolved_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    deleted_at TIMESTAMP WITH TIME ZONE
+);
+
+CREATE INDEX idx_comments_room ON collaboration_comments(room_id);
+CREATE INDEX idx_comments_user ON collaboration_comments(user_id);
+CREATE INDEX idx_comments_bullet ON collaboration_comments(bullet_id);
+CREATE INDEX idx_comments_highlight ON collaboration_comments(highlight_id);
+```
+
+**Note:** These schemas should be added to `DATABASE_SCHEMA.md` when implementing Phase 4.
 
 ## Resources
 
