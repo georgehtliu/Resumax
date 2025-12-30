@@ -55,15 +55,6 @@ Resume Master helps candidates create stronger resumes by:
 3. **Get Feedback** - Use AI Coach or connect with human reviewers to improve your resume
 4. **Export & Share** - Generate professional PDFs and share links for feedback
 
-## For Recruiters & Hiring Managers
-
-Resume Master helps candidates submit stronger applications by:
-
-- **Better job matching** - Candidates submit resumes that are actually relevant to the role
-- **Clearer communication** - Bullet points are optimized for clarity and impact
-- **Professional formatting** - Consistent, clean resume format across all applications
-- **More qualified candidates** - Candidates who use feedback tools tend to have more polished applications
-
 ## Quick Start
 
 ### Prerequisites
