@@ -55,10 +55,20 @@ Resume Master combines a **Chrome extension** (React-based UI) with a **FastAPI 
 ### Resume Coaching
 
 **AI Coach:**
+- **Roast My Bullets**: Get brutally honest feedback on your resume bullets with:
+  - TLDR summary with overall score and key statistics
+  - Comprehensive bullet-by-bullet analysis
+  - Color-coded feedback (strengths, issues, suggestions)
+  - Actionable improvement suggestions with specific examples
+  - Visual indicators (✓ for strengths, ✗ for issues, 💡 for suggestions)
+- **Interview Question Prep**: Prepare for interviews based on your resume:
+  - Select any experience or project from your resume
+  - Generate personalized interview questions
+  - STAR-method answer frameworks
+  - Behavioral and technical question preparation
 - Instant AI-powered feedback on resume bullet points
 - Intelligent suggestions for improvement
 - Gap analysis to identify missing skills or experiences
-- Real-time optimization recommendations
 
 **Human Critique:**
 - Queue-based matching system connecting reviewers with reviewees
@@ -345,6 +355,12 @@ ResumeMaster/
 │   │   │   │   ├── ExperienceEditor.jsx   # Work experience editor
 │   │   │   │   ├── EducationEditor.jsx    # Education editor
 │   │   │   │   ├── ProjectEditor.jsx      # Projects editor
+│   │   │   │   ├── coaching/
+│   │   │   │   │   ├── RoastMyBullets.jsx      # AI Coach: Roast feature
+│   │   │   │   │   ├── InterviewQuestionPrep.jsx # AI Coach: Interview prep
+│   │   │   │   │   ├── HumanCritiqueSelection.jsx
+│   │   │   │   │   ├── ReviewResume.jsx
+│   │   │   │   │   └── HaveResumeReviewed.jsx
 │   │   │   │   └── ...                    # Other components
 │   │   │   ├── services/
 │   │   │   │   ├── api.js                  # Backend API client
@@ -414,10 +430,27 @@ Users build a comprehensive "super resume" with unlimited bullet points:
 Get feedback on your resume through two channels:
 
 **AI Coach:**
-1. Select a resume you want to review
-2. AI analyzes bullet points for impact, clarity, and relevance
-3. Receive instant suggestions for improvements
-4. Get gap analysis identifying missing skills or experiences
+
+**Roast My Bullets:**
+1. Navigate to AI Coach → Roast My Bullets
+2. Click "Roast My Bullets" to begin analysis
+3. Receive comprehensive feedback including:
+   - **TLDR Summary**: Overall score (out of 10), total bullets analyzed, issues found, and strengths identified
+   - **General Issues**: High-level patterns and recommendations across your entire resume
+   - **Detailed Feedback**: Bullet-by-bullet analysis with:
+     - Color-coded feedback cards (green for strengths, red for issues, yellow for improvements, blue for suggestions)
+     - Specific issues identified for each bullet
+     - Actionable suggestions with example rewrites
+     - Visual indicators (✓ checkmarks, ✗ warnings, 💡 suggestions)
+4. Use the feedback to improve your resume bullets with specific, actionable guidance
+
+**Interview Question Prep:**
+1. Navigate to AI Coach → Interview Question Prep
+2. Select an experience or project from your resume
+3. View the selected item with all bullet points
+4. Generate personalized interview questions based on your bullets
+5. Prepare using STAR-method frameworks (Situation, Task, Action, Result)
+6. Get both behavioral and technical questions tailored to your specific experiences
 
 **Human Critique:**
 1. Choose "Have My Resume Reviewed" or "Review Resume"
