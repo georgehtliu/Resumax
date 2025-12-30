@@ -29,6 +29,7 @@ import HumanCritiqueSelection from './components/coaching/HumanCritiqueSelection
 import ReviewResume from './components/coaching/ReviewResume';
 import HaveResumeReviewed from './components/coaching/HaveResumeReviewed';
 import InterviewQuestionPrep from './components/coaching/InterviewQuestionPrep';
+import RoastMyBullets from './components/coaching/RoastMyBullets';
 import './styles/design-system.css';
 import './styles/animations.css';
 import './App.css';
@@ -1320,6 +1321,13 @@ function App() {
 
               {coachingAIView === 'interview-prep' && (
                 <InterviewQuestionPrep
+                  resume={resume}
+                  onBack={() => setCoachingAIView('selection')}
+                />
+              )}
+
+              {coachingAIView === 'roast' && (
+                <RoastMyBullets
                   resume={resume}
                   onBack={() => setCoachingAIView('selection')}
                 />
