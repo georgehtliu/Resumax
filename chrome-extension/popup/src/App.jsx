@@ -28,6 +28,7 @@ import { Icon } from './components/ui/Icons';
 import HumanCritiqueSelection from './components/coaching/HumanCritiqueSelection';
 import ReviewResume from './components/coaching/ReviewResume';
 import HaveResumeReviewed from './components/coaching/HaveResumeReviewed';
+import InterviewQuestionPrep from './components/coaching/InterviewQuestionPrep';
 import './styles/design-system.css';
 import './styles/animations.css';
 import './App.css';
@@ -57,6 +58,7 @@ function App() {
   const [activeTab, setActiveTab] = useState(() => (isManagerView ? 'generate' : 'generate'));
   const [activeView, setActiveView] = useState(() => (isManagerView ? 'about' : 'generate'));
   const [humanCritiqueView, setHumanCritiqueView] = useState('selection'); // 'selection', 'review', 'get-reviewed'
+  const [coachingAIView, setCoachingAIView] = useState('selection'); // 'selection', 'interview-prep', 'roast'
   const [refreshSaved, setRefreshSaved] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -101,6 +103,13 @@ function App() {
   useEffect(() => {
     if (activeView !== 'coaching-human') {
       setHumanCritiqueView('selection');
+    }
+  }, [activeView]);
+
+  // Reset AI coaching view when switching away from coaching-ai
+  useEffect(() => {
+    if (activeView !== 'coaching-ai') {
+      setCoachingAIView('selection');
     }
   }, [activeView]);
 
@@ -1261,23 +1270,60 @@ function App() {
 
           {activeView === 'coaching-ai' && (
             <div className="view-container">
-              <div className="view-header">
-                <h1>AI Coach</h1>
-                <p className="view-subtitle">Get AI-powered feedback and suggestions for your resume</p>
-              </div>
-              <div className="view-content">
-                <div className="coaching-placeholder">
-                  <div className="placeholder-icon">
-                    <Icon name="bot" size={48} />
+              {coachingAIView === 'selection' && (
+                <>
+                  <div className="view-header">
+                    <h1>AI Coach</h1>
+                    <p className="view-subtitle">Get AI-powered feedback and suggestions for your resume</p>
                   </div>
-                  <h2>AI Coach Coming Soon</h2>
-                  <p>AI-powered resume coaching features will be available here soon.</p>
-                  <p className="placeholder-subtext">
-                    Get instant feedback, improvement suggestions, and personalized recommendations
-                    powered by advanced AI.
-                  </p>
-                </div>
-              </div>
+                  <div className="view-content">
+                    <div className="coaching-options">
+                      <div 
+                        className="coaching-option-card"
+                        onClick={() => setCoachingAIView('roast')}
+                      >
+                        <div className="coaching-option-icon">
+                          <Icon name="zap" size={48} />
+                        </div>
+                        <h3>Roast My Bullets</h3>
+                        <p className="coaching-option-description">
+                          Get brutally honest feedback on your resume bullets. Our AI will tell you exactly what's wrong and how to fix it.
+                        </p>
+                        <div className="coaching-option-features">
+                          <span className="coaching-feature-tag">Honest</span>
+                          <span className="coaching-feature-tag">Direct</span>
+                          <span className="coaching-feature-tag">Actionable</span>
+                        </div>
+                      </div>
+
+                      <div 
+                        className="coaching-option-card"
+                        onClick={() => setCoachingAIView('interview-prep')}
+                      >
+                        <div className="coaching-option-icon">
+                          <Icon name="messageSquare" size={48} />
+                        </div>
+                        <h3>Interview Question Prep</h3>
+                        <p className="coaching-option-description">
+                          Generate interview questions based on your resume bullets. Get STAR-method answer frameworks to help you articulate your experiences clearly.
+                        </p>
+                        <div className="coaching-option-features">
+                          <span className="coaching-feature-tag">STAR Method</span>
+                          <span className="coaching-feature-tag">Behavioral</span>
+                          <span className="coaching-feature-tag">Technical</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {coachingAIView === 'interview-prep' && (
+                <InterviewQuestionPrep
+                  resume={resume}
+                  onBack={() => setCoachingAIView('selection')}
+                />
+              )}
             </div>
           )}
 

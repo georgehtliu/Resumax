@@ -205,6 +205,66 @@ body {
   color: var(--text-tertiary) !important;
 }
 
+/* Coaching Options Grid */
+.coaching-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-6);
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.coaching-option-card {
+  background: var(--bg-primary);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  border: 1px solid var(--color-slate-200);
+}
+
+.coaching-option-card:hover {
+  border-color: var(--color-primary-300);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.coaching-option-icon {
+  margin-bottom: var(--space-5);
+  color: var(--color-primary-600);
+}
+
+.coaching-option-card h3 {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  margin: 0 0 var(--space-3) 0;
+}
+
+.coaching-option-description {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  line-height: var(--line-height-relaxed);
+  margin: 0 0 var(--space-5) 0;
+}
+
+.coaching-option-features {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.coaching-feature-tag {
+  display: inline-block;
+  padding: var(--space-1) var(--space-3);
+  background: var(--color-primary-50);
+  color: var(--color-primary-600);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+}
+
 .resume-section-group {
   margin-bottom: var(--space-8);
   padding-bottom: var(--space-6);
