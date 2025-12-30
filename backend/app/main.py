@@ -6,7 +6,7 @@ This is the main entry point for the unified optimization API service.
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import rag
+from app.api import rag, websocket
 import os
 
 # Create FastAPI application
@@ -29,9 +29,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# TODO: Include routers
-# HINT: Add rag router with prefix
+# Include routers
 app.include_router(rag.router, prefix="/api/v1", tags=["RAG"])
+app.include_router(websocket.router, tags=["WebSocket"])
 
 @app.get("/")
 async def root():

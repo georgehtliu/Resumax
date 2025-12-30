@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { Icon } from '../ui/Icons';
 import './PersonalInfoEditor.css';
 
 const DEFAULT_INFO = {
@@ -11,14 +12,34 @@ const DEFAULT_INFO = {
 };
 
 function PersonalInfoEditor({ value, onChange, variant = 'default' }) {
-  const personalInfo = { ...DEFAULT_INFO, ...(value || {}) };
+  const initialInfo = { ...DEFAULT_INFO, ...(value || {}) };
+  const [localInfo, setLocalInfo] = useState(initialInfo);
+  const [hasChanges, setHasChanges] = useState(false);
+
+  // Update local state when value prop changes (e.g., from external updates)
+  useEffect(() => {
+    const newInfo = { ...DEFAULT_INFO, ...(value || {}) };
+    setLocalInfo(newInfo);
+    setHasChanges(false);
+  }, [value]);
 
   function handleFieldChange(field, newValue) {
-    if (!onChange) return;
-    onChange({
-      ...personalInfo,
+    const updated = {
+      ...localInfo,
       [field]: newValue
-    });
+    };
+    setLocalInfo(updated);
+    
+    // Check if there are changes compared to initial value
+    const initialInfo = { ...DEFAULT_INFO, ...(value || {}) };
+    const hasChanges = JSON.stringify(updated) !== JSON.stringify(initialInfo);
+    setHasChanges(hasChanges);
+  }
+
+  function handleSave() {
+    if (!onChange) return;
+    onChange(localInfo);
+    setHasChanges(false);
   }
 
   return (
@@ -28,7 +49,7 @@ function PersonalInfoEditor({ value, onChange, variant = 'default' }) {
           <label>First Name</label>
           <input
             type="text"
-            value={personalInfo.firstName}
+            value={localInfo.firstName}
             onChange={(e) => handleFieldChange('firstName', e.target.value)}
             placeholder="e.g., Jane"
           />
@@ -37,7 +58,7 @@ function PersonalInfoEditor({ value, onChange, variant = 'default' }) {
           <label>Last Name</label>
           <input
             type="text"
-            value={personalInfo.lastName}
+            value={localInfo.lastName}
             onChange={(e) => handleFieldChange('lastName', e.target.value)}
             placeholder="e.g., Doe"
           />
@@ -49,7 +70,7 @@ function PersonalInfoEditor({ value, onChange, variant = 'default' }) {
           <label>Phone</label>
           <input
             type="text"
-            value={personalInfo.phone}
+            value={localInfo.phone}
             onChange={(e) => handleFieldChange('phone', e.target.value)}
             placeholder="e.g., (555) 555-1234"
           />
@@ -58,7 +79,7 @@ function PersonalInfoEditor({ value, onChange, variant = 'default' }) {
           <label>Email</label>
           <input
             type="text"
-            value={personalInfo.email}
+            value={localInfo.email}
             onChange={(e) => handleFieldChange('email', e.target.value)}
             placeholder="e.g., jane.doe@email.com"
           />
@@ -70,7 +91,7 @@ function PersonalInfoEditor({ value, onChange, variant = 'default' }) {
           <label>LinkedIn</label>
           <input
             type="text"
-            value={personalInfo.linkedin}
+            value={localInfo.linkedin}
             onChange={(e) => handleFieldChange('linkedin', e.target.value)}
             placeholder="linkedin.com/in/janedoe"
           />
@@ -79,12 +100,24 @@ function PersonalInfoEditor({ value, onChange, variant = 'default' }) {
           <label>GitHub</label>
           <input
             type="text"
-            value={personalInfo.github}
+            value={localInfo.github}
             onChange={(e) => handleFieldChange('github', e.target.value)}
             placeholder="github.com/janedoe"
           />
         </div>
       </div>
+
+      {hasChanges && (
+        <div className="personal-info-save-section">
+          <button
+            className="btn btn-primary"
+            onClick={handleSave}
+          >
+            <Icon name="save" size={18} />
+            Save Personal Info
+          </button>
+        </div>
+      )}
     </div>
   );
 }

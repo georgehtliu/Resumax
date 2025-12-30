@@ -842,15 +842,31 @@ function App() {
         totalBullets
       };
 
+      console.log('💾 App: Saving resume data...', {
+        experiences: normalized.experiences.length,
+        education: normalized.education.length,
+        projects: normalized.projects.length,
+        customSections: normalized.customSections.length,
+        skills: normalized.skills.length
+      });
+
       await storageService.saveResume(normalized);
       setResume(normalized);
       if (showNotification) {
         success('Resume saved');
       }
+      console.log('✅ App: Resume saved successfully');
     } catch (error) {
-      console.error('Error saving resume:', error);
+      console.error('❌ App: Error saving resume:', error);
+      console.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint
+      });
       if (showNotification) {
-        showError('Failed to save resume');
+        const errorMsg = error.message || 'Failed to save resume to database. Check console for details.';
+        showError(errorMsg);
       }
     }
   }
@@ -929,8 +945,29 @@ function App() {
       }
     }
     
+    // Clear any existing resume state before loading new user's data
+    setResume({
+      personalInfo: {
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        linkedin: '',
+        github: ''
+      },
+      skills: [],
+      experiences: [],
+      education: [],
+      projects: [],
+      customSections: [],
+      totalBullets: 0
+    });
+    
     setIsSignedIn(true);
     setLoading(true);
+    
+    // Wait a bit for Supabase session to be established
+    await new Promise(resolve => setTimeout(resolve, 500));
     
     // Check if user has existing data
     try {
@@ -998,7 +1035,10 @@ function App() {
   }
 
   async function handleSignOut() {
-    // Sign out from Supabase
+    // IMPORTANT: Only clear local UI state and Chrome storage cache
+    // DO NOT delete data from Supabase - it should persist per user
+    
+    // Sign out from Supabase first (this only clears the session, not the data)
     await supabase.auth.signOut();
     
     if (typeof window !== 'undefined' && window.localStorage) {
@@ -1010,7 +1050,23 @@ function App() {
       localStorage.removeItem('resumax_user_email');
       localStorage.removeItem('resumax_is_test_user');
     }
+    
+    // Set signed in to false first (this will show the sign-in screen)
     setIsSignedIn(false);
+    
+    // Clear Chrome storage cache AFTER UI transition (local cache only, not Supabase data)
+    // This is just a cache - the real data stays in Supabase
+    if (typeof chrome !== 'undefined' && chrome.storage) {
+      chrome.storage.local.remove(['resume', 'savedResumes'], () => {
+        console.log('✅ Cleared local Chrome storage cache (Supabase data preserved)');
+      });
+    }
+    
+    // Don't clear resume state immediately - let it persist visually
+    // It will be cleared when a new user signs in (in handleSignIn)
+    // This prevents the visual "flash" of empty data during sign-out transition
+    
+    console.log('✅ Signed out - session cleared, Supabase data preserved');
   }
 
   const tabs = [
@@ -1164,7 +1220,8 @@ function App() {
           {activeView === 'profile' && (
             <Profile
               resume={resume}
-              onResumeUpdate={saveResumeData}
+              onResumeUpdate={(updatedResume) => setResume(updatedResume)}
+              onSave={saveResumeData}
               calculateTotalBullets={calculateTotalBullets}
             />
           )}

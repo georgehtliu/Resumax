@@ -1,25 +1,25 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { ArrowLeft, Send, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Send, MessageSquare, CheckCircle2 } from 'lucide-react';
 import ResumeRenderer from '../resume/ResumeRenderer';
 import HighlightOverlay, { createOverlayHighlight } from '../pdf/HighlightOverlay';
 import { findBulletText as findBulletTextUtil, findBulletContext as findBulletContextUtil } from '../../utils/resumeUtils';
 import { generateAnonymousUsername } from '../../utils/anonymousUsernames';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { supabase } from '../../config/supabase';
-import './ReviewerView.css';
+import './RevieweeView.css';
 
-// Mock resume data for review
-const mockResumeForReview = {
-  id: 'mock-review-resume-1',
+// Mock resume data - in real implementation, this would come from the selected resume
+const getMockResumeForReviewee = () => ({
+  id: 'mock-reviewee-resume-1',
   name: 'Software Engineer Resume',
   resume_data: {
     personalInfo: {
-      firstName: '',
-      lastName: '',
-      email: '',
-      phone: '',
-      linkedin: '',
-      github: ''
+      firstName: 'Sarah',
+      lastName: 'Johnson',
+      email: 'sarah.johnson@email.com',
+      phone: '(555) 123-4567',
+      linkedin: 'linkedin.com/in/sarahjohnson',
+      github: 'github.com/sarahjohnson'
     },
     skills: [
       { id: 'skill-1', title: 'Programming Languages', skills: ['Python', 'JavaScript', 'TypeScript', 'Java', 'Go'] },
@@ -96,24 +96,21 @@ const mockResumeForReview = {
     ],
     customSections: []
   }
-};
+});
 
-function ReviewerView({ onBack, roomId, partnerId, resumeId: propResumeId }) {
-  // Generate anonymous names
-  const [seekerAnonymousName] = useState(() => generateAnonymousUsername());
+function RevieweeView({ onBack, resumeId, roomId, partnerId }) {
+  // Generate anonymous name for the reviewer
   const [reviewerAnonymousName] = useState(() => generateAnonymousUsername());
   
   // State
   const [userId, setUserId] = useState(null);
-  const [resume, setResume] = useState(mockResumeForReview); // Will be loaded from propResumeId
+  const [resume, setResume] = useState(getMockResumeForReviewee());
   const [bulletComments, setBulletComments] = useState({});
   const [selectedBulletId, setSelectedBulletId] = useState(null);
   const [hoveredBulletId, setHoveredBulletId] = useState(null);
   const [bulletRefs, setBulletRefs] = useState({});
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
-  const [commentText, setCommentText] = useState('');
-  const [submitting, setSubmitting] = useState(false);
   const [highlightColor, setHighlightColor] = useState('#fef08a');
   const highlightColorRef = useRef('#fef08a');
   const resumePageRef = useRef(null);
@@ -137,6 +134,39 @@ function ReviewerView({ onBack, roomId, partnerId, resumeId: propResumeId }) {
     getUserId();
   }, []);
 
+  // Load resume data from saved_resumes
+  useEffect(() => {
+    const loadResume = async () => {
+      if (!resumeId) return;
+      
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+
+        const { data, error } = await supabase
+          .from('saved_resumes')
+          .select('*')
+          .eq('id', resumeId)
+          .eq('user_id', session.user.id)
+          .single();
+
+        if (error) throw error;
+
+        if (data) {
+          setResume({
+            id: data.id,
+            name: data.name,
+            resume_data: data.resume_data,
+          });
+        }
+      } catch (err) {
+        console.error('Error loading resume:', err);
+        // Fallback to mock data
+      }
+    };
+    loadResume();
+  }, [resumeId]);
+
   // WebSocket connection
   const {
     isConnected,
@@ -146,15 +176,6 @@ function ReviewerView({ onBack, roomId, partnerId, resumeId: propResumeId }) {
   } = useWebSocket(userId, {
     autoConnect: !!userId && !!roomId,
   });
-
-  // Load resume data if resumeId is provided
-  useEffect(() => {
-    if (propResumeId) {
-      // TODO: Load resume from saved_resumes table
-      // For now, using mock data
-      console.log('Loading resume:', propResumeId);
-    }
-  }, [propResumeId]);
 
   // Join room when connected
   useEffect(() => {
@@ -175,8 +196,8 @@ function ReviewerView({ onBack, roomId, partnerId, resumeId: propResumeId }) {
     const unsubscribeMessage = on('NEW_MESSAGE', (message) => {
       setChatMessages(prev => [...prev, {
         id: `msg-${Date.now()}-${Math.random()}`,
-        sender: message.sender_role === 'reviewer' ? 'reviewer' : 'seeker',
-        name: message.sender_role === 'reviewer' ? reviewerAnonymousName : seekerAnonymousName,
+        sender: message.sender_role === 'reviewee' ? 'reviewee' : 'reviewer',
+        name: message.sender_role === 'reviewer' ? reviewerAnonymousName : 'You',
         message: message.message,
         timestamp: message.timestamp,
       }]);
@@ -185,7 +206,6 @@ function ReviewerView({ onBack, roomId, partnerId, resumeId: propResumeId }) {
     // Handle highlights
     const unsubscribeHighlight = on('HIGHLIGHT_CREATED', (message) => {
       if (message.highlight.user_id !== userId) {
-        // Only add highlights from partner
         setHighlights(prev => [...prev, {
           ...message.highlight,
           id: message.highlight.id,
@@ -204,11 +224,12 @@ function ReviewerView({ onBack, roomId, partnerId, resumeId: propResumeId }) {
         ...prev,
         [comment.bullet_id]: [...(prev[comment.bullet_id] || []), {
           id: comment.id,
-          author_name: comment.author_role === 'reviewer' ? reviewerAnonymousName : seekerAnonymousName,
+          author_name: comment.author_role === 'reviewer' ? reviewerAnonymousName : 'You',
           content: comment.content,
           created_at: comment.created_at,
           is_anonymous: true,
           bullet_id: comment.bullet_id,
+          resolved: false,
         }]
       }));
     });
@@ -257,7 +278,7 @@ function ReviewerView({ onBack, roomId, partnerId, resumeId: propResumeId }) {
       unsubscribeCommentDeleted();
       unsubscribeCommentResolved();
     };
-  }, [isConnected, on, userId, reviewerAnonymousName, seekerAnonymousName]);
+  }, [isConnected, on, userId, reviewerAnonymousName]);
 
   const findBulletText = useCallback((bulletId) => {
     return findBulletTextUtil({ resume_data: resume.resume_data }, bulletId);
@@ -293,7 +314,6 @@ function ReviewerView({ onBack, roomId, partnerId, resumeId: propResumeId }) {
       // Create overlay highlight (doesn't modify DOM)
       const highlightData = createOverlayHighlight(range, resumePage, highlightColorRef.current);
       if (highlightData) {
-        // Add highlight locally
         setHighlights(prev => [...prev, highlightData]);
         
         // Send highlight to server via WebSocket
@@ -353,11 +373,11 @@ function ReviewerView({ onBack, roomId, partnerId, resumeId: propResumeId }) {
       timestamp: new Date().toISOString(),
     });
 
-    // Optimistically add to local state (will be confirmed by server)
+    // Optimistically add to local state
     setChatMessages(prev => [...prev, {
       id: `msg-${Date.now()}-temp`,
-      sender: 'reviewer',
-      name: reviewerAnonymousName,
+      sender: 'reviewee',
+      name: 'You',
       message: chatInput,
       timestamp: new Date().toISOString()
     }]);
@@ -365,42 +385,42 @@ function ReviewerView({ onBack, roomId, partnerId, resumeId: propResumeId }) {
     setChatInput('');
   };
 
-  const handleCommentSubmit = async (e, bulletId, bulletText, sectionType, entryId) => {
-    e.preventDefault();
-    if (!commentText.trim() || !isConnected) return;
-
-    setSubmitting(true);
-
-    const commentId = `comment-${Date.now()}`;
-
-    // Send comment via WebSocket
+  const handleResolveComment = (commentId, bulletId) => {
+    if (!isConnected) return;
+    
+    // Send resolve to server
     sendMessage({
-      type: 'CREATE_COMMENT',
-      comment: {
-        id: commentId,
-        bullet_id: bulletId,
-        content: commentText,
-      }
+      type: 'RESOLVE_COMMENT',
+      comment_id: commentId,
     });
 
-    // Optimistically add to local state
-    const newComment = {
-      id: commentId,
-      author_name: reviewerAnonymousName,
-      content: commentText,
-      created_at: new Date().toISOString(),
-      is_anonymous: true,
-      bullet_id: bulletId,
-    };
+    // Optimistically update local state
+    setBulletComments(prev => {
+      const updated = { ...prev };
+      if (updated[bulletId]) {
+        updated[bulletId] = updated[bulletId].map(comment =>
+          comment.id === commentId
+            ? { ...comment, resolved: true }
+            : comment
+        );
+      }
+      return updated;
+    });
+  };
 
-    setBulletComments(prev => ({
-      ...prev,
-      [bulletId]: [...(prev[bulletId] || []), newComment]
-    }));
-
-    setCommentText('');
-    setSelectedBulletId(null);
-    setSubmitting(false);
+  const handleUnresolveComment = (commentId, bulletId) => {
+    // For now, just update locally (could add UNRESOLVE_COMMENT message type later)
+    setBulletComments(prev => {
+      const updated = { ...prev };
+      if (updated[bulletId]) {
+        updated[bulletId] = updated[bulletId].map(comment =>
+          comment.id === commentId
+            ? { ...comment, resolved: false }
+            : comment
+        );
+      }
+      return updated;
+    });
   };
 
   const scrollToBulletInHtml = (bulletId) => {
@@ -431,22 +451,22 @@ function ReviewerView({ onBack, roomId, partnerId, resumeId: propResumeId }) {
   }, [bulletComments, findBulletText, findBulletContext]);
 
   return (
-    <div className="reviewer-view">
-      <div className="reviewer-header">
+    <div className="reviewee-view">
+      <div className="reviewee-header">
         <button className="back-button" onClick={onBack}>
           <ArrowLeft size={18} />
           <span>Back</span>
         </button>
-        <div className="reviewer-header-content">
-          <h1>Review Resume</h1>
-          <p className="reviewer-subtitle">Reviewing anonymous user's resume ({seekerAnonymousName})</p>
+        <div className="reviewee-header-content">
+          <h1>My Resume Review</h1>
+          <p className="reviewee-subtitle">Reviewing: {resume.name}</p>
         </div>
         <div className="highlight-controls">
-          <label htmlFor="highlight-color-picker" className="highlight-label">
+          <label htmlFor="highlight-color-picker-reviewee" className="highlight-label">
             Highlight Color:
           </label>
           <input
-            id="highlight-color-picker"
+            id="highlight-color-picker-reviewee"
             type="color"
             value={highlightColor}
             onChange={(e) => setHighlightColor(e.target.value)}
@@ -457,8 +477,8 @@ function ReviewerView({ onBack, roomId, partnerId, resumeId: propResumeId }) {
         </div>
       </div>
 
-      <div className="reviewer-layout">
-        <div className="reviewer-resume-section">
+      <div className="reviewee-layout">
+        <div className="reviewee-resume-section">
           <div className="resume-html-wrapper" style={{ position: 'relative' }}>
             <div 
               className="resume-page" 
@@ -494,7 +514,7 @@ function ReviewerView({ onBack, roomId, partnerId, resumeId: propResumeId }) {
           </div>
         </div>
 
-        <div className="reviewer-sidebar">
+        <div className="reviewee-sidebar">
           <div className="chat-section">
             <div className="chat-header">
               <MessageSquare size={18} />
@@ -507,7 +527,7 @@ function ReviewerView({ onBack, roomId, partnerId, resumeId: propResumeId }) {
             </div>
             <div className="chat-messages">
               {chatMessages.map((msg) => (
-                <div key={msg.id} className={`chat-message ${msg.sender === 'reviewer' ? 'reviewer' : 'seeker'}`}>
+                <div key={msg.id} className={`chat-message ${msg.sender === 'reviewee' ? 'reviewee' : 'reviewer'}`}>
                   <div className="chat-message-header">
                     <span className="chat-message-name">{msg.name}</span>
                     <span className="chat-message-time">
@@ -545,7 +565,7 @@ function ReviewerView({ onBack, roomId, partnerId, resumeId: propResumeId }) {
             <div className="comments-content">
               {getAllBulletsWithComments().length === 0 ? (
                 <div className="no-comments">
-                  <p>No comments yet. Click on a bullet point to add feedback.</p>
+                  <p>No comments yet. Reviewers will add feedback here.</p>
                 </div>
               ) : (
                 getAllBulletsWithComments().map(({ bulletId, bulletText, comments }) => (
@@ -560,7 +580,10 @@ function ReviewerView({ onBack, roomId, partnerId, resumeId: propResumeId }) {
                     </div>
                     <div className="comment-group-comments">
                       {comments.map(comment => (
-                        <div key={comment.id} className="comment-item">
+                        <div 
+                          key={comment.id} 
+                          className={`comment-item ${comment.resolved ? 'resolved' : ''}`}
+                        >
                           <div className="comment-header">
                             <span className="comment-author">{comment.author_name}</span>
                             <span className="comment-date">
@@ -573,6 +596,27 @@ function ReviewerView({ onBack, roomId, partnerId, resumeId: propResumeId }) {
                             </span>
                           </div>
                           <div className="comment-content">{comment.content}</div>
+                          <div className="comment-actions">
+                            {comment.resolved ? (
+                              <button
+                                className="resolve-button unresolved"
+                                onClick={() => handleUnresolveComment(comment.id, bulletId)}
+                                title="Mark as unresolved"
+                              >
+                                <CheckCircle2 size={16} />
+                                <span>Resolved</span>
+                              </button>
+                            ) : (
+                              <button
+                                className="resolve-button"
+                                onClick={() => handleResolveComment(comment.id, bulletId)}
+                                title="Mark as resolved"
+                              >
+                                <CheckCircle2 size={16} />
+                                <span>Resolve</span>
+                              </button>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -580,53 +624,6 @@ function ReviewerView({ onBack, roomId, partnerId, resumeId: propResumeId }) {
                 ))
               )}
             </div>
-
-            {selectedBulletId && (
-              <div className="comment-form-section">
-                <div className="comment-form-header">
-                  <div className="comment-form-bullet-preview">
-                    {findBulletText(selectedBulletId).substring(0, 80)}
-                    {findBulletText(selectedBulletId).length > 80 ? '...' : ''}
-                  </div>
-                </div>
-                <form 
-                  onSubmit={(e) => {
-                    const context = findBulletContext(selectedBulletId);
-                    const bulletText = findBulletText(selectedBulletId);
-                    handleCommentSubmit(e, selectedBulletId, bulletText, context.sectionType, context.entryId);
-                  }}
-                  className="comment-form"
-                >
-                  <textarea
-                    placeholder="Add your feedback..."
-                    value={commentText}
-                    onChange={(e) => setCommentText(e.target.value)}
-                    className="comment-textarea"
-                    required
-                    rows={3}
-                  />
-                  <div className="comment-form-actions">
-                    <button 
-                      type="submit" 
-                      className="btn-submit-comment"
-                      disabled={submitting || !commentText.trim()}
-                    >
-                      {submitting ? 'Posting...' : 'Post Comment'}
-                    </button>
-                    <button 
-                      type="button"
-                      className="btn-cancel-comment"
-                      onClick={() => {
-                        setSelectedBulletId(null);
-                        setCommentText('');
-                      }}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </form>
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -634,5 +631,5 @@ function ReviewerView({ onBack, roomId, partnerId, resumeId: propResumeId }) {
   );
 }
 
-export default ReviewerView;
+export default RevieweeView;
 

@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, MessageSquare, CheckCircle, FileText, Calendar } from 'lucide-react';
 import { supabase } from '../../config/supabase';
-import LoadingScreen from './LoadingScreen';
+import RevieweeView from './RevieweeView';
+import QueueMatching from './QueueMatching';
 import './HaveResumeReviewed.css';
 
 function HaveResumeReviewed({ onBack }) {
   const [savedResumes, setSavedResumes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedResumeId, setSelectedResumeId] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showRevieweeView, setShowRevieweeView] = useState(false);
+  const [showQueue, setShowQueue] = useState(false);
+  const [matchData, setMatchData] = useState(null);
 
   useEffect(() => {
     loadSavedResumes();
@@ -49,21 +52,44 @@ function HaveResumeReviewed({ onBack }) {
 
   const handleSubmit = () => {
     if (!selectedResumeId) return;
-    setIsSubmitting(true);
+    setShowQueue(true);
   };
 
-  if (isSubmitting) {
+  const handleMatch = (matchInfo) => {
+    console.log('Match received:', matchInfo);
+    setMatchData(matchInfo);
+    setShowQueue(false);
+    setShowRevieweeView(true);
+  };
+
+  if (showRevieweeView && matchData) {
+    return (
+      <RevieweeView 
+        onBack={() => {
+          setShowRevieweeView(false);
+          setMatchData(null);
+        }} 
+        resumeId={selectedResumeId}
+        roomId={matchData.roomId}
+        partnerId={matchData.partnerId}
+      />
+    );
+  }
+
+  if (showQueue) {
     return (
       <div className="have-resume-reviewed-page">
         <div className="have-resume-reviewed-header">
-          <button className="back-button" onClick={() => setIsSubmitting(false)}>
+          <button className="back-button" onClick={() => setShowQueue(false)}>
             <ArrowLeft size={18} />
             <span>Back</span>
           </button>
         </div>
-        <LoadingScreen 
-          title="Submitting your resume for review"
-          message="We're connecting you with experienced professionals. This may take a moment..."
+        <QueueMatching
+          role="reviewee"
+          resumeId={selectedResumeId}
+          onMatch={handleMatch}
+          onCancel={() => setShowQueue(false)}
         />
       </div>
     );

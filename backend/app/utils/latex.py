@@ -150,11 +150,12 @@ def _build_education(education: list) -> str:
             degree_line = field_text
         else:
             degree_line = degree_text
-        end_date = _escape_latex(entry.endDate or "")
-        grad_line = f"Expected Graduation: {end_date}" if end_date else ""
+        start = _escape_latex(entry.startDate or "")
+        end = _escape_latex(entry.endDate or "") or "Present"
+        date_range = f"{start} -- {end}" if start else end
         line = (
             "  \\resumeSubheading\n"
-            f"    {{{_escape_latex(entry.school or '')}}}{{{grad_line}}}\n"
+            f"    {{{_escape_latex(entry.school or '')}}}{{{date_range}}}\n"
             f"    {{{degree_line}}}{{}}\n"
         )
         bullets = _format_bullets(entry.selectedBullets or [])

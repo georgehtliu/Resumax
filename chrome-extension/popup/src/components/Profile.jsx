@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import ExperienceEditor from './editors/ExperienceEditor';
 import EducationEditor from './editors/EducationEditor';
 import ProjectEditor from './editors/ProjectEditor';
@@ -6,17 +6,18 @@ import CustomSectionEditor from './editors/CustomSectionEditor';
 import PersonalInfoEditor from './editors/PersonalInfoEditor';
 import SkillsEditor from './editors/SkillsEditor';
 import Tabs from './ui/Tabs';
-import AutoSaveIndicator from './AutoSaveIndicator';
 import { storageService } from '../services/storage';
 import { Icon } from './ui/Icons';
+import { useToast } from '../hooks/useToast';
 import './Profile.css';
 
 /**
  * Profile Component
  * Contains master resume points and editing
  */
-function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
-  // onResumeUpdate signature: (updatedResume, showNotification = true)
+function Profile({ resume, onResumeUpdate, calculateTotalBullets, onSave }) {
+  // onResumeUpdate signature: (updatedResume) - only updates local state, doesn't save to DB
+  // onSave signature: (resumeData) - saves to database
   const tabs = [
     { id: 'personal', label: 'Personal Info' },
     { id: 'experiences', label: 'Experiences' },
@@ -27,77 +28,59 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
   ];
 
   const [activeTab, setActiveTab] = React.useState('personal');
-  const [saveStatus, setSaveStatus] = useState('idle');
-  const saveTimeoutRef = useRef(null);
-  const isInitialMount = useRef(true);
-  const previousResumeRef = useRef(resume);
+  const [isSaving, setIsSaving] = useState(false);
+  const [localResume, setLocalResume] = useState(resume);
+  const { success, error: showError } = useToast();
 
-  // Auto-save on resume update (skip on initial mount)
+  // Update local resume when prop changes (e.g., after loading from DB)
   useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      previousResumeRef.current = JSON.stringify(resume);
-      return;
-    }
+    setLocalResume(resume);
+  }, [resume]);
 
-    const currentResumeStr = JSON.stringify(resume);
-    
-    // Check if resume actually changed
-    if (previousResumeRef.current === currentResumeStr) {
-      return;
-    }
-
-    previousResumeRef.current = currentResumeStr;
-
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
-
-    // Only auto-save if resume has actual content
-    const hasContent = resume.experiences?.length > 0 || 
-                      resume.education?.length > 0 || 
-                      resume.projects?.length > 0 ||
-                      (resume.personalInfo?.firstName && resume.personalInfo?.lastName);
-
-    if (hasContent) {
-      setSaveStatus('saving');
-      saveTimeoutRef.current = setTimeout(async () => {
-        try {
-          // Save directly to storage without triggering state update
-          const totalBullets = calculateTotalBullets(resume);
-          const normalized = {
-            personalInfo: resume.personalInfo || {
-              firstName: '',
-              lastName: '',
-              email: '',
-              phone: '',
-              linkedin: '',
-              github: ''
-            },
-            skills: Array.isArray(resume.skills) ? resume.skills : [],
-            experiences: Array.isArray(resume.experiences) ? resume.experiences : [],
-            education: Array.isArray(resume.education) ? resume.education : [],
-            projects: Array.isArray(resume.projects) ? resume.projects : [],
-            customSections: Array.isArray(resume.customSections) ? resume.customSections : [],
-            totalBullets
-          };
-          await storageService.saveResume(normalized);
-          setSaveStatus('saved');
-          setTimeout(() => setSaveStatus('idle'), 2000);
-        } catch (error) {
-          console.error('Auto-save error:', error);
-          setSaveStatus('error');
-          setTimeout(() => setSaveStatus('idle'), 3000);
-        }
-      }, 1000); // Debounce: save 1 second after last change
-    }
-
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const totalBullets = calculateTotalBullets(localResume);
+      const normalized = {
+        personalInfo: localResume.personalInfo || {
+          firstName: '',
+          lastName: '',
+          email: '',
+          phone: '',
+          linkedin: '',
+          github: ''
+        },
+        skills: Array.isArray(localResume.skills) ? localResume.skills : [],
+        experiences: Array.isArray(localResume.experiences) ? localResume.experiences : [],
+        education: Array.isArray(localResume.education) ? localResume.education : [],
+        projects: Array.isArray(localResume.projects) ? localResume.projects : [],
+        customSections: Array.isArray(localResume.customSections) ? localResume.customSections : [],
+        totalBullets
+      };
+      
+      // Use onSave if provided, otherwise fall back to direct storageService call
+      if (onSave) {
+        await onSave(normalized);
+      } else {
+        await storageService.saveResume(normalized);
       }
-    };
-  }, [resume, calculateTotalBullets]);
+      
+      // Update parent state after successful save
+      onResumeUpdate(normalized);
+      success('Profile saved successfully');
+    } catch (error) {
+      console.error('Save error:', error);
+      showError('Failed to save profile. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Handle local updates (only updates local state, doesn't save to DB)
+  const handleLocalUpdate = (updatedResume) => {
+    setLocalResume(updatedResume);
+    onResumeUpdate(updatedResume);
+  };
 
   const handleImportResume = async () => {
     // Load Waterloo student mock data with 8 internships and 3 projects
@@ -335,17 +318,16 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
       ]
     };
 
-    // Save to storage and update the resume
-    await storageService.saveResume(mockMasterResume);
-    onResumeUpdate(mockMasterResume);
+    // Update local state (don't save to DB yet - user needs to click Save Profile)
+    handleLocalUpdate(mockMasterResume);
   };
 
   // Calculate stats for header
-  const totalBullets = calculateTotalBullets(resume);
-  const totalExperiences = resume.experiences?.length || 0;
-  const totalEducation = resume.education?.length || 0;
-  const totalProjects = resume.projects?.length || 0;
-  const totalCustomSections = resume.customSections?.length || 0;
+  const totalBullets = calculateTotalBullets(localResume);
+  const totalExperiences = localResume.experiences?.length || 0;
+  const totalEducation = localResume.education?.length || 0;
+  const totalProjects = localResume.projects?.length || 0;
+  const totalCustomSections = localResume.customSections?.length || 0;
 
   return (
     <div className="profile-page">
@@ -358,14 +340,31 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
               <p className="profile-subtitle">Build and manage your master resume</p>
             </div>
             <div className="profile-header-actions">
-              <AutoSaveIndicator status={saveStatus} />
               <button 
-                className="btn-import-resume"
+                className="btn btn-secondary"
                 onClick={handleImportResume}
                 title="Import from existing resume"
               >
                 <Icon name="download" size={18} />
                 Import Resume
+              </button>
+              <button 
+                className="btn btn-primary"
+                onClick={handleSave}
+                disabled={isSaving}
+                title="Save profile"
+              >
+                {isSaving ? (
+                  <>
+                    <Icon name="loader" size={18} />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Icon name="save" size={18} />
+                    Save Profile
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -422,10 +421,10 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
           {activeTab === 'personal' && (
             <div className="profile-tab-content">
               <PersonalInfoEditor
-                value={resume.personalInfo}
+                value={localResume.personalInfo}
                 onChange={(updatedInfo) => {
-                  onResumeUpdate({
-                    ...resume,
+                  handleLocalUpdate({
+                    ...localResume,
                     personalInfo: updatedInfo
                   });
                 }}
@@ -435,7 +434,7 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
 
           {activeTab === 'experiences' && (
             <div className="profile-tab-content">
-              {(!resume.experiences || resume.experiences.length === 0) ? (
+              {(!localResume.experiences || localResume.experiences.length === 0) ? (
                 <div className="empty-state-modern">
                   <div className="empty-state-icon">
                     <Icon name="briefcase" size={48} />
@@ -453,9 +452,9 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
                         endDate: '',
                         bullets: []
                       };
-                      onResumeUpdate({
-                        ...resume,
-                        experiences: [...(resume.experiences || []), newExp]
+                      handleLocalUpdate({
+                        ...localResume,
+                        experiences: [...(localResume.experiences || []), newExp]
                       });
                     }}
                   >
@@ -466,32 +465,32 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
               ) : (
                 <>
                   <div className="profile-items-list">
-                    {resume.experiences.map(experience => (
+                    {localResume.experiences.map(experience => (
                       <ExperienceEditor
                         key={experience.id}
                         experience={experience}
                         onUpdate={(updatedExp) => {
-                          const updated = resume.experiences.map(exp =>
+                          const updated = localResume.experiences.map(exp =>
                             exp.id === updatedExp.id ? updatedExp : exp
                           );
                           const totalBullets = calculateTotalBullets({
-                            ...resume,
+                            ...localResume,
                             experiences: updated
                           });
-                          onResumeUpdate({
-                            ...resume,
+                          handleLocalUpdate({
+                            ...localResume,
                             experiences: updated,
                             totalBullets
                           });
                         }}
                         onDelete={(expId) => {
-                          const updated = resume.experiences.filter(exp => exp.id !== expId);
+                          const updated = localResume.experiences.filter(exp => exp.id !== expId);
                           const totalBullets = calculateTotalBullets({
-                            ...resume,
+                            ...localResume,
                             experiences: updated
                           });
-                          onResumeUpdate({
-                            ...resume,
+                          handleLocalUpdate({
+                            ...localResume,
                             experiences: updated,
                             totalBullets
                           });
@@ -510,9 +509,9 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
                         endDate: '',
                         bullets: []
                       };
-                      onResumeUpdate({
-                        ...resume,
-                        experiences: [...resume.experiences, newExp]
+                      handleLocalUpdate({
+                        ...localResume,
+                        experiences: [...localResume.experiences, newExp]
                       });
                     }}
                   >
@@ -526,7 +525,7 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
 
           {activeTab === 'education' && (
             <div className="profile-tab-content">
-              {(!resume.education || resume.education.length === 0) ? (
+              {(!localResume.education || localResume.education.length === 0) ? (
                 <div className="empty-state-modern">
                   <div className="empty-state-icon">
                     <Icon name="graduation" size={48} />
@@ -545,9 +544,9 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
                         endDate: '',
                         bullets: []
                       };
-                      onResumeUpdate({
-                        ...resume,
-                        education: [...(resume.education || []), newEdu]
+                      handleLocalUpdate({
+                        ...localResume,
+                        education: [...(localResume.education || []), newEdu]
                       });
                     }}
                   >
@@ -558,20 +557,20 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
               ) : (
                 <>
                   <div className="profile-items-list">
-                    {resume.education.map(edu => (
+                    {localResume.education.map(edu => (
                       <EducationEditor
                         key={edu.id}
                         education={edu}
                         onUpdate={(updatedEdu) => {
-                          const updated = resume.education.map(e =>
+                          const updated = localResume.education.map(e =>
                             e.id === updatedEdu.id ? updatedEdu : e
                           );
-                          onResumeUpdate({ ...resume, education: updated });
+                          handleLocalUpdate({ ...localResume, education: updated });
                         }}
                         onDelete={(eduId) => {
-                          onResumeUpdate({
-                            ...resume,
-                            education: resume.education.filter(e => e.id !== eduId)
+                          handleLocalUpdate({
+                            ...localResume,
+                            education: localResume.education.filter(e => e.id !== eduId)
                           });
                         }}
                       />
@@ -589,9 +588,9 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
                         endDate: '',
                         bullets: []
                       };
-                      onResumeUpdate({
-                        ...resume,
-                        education: [...resume.education, newEdu]
+                      handleLocalUpdate({
+                        ...localResume,
+                        education: [...localResume.education, newEdu]
                       });
                     }}
                   >
@@ -605,7 +604,7 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
 
           {activeTab === 'projects' && (
             <div className="profile-tab-content">
-              {(!resume.projects || resume.projects.length === 0) ? (
+              {(!localResume.projects || localResume.projects.length === 0) ? (
                 <div className="empty-state-modern">
                   <div className="empty-state-icon">
                     <Icon name="code" size={48} />
@@ -624,9 +623,9 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
                         endDate: '',
                         bullets: []
                       };
-                      onResumeUpdate({
-                        ...resume,
-                        projects: [...(resume.projects || []), newProj]
+                      handleLocalUpdate({
+                        ...localResume,
+                        projects: [...(localResume.projects || []), newProj]
                       });
                     }}
                   >
@@ -637,20 +636,20 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
               ) : (
                 <>
                   <div className="profile-items-list">
-                    {resume.projects.map(project => (
+                    {localResume.projects.map(project => (
                       <ProjectEditor
                         key={project.id}
                         project={project}
                         onUpdate={(updatedProj) => {
-                          const updated = resume.projects.map(p =>
+                          const updated = localResume.projects.map(p =>
                             p.id === updatedProj.id ? updatedProj : p
                           );
-                          onResumeUpdate({ ...resume, projects: updated });
+                          handleLocalUpdate({ ...localResume, projects: updated });
                         }}
                         onDelete={(projId) => {
-                          onResumeUpdate({
-                            ...resume,
-                            projects: resume.projects.filter(p => p.id !== projId)
+                          handleLocalUpdate({
+                            ...localResume,
+                            projects: localResume.projects.filter(p => p.id !== projId)
                           });
                         }}
                       />
@@ -668,9 +667,9 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
                         endDate: '',
                         bullets: []
                       };
-                      onResumeUpdate({
-                        ...resume,
-                        projects: [...resume.projects, newProj]
+                      handleLocalUpdate({
+                        ...localResume,
+                        projects: [...localResume.projects, newProj]
                       });
                     }}
                   >
@@ -685,15 +684,15 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
           {activeTab === 'skills' && (
             <div className="profile-tab-content">
               <SkillsEditor
-                skills={resume.skills}
-                onChange={(updatedSkills) => onResumeUpdate({ ...resume, skills: updatedSkills })}
+                skills={localResume.skills}
+                onChange={(updatedSkills) => handleLocalUpdate({ ...localResume, skills: updatedSkills })}
               />
             </div>
           )}
 
           {activeTab === 'custom' && (
             <div className="profile-tab-content">
-              {(!resume.customSections || resume.customSections.length === 0) ? (
+              {(!localResume.customSections || localResume.customSections.length === 0) ? (
                 <div className="empty-state-modern">
                   <div className="empty-state-icon">
                     <Icon name="award" size={48} />
@@ -709,9 +708,9 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
                         subtitle: '',
                         bullets: []
                       };
-                      onResumeUpdate({
-                        ...resume,
-                        customSections: [...(resume.customSections || []), newSection]
+                      handleLocalUpdate({
+                        ...localResume,
+                        customSections: [...(localResume.customSections || []), newSection]
                       });
                     }}
                   >
@@ -722,20 +721,20 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
               ) : (
                 <>
                   <div className="profile-items-list">
-                    {resume.customSections.map(section => (
+                    {localResume.customSections.map(section => (
                       <CustomSectionEditor
                         key={section.id}
                         section={section}
                         onUpdate={(updatedSection) => {
-                          const updated = resume.customSections.map(s =>
+                          const updated = localResume.customSections.map(s =>
                             s.id === updatedSection.id ? updatedSection : s
                           );
-                          onResumeUpdate({ ...resume, customSections: updated });
+                          handleLocalUpdate({ ...localResume, customSections: updated });
                         }}
                         onDelete={(sectionId) => {
-                          onResumeUpdate({
-                            ...resume,
-                            customSections: resume.customSections.filter(s => s.id !== sectionId)
+                          handleLocalUpdate({
+                            ...localResume,
+                            customSections: localResume.customSections.filter(s => s.id !== sectionId)
                           });
                         }}
                       />
@@ -750,9 +749,9 @@ function Profile({ resume, onResumeUpdate, calculateTotalBullets }) {
                         subtitle: '',
                         bullets: []
                       };
-                      onResumeUpdate({
-                        ...resume,
-                        customSections: [...resume.customSections, newSection]
+                      handleLocalUpdate({
+                        ...localResume,
+                        customSections: [...localResume.customSections, newSection]
                       });
                     }}
                   >
