@@ -9,12 +9,14 @@ from app.schemas.rag import (
     RAGRequest, RAGResponse, SelectionRequest, SelectionResponse,
     OptimizationRequest, OptimizationResponse,
     LatexRenderRequest, LatexRenderResponse,
-    KeywordScanRequest, KeywordScanResponse
+    KeywordScanRequest, KeywordScanResponse,
+    RoastRequest, RoastResponse
 )
 from app.services.rag_service import RAGService
 from app.services.selection_service import SelectionService, calculate_total_lines, identify_gaps
 from app.services.optimization_service import OptimizationService
 from app.services.keyword_scanner import KeywordScanner
+from app.services.roast_service import RoastService
 from app.utils.latex import build_resume_latex, render_pdf_from_latex, pdf_bytes_to_base64
 import json
 import os
@@ -404,5 +406,54 @@ async def scan_keywords(request: KeywordScanRequest):
     except Exception as e:
         print(f"❌ Keyword scan failed: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to scan keywords: {str(e)}")
+
+
+@router.post("/coaching/roast", response_model=RoastResponse)
+async def roast_resume(request: RoastRequest, background_tasks: BackgroundTasks):
+    """
+    Provide brutally honest feedback on resume bullets.
+    
+    Analyzes resume for:
+    - Content quality (action verbs, metrics, specificity)
+    - Format consistency (dates, capitalization, punctuation)
+    - Grammar and spelling errors
+    
+    Args:
+        request: Roast request with structured resume
+        background_tasks: For saving results in background
+        
+    Returns:
+        Comprehensive feedback with scores, issues, and suggestions
+    """
+    start_time = time.time()
+    
+    try:
+        print(f"🔥 Roasting resume...")
+        
+        roast_service = RoastService()
+        
+        # Analyze resume and get feedback
+        feedback_data = await roast_service.roast_resume(request.resume)
+        
+        processing_time = time.time() - start_time
+        
+        print(f"✅ Resume roast completed in {processing_time:.2f} seconds")
+        print(f"   - Analyzed {feedback_data.get('totalBullets', 0)} bullets")
+        print(f"   - Found {feedback_data.get('issuesFound', 0)} issues")
+        print(f"   - Overall score: {feedback_data.get('overallScore', 0):.1f}/10")
+        
+        # Add processing time and timestamp
+        feedback_data["processing_time"] = processing_time
+        feedback_data["created_at"] = datetime.now()
+        
+        # Save results in background (optional)
+        # You can add a _save_roast_results function if needed
+        
+        return RoastResponse(**feedback_data)
+    except Exception as e:
+        print(f"❌ Resume roast failed: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Failed to roast resume: {str(e)}")
 
 

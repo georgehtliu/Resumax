@@ -443,6 +443,84 @@
   color: var(--color-primary-900, #1e3a8a);
 }
 
+/* Format Issues */
+.format-issues-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4, 16px);
+}
+
+.format-issue-item {
+  padding: var(--space-4, 16px);
+  background: var(--bg-secondary, #f8fafc);
+  border-radius: var(--radius-md, 8px);
+  border-left: 3px solid var(--color-warning, #f59e0b);
+}
+
+.format-issue-title {
+  font-size: var(--font-size-base, 16px);
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--text-primary, #111827);
+  margin: 0 0 var(--space-2, 8px) 0;
+}
+
+.format-issue-details {
+  font-size: var(--font-size-sm, 14px);
+  color: var(--text-secondary, #6b7280);
+  margin: 0 0 var(--space-3, 12px) 0;
+  line-height: 1.5;
+}
+
+.format-issue-recommendation {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2, 8px);
+  padding: var(--space-3, 12px);
+  background: var(--color-primary-50, #eff6ff);
+  border-radius: var(--radius-md, 8px);
+  margin-top: var(--space-2, 8px);
+  font-size: var(--font-size-sm, 14px);
+  color: var(--color-primary-700, #1d4ed8);
+  line-height: 1.5;
+}
+
+.format-issue-recommendation svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.format-issue-affected {
+  font-size: var(--font-size-xs, 12px);
+  color: var(--text-tertiary, #9ca3af);
+  margin: var(--space-2, 8px) 0 0 0;
+}
+
+.issue-examples {
+  margin-top: var(--space-2, 8px);
+  padding: var(--space-2, 8px);
+  background: var(--bg-primary, #ffffff);
+  border-radius: var(--radius-md, 8px);
+  font-size: var(--font-size-sm, 14px);
+}
+
+.issue-examples ul {
+  margin: var(--space-2, 8px) 0 0 0;
+  padding-left: var(--space-5, 20px);
+}
+
+.issue-examples li {
+  margin-bottom: var(--space-1, 4px);
+  color: var(--text-secondary, #6b7280);
+}
+
+.issue-severity {
+  font-size: var(--font-size-xs, 12px);
+  font-weight: var(--font-weight-medium, 500);
+  text-transform: uppercase;
+  color: var(--text-tertiary, #9ca3af);
+  margin-left: var(--space-2, 8px);
+}
+
 /* Actions */
 .roast-actions {
   display: flex;

@@ -9,7 +9,7 @@ These schemas define the data structures for the RAG pipeline:
 """
 
 from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Literal
 from datetime import datetime
 
 class RAGRequest(BaseModel):
@@ -301,3 +301,53 @@ class KeywordScanResponse(BaseModel):
     statistics: KeywordScanStatistics = Field(..., description="Match statistics")
 
 
+# ============================================================================
+# RESUME ROASTING SCHEMAS
+# ============================================================================
+
+class IssueFeedback(BaseModel):
+    """Individual issue or feedback for a bullet point."""
+    type: Literal["good", "bad", "improvement", "suggestion", "format", "grammar"] = Field(..., description="Type of feedback")
+    category: Literal["content", "format", "grammar"] = Field(..., description="Category of the issue")
+    message: str = Field(..., description="Specific feedback message")
+    severity: Optional[Literal["critical", "major", "minor"]] = Field(None, description="Severity level for format/grammar issues")
+
+class BulletFeedback(BaseModel):
+    """Feedback for a single bullet point."""
+    id: str = Field(..., description="Bullet ID")
+    text: str = Field(..., description="Original bullet text")
+    section: Literal["experience", "project", "education", "custom"] = Field(..., description="Section type")
+    sectionTitle: str = Field(..., description="Section title (e.g., company name, project name)")
+    issues: List[IssueFeedback] = Field(default_factory=list, description="List of issues/feedback for this bullet")
+
+class GeneralIssue(BaseModel):
+    """General issue pattern found across multiple bullets."""
+    type: Literal["warning", "info", "error"] = Field(..., description="Issue type")
+    category: Literal["content", "format", "grammar"] = Field(..., description="Issue category")
+    message: str = Field(..., description="Description of the pattern or issue")
+    suggestion: Optional[str] = Field(None, description="Recommendation to fix")
+    examples: Optional[List[str]] = Field(None, description="Examples showing the inconsistency or pattern")
+
+class FormatIssue(BaseModel):
+    """Format inconsistency found across bullets."""
+    issue: str = Field(..., description="Description of the format issue (e.g., 'Date format inconsistency')")
+    details: str = Field(..., description="Details about the inconsistency")
+    recommendation: str = Field(..., description="Recommended consistent format")
+    affectedBullets: List[str] = Field(default_factory=list, description="List of bullet IDs affected by this issue")
+
+class RoastRequest(BaseModel):
+    """Request for resume roasting/feedback."""
+    resume: StructuredResume = Field(..., description="Structured resume to analyze")
+
+class RoastResponse(BaseModel):
+    """Response containing comprehensive resume feedback."""
+    tldr: str = Field(..., description="2-3 sentence summary of overall resume quality")
+    overallScore: float = Field(..., ge=0, le=10, description="Overall resume score (0-10)")
+    totalBullets: int = Field(..., description="Total number of bullets analyzed")
+    issuesFound: int = Field(..., description="Total number of issues found")
+    strengths: int = Field(..., description="Number of strong, well-written bullets")
+    feedback: List[BulletFeedback] = Field(default_factory=list, description="Feedback for each bullet")
+    generalIssues: List[GeneralIssue] = Field(default_factory=list, description="General issues/patterns across the resume")
+    formatIssues: List[FormatIssue] = Field(default_factory=list, description="Format inconsistencies found")
+    processing_time: float = Field(..., description="Processing time in seconds")
+    created_at: datetime = Field(default_factory=datetime.now, description="Timestamp")

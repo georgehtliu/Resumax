@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Icon } from '../ui/Icons';
+import { roastResume, buildStructuredResume } from '../../services/api';
+import { useToast } from '../../hooks/useToast';
 import './RoastMyBullets.css';
 
 /**
@@ -9,108 +11,45 @@ import './RoastMyBullets.css';
 function RoastMyBullets({ resume, onBack }) {
   const [loading, setLoading] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
-
-  // Mock data structure for demonstration
-  // TODO: Replace with actual API call
-  const mockFeedback = {
-    tldr: "Your resume has potential but needs work. 60% of your bullets are too vague, missing quantifiable results, or use weak action verbs. The good news? These are all fixable issues that will dramatically improve your resume's impact.",
-    overallScore: 4.2,
-    totalBullets: 15,
-    issuesFound: 9,
-    strengths: 3,
-    feedback: [
-      {
-        id: 'bullet-1',
-        text: 'Developed and maintained microservices handling 10M+ daily requests using Python, Go, and Kubernetes, ensuring 99.9% uptime',
-        section: 'experience',
-        sectionTitle: 'Software Engineer II at Google',
-        issues: [
-          {
-            type: 'good',
-            message: 'Great use of specific numbers and technologies'
-          },
-          {
-            type: 'improvement',
-            message: 'Could add impact - what business value did this deliver?'
-          }
-        ]
-      },
-      {
-        id: 'bullet-2',
-        text: 'Worked on improving database performance',
-        section: 'experience',
-        sectionTitle: 'Software Engineer II at Google',
-        issues: [
-          {
-            type: 'bad',
-            message: 'Too vague - "worked on" is weak. Use specific action verbs like "optimized", "reduced", "improved"'
-          },
-          {
-            type: 'bad',
-            message: 'Missing quantifiable results - how much did performance improve?'
-          },
-          {
-            type: 'bad',
-            message: 'No technologies mentioned - which database? What techniques?'
-          },
-          {
-            type: 'suggestion',
-            message: 'Try: "Optimized PostgreSQL queries and implemented Redis caching, reducing API response time by 40% and saving $50K annually in infrastructure costs"'
-          }
-        ]
-      },
-      {
-        id: 'bullet-3',
-        text: 'Led team to build features',
-        section: 'experience',
-        sectionTitle: 'Software Engineer II at Google',
-        issues: [
-          {
-            type: 'bad',
-            message: 'Extremely vague - what team size? What features? What impact?'
-          },
-          {
-            type: 'bad',
-            message: '"Led team" is passive - use "Led a team of X engineers"'
-          },
-          {
-            type: 'bad',
-            message: '"Build features" tells us nothing - be specific about what was built'
-          },
-          {
-            type: 'suggestion',
-            message: 'Try: "Led a team of 3 engineers to ship a recommendation feature that increased user engagement by 25% and generated $2M in additional revenue"'
-          }
-        ]
-      }
-    ],
-    generalIssues: [
-      {
-        type: 'warning',
-        message: 'Many bullets start with weak verbs like "worked on", "helped", "participated"',
-        suggestion: 'Start with strong action verbs: "Designed", "Implemented", "Optimized", "Architected", "Led"'
-      },
-      {
-        type: 'warning',
-        message: 'Missing quantifiable metrics in 60% of bullets',
-        suggestion: 'Add numbers: percentages, dollar amounts, scale (users, requests, data volume)'
-      },
-      {
-        type: 'info',
-        message: 'Good use of specific technologies throughout',
-        suggestion: null
-      }
-    ]
-  };
+  const [feedback, setFeedback] = useState(null);
+  const { error: showError } = useToast();
 
   async function handleGenerateRoast() {
+    if (!resume) {
+      showError('No resume data available. Please add some experiences or projects first.');
+      return;
+    }
+
+    // Check if resume has any bullets
+    const hasBullets = 
+      (resume.experiences && resume.experiences.some(exp => exp.bullets && exp.bullets.length > 0)) ||
+      (resume.projects && resume.projects.some(proj => proj.bullets && proj.bullets.length > 0)) ||
+      (resume.education && resume.education.some(edu => edu.bullets && edu.bullets.length > 0)) ||
+      (resume.customSections && resume.customSections.some(section => section.bullets && section.bullets.length > 0));
+
+    if (!hasBullets) {
+      showError('Your resume has no bullet points. Please add some experiences, projects, or education entries with bullets first.');
+      return;
+    }
+
     setLoading(true);
-    // TODO: Call backend API to generate roast
-    // For now, just simulate loading
-    setTimeout(() => {
-      setLoading(false);
+    setFeedback(null);
+
+    try {
+      // Build structured resume for API
+      const structuredResume = buildStructuredResume(resume);
+      
+      // Call API
+      const response = await roastResume({ resume: structuredResume });
+      
+      setFeedback(response);
       setShowFeedback(true);
-    }, 2000);
+    } catch (error) {
+      console.error('Error generating roast:', error);
+      showError(error?.message || 'Failed to generate roast. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   function getIssueIcon(type) {
@@ -123,9 +62,14 @@ function RoastMyBullets({ resume, onBack }) {
         return <Icon name="alert" size={16} className="issue-icon issue-icon-improvement" />;
       case 'suggestion':
         return <Icon name="lightbulb" size={16} className="issue-icon issue-icon-suggestion" />;
+      case 'format':
+        return <Icon name="warning" size={16} className="issue-icon issue-icon-warning" />;
+      case 'grammar':
+        return <Icon name="xCircle" size={16} className="issue-icon issue-icon-bad" />;
       case 'warning':
         return <Icon name="warning" size={16} className="issue-icon issue-icon-warning" />;
       case 'info':
+      case 'error':
         return <Icon name="checkCircle" size={16} className="issue-icon issue-icon-info" />;
       default:
         return null;
@@ -142,10 +86,16 @@ function RoastMyBullets({ resume, onBack }) {
         return 'Could improve';
       case 'suggestion':
         return 'Suggestion';
+      case 'format':
+        return 'Format';
+      case 'grammar':
+        return 'Grammar';
       case 'warning':
         return 'Warning';
       case 'info':
         return 'Good';
+      case 'error':
+        return 'Error';
       default:
         return '';
     }
@@ -174,7 +124,7 @@ function RoastMyBullets({ resume, onBack }) {
     );
   }
 
-  if (showFeedback) {
+  if (showFeedback && feedback) {
     return (
       <div className="roast-container">
         <div className="roast-header">
@@ -193,33 +143,57 @@ function RoastMyBullets({ resume, onBack }) {
           <div className="tldr-header">
             <h2>TL;DR</h2>
             <div className="overall-score">
-              <span className="score-value">{mockFeedback.overallScore.toFixed(1)}</span>
+              <span className="score-value">{feedback.overallScore?.toFixed(1) || '0.0'}</span>
               <span className="score-label">/ 10</span>
             </div>
           </div>
-          <p className="tldr-text">{mockFeedback.tldr}</p>
+          <p className="tldr-text">{feedback.tldr || 'No summary available.'}</p>
           <div className="tldr-stats">
             <div className="stat-item">
-              <span className="stat-value">{mockFeedback.totalBullets}</span>
+              <span className="stat-value">{feedback.totalBullets || 0}</span>
               <span className="stat-label">Total Bullets</span>
             </div>
             <div className="stat-item">
-              <span className="stat-value stat-issues">{mockFeedback.issuesFound}</span>
+              <span className="stat-value stat-issues">{feedback.issuesFound || 0}</span>
               <span className="stat-label">Issues Found</span>
             </div>
             <div className="stat-item">
-              <span className="stat-value stat-strengths">{mockFeedback.strengths}</span>
+              <span className="stat-value stat-strengths">{feedback.strengths || 0}</span>
               <span className="stat-label">Strengths</span>
             </div>
           </div>
         </div>
 
+        {/* Format Issues Section */}
+        {feedback.formatIssues && feedback.formatIssues.length > 0 && (
+          <div className="roast-section">
+            <h2 className="section-title">Format Issues</h2>
+            <div className="format-issues-list">
+              {feedback.formatIssues.map((formatIssue, index) => (
+                <div key={index} className="format-issue-item">
+                  <h3 className="format-issue-title">{formatIssue.issue}</h3>
+                  <p className="format-issue-details">{formatIssue.details}</p>
+                  <div className="format-issue-recommendation">
+                    <Icon name="lightbulb" size={16} />
+                    <span><strong>Recommendation:</strong> {formatIssue.recommendation}</span>
+                  </div>
+                  {formatIssue.affectedBullets && formatIssue.affectedBullets.length > 0 && (
+                    <p className="format-issue-affected">
+                      Affects {formatIssue.affectedBullets.length} bullet{formatIssue.affectedBullets.length !== 1 ? 's' : ''}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* General Issues */}
-        {mockFeedback.generalIssues && mockFeedback.generalIssues.length > 0 && (
+        {feedback.generalIssues && feedback.generalIssues.length > 0 && (
           <div className="roast-section">
             <h2 className="section-title">General Issues</h2>
             <div className="general-issues-list">
-              {mockFeedback.generalIssues.map((issue, index) => (
+              {feedback.generalIssues.map((issue, index) => (
                 <div key={index} className="general-issue-item">
                   <div className="issue-header">
                     {getIssueIcon(issue.type)}
@@ -232,6 +206,16 @@ function RoastMyBullets({ resume, onBack }) {
                       <span>{issue.suggestion}</span>
                     </div>
                   )}
+                  {issue.examples && issue.examples.length > 0 && (
+                    <div className="issue-examples">
+                      <strong>Examples:</strong>
+                      <ul>
+                        {issue.examples.map((example, exIndex) => (
+                          <li key={exIndex}>{example}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -239,39 +223,52 @@ function RoastMyBullets({ resume, onBack }) {
         )}
 
         {/* Detailed Feedback by Bullet */}
-        <div className="roast-section">
-          <h2 className="section-title">Detailed Feedback</h2>
-          <p className="section-description">Bullet-by-bullet analysis with specific suggestions</p>
-          
-          <div className="feedback-list">
-            {mockFeedback.feedback.map((item) => (
-              <div key={item.id} className="feedback-item">
-                <div className="feedback-bullet-header">
-                  <div className="bullet-section-badge">{item.sectionTitle}</div>
-                </div>
-                
-                <div className="feedback-bullet-text">
-                  {item.text}
-                </div>
+        {feedback.feedback && feedback.feedback.length > 0 && (
+          <div className="roast-section">
+            <h2 className="section-title">Detailed Feedback</h2>
+            <p className="section-description">Bullet-by-bullet analysis with specific suggestions</p>
+            
+            <div className="feedback-list">
+              {feedback.feedback.map((item) => (
+                <div key={item.id} className="feedback-item">
+                  <div className="feedback-bullet-header">
+                    <div className="bullet-section-badge">{item.sectionTitle || item.section}</div>
+                  </div>
+                  
+                  <div className="feedback-bullet-text">
+                    {item.text}
+                  </div>
 
-                <div className="feedback-issues">
-                  {item.issues.map((issue, issueIndex) => (
-                    <div key={issueIndex} className={`feedback-issue feedback-issue-${issue.type}`}>
-                      <div className="issue-header">
-                        {getIssueIcon(issue.type)}
-                        <span className="issue-label">{getIssueLabel(issue.type)}</span>
-                      </div>
-                      <p className="issue-message">{issue.message}</p>
+                  {item.issues && item.issues.length > 0 && (
+                    <div className="feedback-issues">
+                      {item.issues.map((issue, issueIndex) => (
+                        <div key={issueIndex} className={`feedback-issue feedback-issue-${issue.type}`}>
+                          <div className="issue-header">
+                            {getIssueIcon(issue.type)}
+                            <span className="issue-label">{getIssueLabel(issue.type)}</span>
+                            {issue.severity && (
+                              <span className="issue-severity">({issue.severity})</span>
+                            )}
+                          </div>
+                          <p className="issue-message">{issue.message}</p>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="roast-actions">
-          <button className="btn btn-secondary" onClick={() => setShowFeedback(false)}>
+          <button 
+            className="btn btn-secondary" 
+            onClick={() => {
+              setShowFeedback(false);
+              setFeedback(null);
+            }}
+          >
             Generate New Roast
           </button>
         </div>
