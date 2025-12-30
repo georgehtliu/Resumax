@@ -127,8 +127,9 @@ function buildEducationSection(entries = []) {
   }
 
   const sectionBody = entries.map((entry) => {
-    const endDate = entry.endDate ? escapeLatex(entry.endDate) : '';
-    const gradLine = endDate ? `Expected Graduation: ${endDate}` : '';
+    const start = entry.startDate ? escapeLatex(entry.startDate) : '';
+    const end = entry.endDate ? escapeLatex(entry.endDate) : 'Present';
+    const dateRange = start ? `${start} -- ${end}` : end;
     const degreeText = escapeLatex(entry.degree || '');
     const fieldText = entry.field ? escapeLatex(entry.field) : '';
     const degreeLine = degreeText && fieldText ? `${degreeText}, ${fieldText}` : (degreeText || fieldText);
@@ -136,7 +137,7 @@ function buildEducationSection(entries = []) {
     const list = bullets ? `\\resumeItemListStart\n${bullets}\n\\resumeItemListEnd` : '';
 
     return `  \\resumeSubheading
-      {${escapeLatex(entry.school || '')}}{${gradLine}}
+      {${escapeLatex(entry.school || '')}}{${dateRange}}
       {${degreeLine}}{}
 ${list}`;
   }).join('\n\n');

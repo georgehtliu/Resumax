@@ -167,6 +167,7 @@ export async function saveResume(resumeData) {
           user_id: userId,
           company_name: exp.company || '',
           role: exp.role || '',
+          location: exp.location || null,
           start_date: exp.startDate || null,
           end_date: exp.endDate || null
         })
@@ -641,6 +642,7 @@ export async function getResume() {
         id: exp.id,
         company: exp.company_name || exp.company || '',
         role: exp.role || '',
+        location: exp.location || '',
         startDate: exp.start_date || '',
         endDate: exp.end_date || '',
         bullets: (Array.isArray(exp.resume_points) ? exp.resume_points : []).map(point => ({

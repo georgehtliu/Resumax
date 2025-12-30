@@ -50,6 +50,7 @@ CREATE TABLE experiences (
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
     company_name TEXT NOT NULL,
     role TEXT NOT NULL,
+    location TEXT,
     start_date VARCHAR(50),
     end_date VARCHAR(50),
     is_current BOOLEAN DEFAULT false,
