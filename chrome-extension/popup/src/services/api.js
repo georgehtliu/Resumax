@@ -300,6 +300,42 @@ export async function roastResume({ resume }) {
   return response.json();
 }
 
+export async function generateInterviewQuestions({ item, itemType }) {
+  const baseUrl = getApiBaseUrl();
+  const requestBody = {
+    item,
+    itemType,
+  };
+
+  const response = await fetch(`${baseUrl.replace(/\/$/, '')}/coaching/interview-questions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(requestBody),
+  });
+
+  if (!response.ok) {
+    let errorMessage = `Interview question generation failed with status ${response.status}`;
+    try {
+      const errorPayload = await response.json();
+      if (errorPayload?.detail) {
+        errorMessage = Array.isArray(errorPayload.detail)
+          ? errorPayload.detail.map((item) => (item.msg ? `${item.msg}` : JSON.stringify(item))).join('\n')
+          : (errorPayload.detail.message || errorPayload.detail);
+      }
+    } catch (parseError) {
+      const fallbackText = await response.text();
+      if (fallbackText) {
+        errorMessage = fallbackText;
+      }
+    }
+    throw new Error(errorMessage);
+  }
+
+  return response.json();
+}
+
 /**
  * Parse resume from uploaded file
  * TODO: Implement backend API endpoint for resume parsing
@@ -335,6 +371,7 @@ export const apiService = {
   parseResume,
   scanKeywords,
   roastResume,
+  generateInterviewQuestions,
 };
 
 

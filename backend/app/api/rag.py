@@ -10,13 +10,15 @@ from app.schemas.rag import (
     OptimizationRequest, OptimizationResponse,
     LatexRenderRequest, LatexRenderResponse,
     KeywordScanRequest, KeywordScanResponse,
-    RoastRequest, RoastResponse
+    RoastRequest, RoastResponse,
+    InterviewQuestionRequest, InterviewQuestionResponse
 )
 from app.services.rag_service import RAGService
 from app.services.selection_service import SelectionService, calculate_total_lines, identify_gaps
 from app.services.optimization_service import OptimizationService
 from app.services.keyword_scanner import KeywordScanner
 from app.services.roast_service import RoastService
+from app.services.interview_question_service import InterviewQuestionService
 from app.utils.latex import build_resume_latex, render_pdf_from_latex, pdf_bytes_to_base64
 import json
 import os
@@ -455,5 +457,51 @@ async def roast_resume(request: RoastRequest, background_tasks: BackgroundTasks)
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Failed to roast resume: {str(e)}")
+
+
+@router.post("/coaching/interview-questions", response_model=InterviewQuestionResponse)
+async def generate_interview_questions(request: InterviewQuestionRequest, background_tasks: BackgroundTasks):
+    """
+    Generate interview questions based on a specific experience or project.
+    
+    Creates tailored interview questions with STAR method guidance to help
+    candidates prepare for interviews.
+    
+    Args:
+        request: Interview question request with experience/project item
+        background_tasks: For saving results in background (optional)
+        
+    Returns:
+        Interview question response with questions and STAR frameworks
+    """
+    start_time = time.time()
+    
+    try:
+        print(f"❓ Generating interview questions for {request.itemType}...")
+        
+        question_service = InterviewQuestionService()
+        
+        # Generate questions
+        questions_data = await question_service.generate_questions(
+            item=request.item,
+            item_type=request.itemType
+        )
+        
+        processing_time = time.time() - start_time
+        
+        print(f"✅ Interview questions generated in {processing_time:.2f} seconds")
+        print(f"   - Generated {len(questions_data.get('questions', []))} questions")
+        print(f"   - Item: {questions_data.get('itemTitle', 'Unknown')}")
+        
+        # Add processing time and timestamp
+        questions_data["processing_time"] = processing_time
+        questions_data["created_at"] = datetime.now()
+        
+        return InterviewQuestionResponse(**questions_data)
+    except Exception as e:
+        print(f"❌ Interview question generation failed: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Failed to generate interview questions: {str(e)}")
 
 

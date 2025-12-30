@@ -1,0 +1,55 @@
+graph TD
+    %% Styling Definitions %%
+    classDef container fill:#f9f9f9,stroke:#333,stroke-width:2px;
+    classDef component fill:#fff,stroke:#333,stroke-width:1px;
+    classDef database fill:#e1f5fe,stroke:#01579b,stroke-width:2px,rx:5,ry:5;
+    classDef external fill:#f3e5f5,stroke:#4a148c,stroke-width:2px;
+    classDef connector fill:#fff3e0,stroke:#e65100,stroke-width:2px,shape:circle;
+
+    %% --- CHROME EXTENSION (CLIENT) --- %%
+    subgraph Client ["Chrome Extension"]
+        direction TB
+        Popup["<b>Popup View</b><br>Master Resume • Generate • Saved"]:::component
+        Manager["<b>Manager View</b><br>Full App • Coaching • Community"]:::component
+        Components["<b>Shared Components</b><br>Editors • Preview • WebSocket"]:::component
+        
+        Popup --> Components
+        Manager --> Components
+    end
+    class Client container
+
+    %% --- COMMUNICATION LAYER --- %%
+    HTTP(HTTP REST):::connector
+    WS(WebSocket):::connector
+
+    Components --> HTTP
+    Components --> WS
+
+    %% --- BACKEND API --- %%
+    subgraph Server ["FastAPI Backend"]
+        direction TB
+        
+        REST["<b>REST Endpoints</b><br>Select • Optimize • Coaching • LaTeX"]:::component
+        Core["<b>Core Services</b><br>RAG • Optimizer • Vector Search"]:::component
+        WS_Layer["<b>WebSocket</b><br>Queue • Room • Chat"]:::component
+
+        HTTP --> REST
+        WS --> WS_Layer
+        REST --> Core
+    end
+    class Server container
+
+    %% --- EXTERNAL SERVICES & DATA --- %%
+    OpenAI["<b>OpenAI</b><br>GPT-4o-mini"]:::external
+    Supabase[("<b>Supabase</b><br>PostgreSQL")]:::database
+    ChromaDB[("<b>ChromaDB</b><br>Vector DB")]:::database
+    Tectonic["<b>Tectonic</b><br>LaTeX PDF"]:::external
+    Redis[("<b>Redis</b><br>Optional<br>Queue/PubSub")]:::database
+
+    %% --- CROSS-SYSTEM CONNECTIONS --- %%
+    Core --> OpenAI
+    Core --> ChromaDB
+    REST --> OpenAI
+    Components --> Supabase
+    REST -.-> Tectonic
+    WS_Layer -.-> Redis

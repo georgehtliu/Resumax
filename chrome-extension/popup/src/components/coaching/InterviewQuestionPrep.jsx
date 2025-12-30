@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Icon } from '../ui/Icons';
+import { generateInterviewQuestions } from '../../services/api';
+import { useToast } from '../../hooks/useToast';
 import './InterviewQuestionPrep.css';
 
 /**
@@ -10,6 +12,8 @@ function InterviewQuestionPrep({ resume, onBack }) {
   const [selectedItem, setSelectedItem] = useState(null);
   const [selectedType, setSelectedType] = useState(null); // 'experience' or 'project'
   const [loading, setLoading] = useState(false);
+  const [questions, setQuestions] = useState(null);
+  const { error: showError } = useToast();
 
   // Get experiences and projects from resume
   const experiences = Array.isArray(resume?.experiences) ? resume.experiences : [];
@@ -24,17 +28,27 @@ function InterviewQuestionPrep({ resume, onBack }) {
     if (!selectedItem) return;
     
     setLoading(true);
-    // TODO: Call backend API to generate questions
-    // For now, just simulate loading
-    setTimeout(() => {
+    setQuestions(null);
+
+    try {
+      const response = await generateInterviewQuestions({
+        item: selectedItem,
+        itemType: selectedType,
+      });
+      
+      setQuestions(response);
+    } catch (error) {
+      console.error('Error generating questions:', error);
+      showError(error?.message || 'Failed to generate interview questions. Please try again.');
+    } finally {
       setLoading(false);
-      // In the future, this would show the generated questions
-    }, 2000);
+    }
   }
 
   function handleBackToSelection() {
     setSelectedItem(null);
     setSelectedType(null);
+    setQuestions(null);
   }
 
   // If item is selected, show the generation UI (placeholder for now)
@@ -91,26 +105,96 @@ function InterviewQuestionPrep({ resume, onBack }) {
           )}
         </div>
 
-        <div className="generate-section">
-          {loading ? (
-            <div className="generating-state">
-              <Icon name="loader" size={32} className="spinning" />
-              <h3>Generating Interview Questions...</h3>
-              <p>Our AI is analyzing your {selectedType === 'experience' ? 'experience' : 'project'} and creating tailored interview questions.</p>
+        {questions && questions.questions && questions.questions.length > 0 ? (
+          <div className="questions-display">
+            <div className="questions-header">
+              <h2>Generated Interview Questions</h2>
+              <p className="questions-subtitle">
+                {questions.questions.length} question{questions.questions.length !== 1 ? 's' : ''} with STAR method guidance
+              </p>
             </div>
-          ) : (
-            <div className="generate-prompt">
-              <p>Ready to generate interview questions based on this {selectedType === 'experience' ? 'experience' : 'project'}?</p>
+
+            <div className="questions-list">
+              {questions.questions.map((q, index) => (
+                <div key={index} className="question-card">
+                  <div className="question-number">Question {index + 1}</div>
+                  <h3 className="question-text">{q.question}</h3>
+                  
+                  {q.whyAsked && (
+                    <div className="why-asked">
+                      <strong>Why asked:</strong> {q.whyAsked}
+                    </div>
+                  )}
+
+                  {q.starFramework && (
+                    <div className="star-framework">
+                      <h4>STAR Method Framework</h4>
+                      <div className="star-section">
+                        <div className="star-label">Situation:</div>
+                        <div className="star-content">{q.starFramework.situation}</div>
+                      </div>
+                      <div className="star-section">
+                        <div className="star-label">Task:</div>
+                        <div className="star-content">{q.starFramework.task}</div>
+                      </div>
+                      <div className="star-section">
+                        <div className="star-label">Action:</div>
+                        <div className="star-content">{q.starFramework.action}</div>
+                      </div>
+                      <div className="star-section">
+                        <div className="star-label">Result:</div>
+                        <div className="star-content">{q.starFramework.result}</div>
+                      </div>
+                    </div>
+                  )}
+
+                  {q.keyPoints && q.keyPoints.length > 0 && (
+                    <div className="key-points">
+                      <strong>Key points to mention:</strong>
+                      <ul>
+                        {q.keyPoints.map((point, pointIndex) => (
+                          <li key={pointIndex}>{point}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div className="questions-actions">
               <button 
-                className="btn btn-primary btn-large"
-                onClick={handleGenerateQuestions}
+                className="btn btn-secondary"
+                onClick={() => {
+                  setQuestions(null);
+                }}
               >
-                <Icon name="sparkles" size={20} />
-                Generate Questions
+                Generate New Questions
               </button>
             </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          <div className="generate-section">
+            {loading ? (
+              <div className="generating-state">
+                <Icon name="loader" size={32} className="spinning" />
+                <h3>Generating Interview Questions...</h3>
+                <p>Our AI is analyzing your {selectedType === 'experience' ? 'experience' : 'project'} and creating tailored interview questions.</p>
+              </div>
+            ) : (
+              <div className="generate-prompt">
+                <p>Ready to generate interview questions based on this {selectedType === 'experience' ? 'experience' : 'project'}?</p>
+                <button 
+                  className="btn btn-primary btn-large"
+                  onClick={handleGenerateQuestions}
+                >
+                  <Icon name="sparkles" size={20} />
+                  Generate Questions
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     );
   }

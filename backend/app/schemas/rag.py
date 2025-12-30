@@ -351,3 +351,35 @@ class RoastResponse(BaseModel):
     formatIssues: List[FormatIssue] = Field(default_factory=list, description="Format inconsistencies found")
     processing_time: float = Field(..., description="Processing time in seconds")
     created_at: datetime = Field(default_factory=datetime.now, description="Timestamp")
+
+
+# ============================================================================
+# INTERVIEW QUESTION PREP SCHEMAS
+# ============================================================================
+
+class STARFramework(BaseModel):
+    """STAR method framework for answering interview questions."""
+    situation: str = Field(..., description="Guidance on describing the situation/context")
+    task: str = Field(..., description="Guidance on describing the task/goal")
+    action: str = Field(..., description="Guidance on describing your actions")
+    result: str = Field(..., description="Guidance on describing results/outcomes")
+
+class InterviewQuestion(BaseModel):
+    """A single interview question with guidance."""
+    question: str = Field(..., description="The interview question")
+    whyAsked: str = Field(..., description="Why this question is likely to be asked")
+    starFramework: STARFramework = Field(..., description="STAR method framework for answering")
+    keyPoints: List[str] = Field(default_factory=list, description="Key points to mention based on resume")
+
+class InterviewQuestionRequest(BaseModel):
+    """Request for generating interview questions."""
+    item: Dict = Field(..., description="Experience or Project dictionary with bullets")
+    itemType: Literal["experience", "project"] = Field(..., description="Type of item")
+
+class InterviewQuestionResponse(BaseModel):
+    """Response containing generated interview questions."""
+    itemTitle: str = Field(..., description="Title of the experience or project")
+    itemType: Literal["experience", "project"] = Field(..., description="Type of item")
+    questions: List[InterviewQuestion] = Field(default_factory=list, description="Generated interview questions")
+    processing_time: float = Field(..., description="Processing time in seconds")
+    created_at: datetime = Field(default_factory=datetime.now, description="Timestamp")
