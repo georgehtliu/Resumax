@@ -129,13 +129,18 @@ class RoomService:
         """
         if room_id not in self.rooms:
             logger.warning(f"Attempted to broadcast to non-existent room {room_id}")
+            print(f"⚠️ Room {room_id} does not exist. Available rooms: {list(self.rooms.keys())}")
             return 0
         
         connections = self.rooms[room_id]
+        print(f"📢 Room {room_id} has {len(connections)} connection(s)")
+        
         if exclude_websocket:
             connections = {ws for ws in connections if ws != exclude_websocket}
+            print(f"📢 After excluding sender, {len(connections)} connection(s) remain")
         
         if len(connections) == 0:
+            print(f"⚠️ No connections to broadcast to in room {room_id}")
             return 0
         
         # Serialize message
@@ -255,6 +260,33 @@ class RoomService:
         room_ws = self.rooms[room_id]
         
         return len(user_ws & room_ws) > 0
+    
+    def get_user_connections(self, user_id: str) -> Set[WebSocket]:
+        """
+        Get all WebSocket connections for a user.
+        
+        Args:
+            user_id: User identifier
+            
+        Returns:
+            Set of WebSocket connections for the user
+        """
+        return self.user_connections.get(user_id, set())
+    
+    def get_connection_room(self, websocket: WebSocket) -> Optional[str]:
+        """
+        Get the room ID for a WebSocket connection.
+        
+        Args:
+            websocket: WebSocket connection
+            
+        Returns:
+            Room ID if connection is in a room, None otherwise
+        """
+        if websocket in self.connection_info:
+            room_id, _, _ = self.connection_info[websocket]
+            return room_id
+        return None
     
     def get_user_rooms(self, user_id: str) -> List[str]:
         """

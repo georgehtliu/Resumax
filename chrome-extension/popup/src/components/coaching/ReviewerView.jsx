@@ -4,6 +4,8 @@ import ResumeRenderer from '../resume/ResumeRenderer';
 import HighlightOverlay, { createOverlayHighlight } from '../pdf/HighlightOverlay';
 import { findBulletText as findBulletTextUtil, findBulletContext as findBulletContextUtil } from '../../utils/resumeUtils';
 import { generateAnonymousUsername } from '../../utils/anonymousUsernames';
+import { useWebSocket } from '../../hooks/useWebSocket';
+import { supabase } from '../../config/supabase';
 import './ReviewerView.css';
 
 // Mock resume data for review
@@ -96,24 +98,19 @@ const mockResumeForReview = {
   }
 };
 
-function ReviewerView({ onBack }) {
-  // Generate anonymous name for the resume owner (seeker)
+function ReviewerView({ onBack, roomId, partnerId, resumeId: propResumeId }) {
+  // Generate anonymous names
   const [seekerAnonymousName] = useState(() => generateAnonymousUsername());
   const [reviewerAnonymousName] = useState(() => generateAnonymousUsername());
   
+  // State
+  const [userId, setUserId] = useState(null);
+  const [resume, setResume] = useState(mockResumeForReview); // Will be loaded from propResumeId
   const [bulletComments, setBulletComments] = useState({});
   const [selectedBulletId, setSelectedBulletId] = useState(null);
   const [hoveredBulletId, setHoveredBulletId] = useState(null);
   const [bulletRefs, setBulletRefs] = useState({});
-  const [chatMessages, setChatMessages] = useState([
-    {
-      id: 'msg-1',
-      sender: 'seeker',
-      name: seekerAnonymousName,
-      message: 'Hi! Thank you for reviewing my resume. I\'d love to hear your feedback.',
-      timestamp: new Date(Date.now() - 300000).toISOString()
-    }
-  ]);
+  const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
   const [commentText, setCommentText] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -125,13 +122,150 @@ function ReviewerView({ onBack }) {
   const isResumeLoadedRef = useRef(false);
   const [highlights, setHighlights] = useState([]);
 
-  const findBulletText = useCallback((bulletId) => {
-    return findBulletTextUtil({ resume_data: mockResumeForReview.resume_data }, bulletId);
+  // Get user ID from Supabase
+  useEffect(() => {
+    const getUserId = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.id) {
+          setUserId(session.user.id);
+        }
+      } catch (err) {
+        console.error('Error getting user session:', err);
+      }
+    };
+    getUserId();
   }, []);
 
+  // WebSocket connection
+  const {
+    isConnected,
+    sendMessage,
+    on,
+    connectionState,
+  } = useWebSocket(userId, {
+    autoConnect: !!userId && !!roomId,
+  });
+
+  // Load resume data if resumeId is provided
+  useEffect(() => {
+    if (propResumeId) {
+      // TODO: Load resume from saved_resumes table
+      // For now, using mock data
+      console.log('Loading resume:', propResumeId);
+    }
+  }, [propResumeId]);
+
+  // Join room when connected
+  useEffect(() => {
+    if (isConnected && roomId && sendMessage) {
+      console.log('Joining room:', roomId);
+      sendMessage({
+        type: 'JOIN_ROOM',
+        room_id: roomId,
+      });
+    }
+  }, [isConnected, roomId, sendMessage]);
+
+  // WebSocket message handlers
+  useEffect(() => {
+    if (!isConnected) return;
+
+    // Handle new chat messages
+    const unsubscribeMessage = on('NEW_MESSAGE', (message) => {
+      setChatMessages(prev => [...prev, {
+        id: `msg-${Date.now()}-${Math.random()}`,
+        sender: message.sender_role === 'reviewer' ? 'reviewer' : 'seeker',
+        name: message.sender_role === 'reviewer' ? reviewerAnonymousName : seekerAnonymousName,
+        message: message.message,
+        timestamp: message.timestamp,
+      }]);
+    });
+
+    // Handle highlights
+    const unsubscribeHighlight = on('HIGHLIGHT_CREATED', (message) => {
+      if (message.highlight.user_id !== userId) {
+        // Only add highlights from partner
+        setHighlights(prev => [...prev, {
+          ...message.highlight,
+          id: message.highlight.id,
+        }]);
+      }
+    });
+
+    const unsubscribeHighlightDeleted = on('HIGHLIGHT_DELETED', (message) => {
+      setHighlights(prev => prev.filter(h => h.id !== message.highlight_id));
+    });
+
+    // Handle comments
+    const unsubscribeComment = on('COMMENT_CREATED', (message) => {
+      const comment = message.comment;
+      setBulletComments(prev => ({
+        ...prev,
+        [comment.bullet_id]: [...(prev[comment.bullet_id] || []), {
+          id: comment.id,
+          author_name: comment.author_role === 'reviewer' ? reviewerAnonymousName : seekerAnonymousName,
+          content: comment.content,
+          created_at: comment.created_at,
+          is_anonymous: true,
+          bullet_id: comment.bullet_id,
+        }]
+      }));
+    });
+
+    const unsubscribeCommentUpdated = on('COMMENT_UPDATED', (message) => {
+      const comment = message.comment;
+      setBulletComments(prev => {
+        const updated = { ...prev };
+        if (updated[comment.bullet_id]) {
+          updated[comment.bullet_id] = updated[comment.bullet_id].map(c =>
+            c.id === comment.id ? { ...c, ...comment } : c
+          );
+        }
+        return updated;
+      });
+    });
+
+    const unsubscribeCommentDeleted = on('COMMENT_DELETED', (message) => {
+      setBulletComments(prev => {
+        const updated = { ...prev };
+        Object.keys(updated).forEach(bulletId => {
+          updated[bulletId] = updated[bulletId].filter(c => c.id !== message.comment_id);
+        });
+        return updated;
+      });
+    });
+
+    const unsubscribeCommentResolved = on('COMMENT_RESOLVED', (message) => {
+      setBulletComments(prev => {
+        const updated = { ...prev };
+        Object.keys(updated).forEach(bulletId => {
+          updated[bulletId] = updated[bulletId].map(c =>
+            c.id === message.comment_id ? { ...c, resolved: true } : c
+          );
+        });
+        return updated;
+      });
+    });
+
+    return () => {
+      unsubscribeMessage();
+      unsubscribeHighlight();
+      unsubscribeHighlightDeleted();
+      unsubscribeComment();
+      unsubscribeCommentUpdated();
+      unsubscribeCommentDeleted();
+      unsubscribeCommentResolved();
+    };
+  }, [isConnected, on, userId, reviewerAnonymousName, seekerAnonymousName]);
+
+  const findBulletText = useCallback((bulletId) => {
+    return findBulletTextUtil({ resume_data: resume.resume_data }, bulletId);
+  }, [resume]);
+
   const findBulletContext = useCallback((bulletId) => {
-    return findBulletContextUtil({ resume_data: mockResumeForReview.resume_data }, bulletId);
-  }, []);
+    return findBulletContextUtil({ resume_data: resume.resume_data }, bulletId);
+  }, [resume]);
 
   // Keep ref in sync with state
   useEffect(() => {
@@ -140,7 +274,7 @@ function ReviewerView({ onBack }) {
 
   // Set up highlighting handler
   useEffect(() => {
-    const resumeId = mockResumeForReview.id;
+    const resumeId = resume.id;
     if (isResumeLoadedRef.current === resumeId) return;
     
     const handleMouseUp = () => {
@@ -159,7 +293,21 @@ function ReviewerView({ onBack }) {
       // Create overlay highlight (doesn't modify DOM)
       const highlightData = createOverlayHighlight(range, resumePage, highlightColorRef.current);
       if (highlightData) {
+        // Add highlight locally
         setHighlights(prev => [...prev, highlightData]);
+        
+        // Send highlight to server via WebSocket
+        if (isConnected && sendMessage) {
+          sendMessage({
+            type: 'CREATE_HIGHLIGHT',
+            highlight: {
+              id: highlightData.id,
+              range: highlightData.range,
+              color: highlightData.color,
+              position: highlightData.position,
+            }
+          });
+        }
       }
       
       // Clear selection
@@ -187,42 +335,27 @@ function ReviewerView({ onBack }) {
         isResumeLoadedRef.current = false;
       }
     };
-  }, []);
+  }, [resume.id, isConnected, sendMessage]);
 
   // Auto-scroll chat to bottom
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages]);
 
-  // Mock chat message from seeker (every 10 seconds)
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const mockMessages = [
-        'Thanks for taking the time to review my resume!',
-        'I\'m particularly interested in feedback on my experience section.',
-        'Do you think I should add more technical details?',
-        'What areas do you think I should improve?'
-      ];
-      const randomMessage = mockMessages[Math.floor(Math.random() * mockMessages.length)];
-      
-      setChatMessages(prev => [...prev, {
-        id: `msg-${Date.now()}`,
-        sender: 'seeker',
-        name: seekerAnonymousName,
-        message: randomMessage,
-        timestamp: new Date().toISOString()
-      }]);
-    }, 10000);
-
-    return () => clearInterval(interval);
-  }, [seekerAnonymousName]);
-
   const handleChatSubmit = (e) => {
     e.preventDefault();
-    if (!chatInput.trim()) return;
+    if (!chatInput.trim() || !isConnected) return;
     
+    // Send message via WebSocket
+    sendMessage({
+      type: 'SEND_MESSAGE',
+      message: chatInput,
+      timestamp: new Date().toISOString(),
+    });
+
+    // Optimistically add to local state (will be confirmed by server)
     setChatMessages(prev => [...prev, {
-      id: `msg-${Date.now()}`,
+      id: `msg-${Date.now()}-temp`,
       sender: 'reviewer',
       name: reviewerAnonymousName,
       message: chatInput,
@@ -234,37 +367,40 @@ function ReviewerView({ onBack }) {
 
   const handleCommentSubmit = async (e, bulletId, bulletText, sectionType, entryId) => {
     e.preventDefault();
-    if (!commentText.trim()) return;
+    if (!commentText.trim() || !isConnected) return;
 
     setSubmitting(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      if (!bulletComments[bulletId]) {
-        bulletComments[bulletId] = [];
-      }
+    const commentId = `comment-${Date.now()}`;
 
-      const newComment = {
-        id: `comment-${Date.now()}`,
-        author_name: reviewerAnonymousName,
-        content: commentText,
-        created_at: new Date().toISOString(),
-        is_anonymous: true,
+    // Send comment via WebSocket
+    sendMessage({
+      type: 'CREATE_COMMENT',
+      comment: {
+        id: commentId,
         bullet_id: bulletId,
-        bullet_text: bulletText,
-        section_type: sectionType,
-        entry_id: entryId
-      };
+        content: commentText,
+      }
+    });
 
-      setBulletComments(prev => ({
-        ...prev,
-        [bulletId]: [...(prev[bulletId] || []), newComment]
-      }));
+    // Optimistically add to local state
+    const newComment = {
+      id: commentId,
+      author_name: reviewerAnonymousName,
+      content: commentText,
+      created_at: new Date().toISOString(),
+      is_anonymous: true,
+      bullet_id: bulletId,
+    };
 
-      setCommentText('');
-      setSelectedBulletId(null);
-      setSubmitting(false);
-    }, 500);
+    setBulletComments(prev => ({
+      ...prev,
+      [bulletId]: [...(prev[bulletId] || []), newComment]
+    }));
+
+    setCommentText('');
+    setSelectedBulletId(null);
+    setSubmitting(false);
   };
 
   const scrollToBulletInHtml = (bulletId) => {
@@ -331,7 +467,7 @@ function ReviewerView({ onBack }) {
               suppressContentEditableWarning={true}
             >
               <ResumeRenderer
-                resume={mockResumeForReview}
+                resume={resume}
                 bulletComments={bulletComments}
                 selectedBulletId={selectedBulletId}
                 hoveredBulletId={hoveredBulletId}
@@ -346,6 +482,13 @@ function ReviewerView({ onBack }) {
               highlights={highlights}
               onRemoveHighlight={(highlightId) => {
                 setHighlights(prev => prev.filter(h => h.id !== highlightId));
+                // Send delete to server
+                if (isConnected && sendMessage) {
+                  sendMessage({
+                    type: 'DELETE_HIGHLIGHT',
+                    highlight_id: highlightId,
+                  });
+                }
               }}
             />
           </div>
@@ -356,6 +499,11 @@ function ReviewerView({ onBack }) {
             <div className="chat-header">
               <MessageSquare size={18} />
               <h3>Live Chat</h3>
+              {connectionState && (
+                <span className={`connection-status ${connectionState}`}>
+                  {connectionState === 'connected' ? '●' : '○'}
+                </span>
+              )}
             </div>
             <div className="chat-messages">
               {chatMessages.map((msg) => (

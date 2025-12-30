@@ -33,8 +33,8 @@ class QueueService:
         self.reviewer_queue: deque = deque()  # deque of (user_id, joined_at)
         self.reviewee_queue: deque = deque()  # deque of (user_id, joined_at, resume_id)
         
-        # Track which queue each user is in for quick lookup
-        self.user_to_queue: Dict[str, str] = {}  # user_id -> 'reviewer' | 'reviewee'
+        # Track which queues each user is in (allow multiple queues for same-user matching)
+        self.user_to_queue: Dict[str, set] = {}  # user_id -> set of 'reviewer' | 'reviewee'
         
         # Track matched pairs: room_id -> (reviewer_id, reviewee_id, resume_id)
         self.active_rooms: Dict[str, Tuple[str, str, str]] = {}
@@ -62,9 +62,9 @@ class QueueService:
         if role not in ['reviewer', 'reviewee']:
             raise ValueError(f"Invalid role: {role}. Must be 'reviewer' or 'reviewee'")
         
-        # Check if user is already in a queue
-        if user_id in self.user_to_queue:
-            raise ValueError(f"User {user_id} is already in the {self.user_to_queue[user_id]} queue")
+        # Check if user is already in the same queue (allow being in both queues for same-user matching)
+        if user_id in self.user_to_queue and role in self.user_to_queue[user_id]:
+            raise ValueError(f"User {user_id} is already in the {role} queue")
         
         # Check if user is already in a room
         if user_id in self.user_to_room:
@@ -82,10 +82,13 @@ class QueueService:
         
         if role == 'reviewer':
             self.reviewer_queue.append((user_id, joined_at))
-            self.user_to_queue[user_id] = 'reviewer'
         else:
             self.reviewee_queue.append((user_id, joined_at, resume_id))
-            self.user_to_queue[user_id] = 'reviewee'
+        
+        # Track queue membership (allow multiple queues)
+        if user_id not in self.user_to_queue:
+            self.user_to_queue[user_id] = set()
+        self.user_to_queue[user_id].add(role)
         
         print(f"✅ User {user_id} joined {role} queue (queue sizes: {len(self.reviewer_queue)} reviewers, {len(self.reviewee_queue)} reviewees)")
         
@@ -93,12 +96,13 @@ class QueueService:
         match_result = await self._try_match()
         return match_result
     
-    async def leave_queue(self, user_id: str) -> bool:
+    async def leave_queue(self, user_id: str, role: Optional[str] = None) -> bool:
         """
         Remove user from queue.
         
         Args:
             user_id: User to remove from queue
+            role: Specific role to remove from (optional). If None, removes from all queues.
             
         Returns:
             True if user was in a queue and removed, False otherwise
@@ -106,19 +110,37 @@ class QueueService:
         if user_id not in self.user_to_queue:
             return False
         
-        role = self.user_to_queue[user_id]
+        removed = False
         
-        if role == 'reviewer':
-            # Remove from reviewer queue
-            self.reviewer_queue = deque([item for item in self.reviewer_queue if item[0] != user_id])
+        # If role specified, only remove from that queue
+        if role:
+            if role in self.user_to_queue[user_id]:
+                if role == 'reviewer':
+                    self.reviewer_queue = deque([item for item in self.reviewer_queue if item[0] != user_id])
+                else:
+                    self.reviewee_queue = deque([item for item in self.reviewee_queue if item[0] != user_id])
+                self.user_to_queue[user_id].discard(role)
+                removed = True
+                
+                # Clean up if no longer in any queue
+                if not self.user_to_queue[user_id]:
+                    del self.user_to_queue[user_id]
         else:
-            # Remove from reviewee queue
-            self.reviewee_queue = deque([item for item in self.reviewee_queue if item[0] != user_id])
+            # Remove from all queues
+            roles_to_remove = list(self.user_to_queue[user_id])
+            for r in roles_to_remove:
+                if r == 'reviewer':
+                    self.reviewer_queue = deque([item for item in self.reviewer_queue if item[0] != user_id])
+                else:
+                    self.reviewee_queue = deque([item for item in self.reviewee_queue if item[0] != user_id])
+            del self.user_to_queue[user_id]
+            removed = True
         
-        del self.user_to_queue[user_id]
-        print(f"✅ User {user_id} left {role} queue")
+        if removed:
+            role_str = role if role else 'all queues'
+            print(f"✅ User {user_id} left {role_str} queue")
         
-        return True
+        return removed
     
     async def _try_match(self) -> Optional[str]:
         """
@@ -135,8 +157,15 @@ class QueueService:
         reviewee_user_id, reviewee_joined_at, resume_id = self.reviewee_queue.popleft()
         
         # Remove from queue tracking
-        del self.user_to_queue[reviewer_user_id]
-        del self.user_to_queue[reviewee_user_id]
+        if reviewer_user_id in self.user_to_queue:
+            self.user_to_queue[reviewer_user_id].discard('reviewer')
+            if not self.user_to_queue[reviewer_user_id]:
+                del self.user_to_queue[reviewer_user_id]
+        
+        if reviewee_user_id in self.user_to_queue:
+            self.user_to_queue[reviewee_user_id].discard('reviewee')
+            if not self.user_to_queue[reviewee_user_id]:
+                del self.user_to_queue[reviewee_user_id]
         
         # Generate unique room ID
         room_id = str(uuid.uuid4())
@@ -172,14 +201,24 @@ class QueueService:
         removed_reviewees = original_size - len(self.reviewee_queue)
         
         # Clean up user_to_queue tracking for removed users
-        for queue in [self.reviewer_queue, self.reviewee_queue]:
-            current_user_ids = {item[0] for item in queue}
+        # Get all user_ids currently in queues
+        reviewer_user_ids = {item[0] for item in self.reviewer_queue}
+        reviewee_user_ids = {item[0] for item in self.reviewee_queue}
+        all_queue_user_ids = reviewer_user_ids | reviewee_user_ids
         
-        # Remove users from tracking if they're no longer in queue
-        all_queue_user_ids = {item[0] for item in self.reviewer_queue} | {item[0] for item in self.reviewee_queue}
-        removed_user_ids = set(self.user_to_queue.keys()) - all_queue_user_ids
-        for user_id in removed_user_ids:
-            del self.user_to_queue[user_id]
+        # Update tracking: remove roles for users no longer in those queues
+        for user_id, roles in list(self.user_to_queue.items()):
+            updated_roles = set()
+            if user_id in reviewer_user_ids:
+                updated_roles.add('reviewer')
+            if user_id in reviewee_user_ids:
+                updated_roles.add('reviewee')
+            
+            if updated_roles:
+                self.user_to_queue[user_id] = updated_roles
+            else:
+                # User not in any queue anymore
+                del self.user_to_queue[user_id]
         
         if removed_reviewers > 0 or removed_reviewees > 0:
             print(f"🧹 Cleaned up {removed_reviewers} stale reviewers and {removed_reviewees} stale reviewees")

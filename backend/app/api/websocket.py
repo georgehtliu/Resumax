@@ -43,8 +43,13 @@ async def websocket_endpoint(
         - DELETE_COMMENT: Delete comment
         - RESOLVE_COMMENT: Resolve comment
     """
+    print(f"🔌 WebSocket connection attempt - user_id: {user_id}")
+    logger.info(f"🔌 WebSocket connection attempt - user_id: {user_id}")
+    
     # Validate user_id
     if not user_id:
+        print("❌ WebSocket connection rejected: user_id is required")
+        logger.error("WebSocket connection rejected: user_id is required")
         await websocket.close(code=1008, reason="user_id is required")
         return
     
@@ -60,15 +65,54 @@ async def websocket_endpoint(
     
     try:
         # Accept WebSocket connection
+        print(f"📡 Accepting WebSocket connection for user {current_user_id}")
         await websocket.accept()
+        print(f"✅ WebSocket connection accepted for user {current_user_id}")
         logger.info(f"✅ WebSocket connection accepted for user {current_user_id}")
         
+        # Track connection in room_service (even if not in a room yet)
+        # This allows us to find and notify waiting connections when matches occur
+        if current_user_id not in room_service.user_connections:
+            room_service.user_connections[current_user_id] = set()
+        room_service.user_connections[current_user_id].add(websocket)
+        
+        # Check if user is already in a room (e.g., reconnecting or new connection after match)
+        # If so, automatically add this connection to the room
+        print(f"🔍 Checking if user {current_user_id} is already in a room...")
+        user_room = queue_service.get_user_room(current_user_id)
+        print(f"🔍 User room from queue_service: {user_room}")
+        
+        if user_room:
+            room_info = queue_service.get_room_info(user_room)
+            print(f"🔍 Room info: {room_info}")
+            if room_info:
+                reviewer_id, reviewee_id, _ = room_info
+                user_role = "reviewer" if current_user_id == reviewer_id else "reviewee"
+                print(f"🔍 User role: {user_role}")
+                try:
+                    # Add connection to room
+                    await room_service.add_connection(user_room, websocket, current_user_id, user_role)
+                    current_room_id = user_room
+                    current_role = user_role
+                    print(f"✅ Auto-added connection to existing room {user_room} as {user_role}")
+                    logger.info(f"✅ Auto-added connection to existing room {user_room} as {user_role}")
+                except Exception as e:
+                    print(f"❌ Error auto-adding connection to room: {e}")
+                    logger.error(f"Error auto-adding connection to room: {e}", exc_info=True)
+        else:
+            print(f"ℹ️ User {current_user_id} is not in a room yet")
+        
         # Send connection confirmation
-        await websocket.send_json({
-            "type": "CONNECTED",
-            "user_id": current_user_id,
-            "timestamp": datetime.now().isoformat()
-        })
+        try:
+            await websocket.send_json({
+                "type": "CONNECTED",
+                "user_id": current_user_id,
+                "timestamp": datetime.now().isoformat()
+            })
+        except Exception as e:
+            logger.error(f"Error sending CONNECTED message: {e}")
+            await websocket.close(code=1011, reason="Error sending initial message")
+            return
         
         # Main message loop
         while True:
@@ -95,6 +139,38 @@ async def websocket_endpoint(
                 })
                 continue
             
+            # ALWAYS sync current_room_id and current_role from connection info before handling messages
+            # This ensures we have the latest state, especially for partner connections added via MATCHED
+            if websocket in room_service.connection_info:
+                conn_room_id, conn_user_id, conn_role = room_service.connection_info[websocket]
+                if conn_room_id:
+                    # Always update from connection_info as it's the source of truth
+                    current_room_id = conn_room_id
+                    current_role = conn_role
+                    print(f"📝 Synced connection state from room_service: room_id={current_room_id}, role={current_role}")
+                    logger.info(f"📝 Synced connection state from room_service: room_id={current_room_id}, role={current_role}")
+            
+            # Fallback: try to get room_id from queue_service if not in connection_info
+            if not current_room_id:
+                user_room = queue_service.get_user_room(current_user_id)
+                if user_room:
+                    current_room_id = user_room
+                    room_info = queue_service.get_room_info(user_room)
+                    if room_info:
+                        reviewer_id, reviewee_id, _ = room_info
+                        current_role = "reviewer" if current_user_id == reviewer_id else "reviewee"
+                    print(f"📝 Synced connection state from queue_service: room_id={current_room_id}, role={current_role}")
+                    logger.info(f"📝 Synced connection state from queue_service: room_id={current_room_id}, role={current_role}")
+            
+            # Debug: log current state before handling message
+            if message_type in ["SEND_MESSAGE", "CREATE_HIGHLIGHT", "CREATE_COMMENT"]:
+                print(f"🔍 Before handling {message_type}: room_id={current_room_id}, role={current_role}, user_id={current_user_id}")
+                if websocket in room_service.connection_info:
+                    conn_room_id, conn_user_id, conn_role = room_service.connection_info[websocket]
+                    print(f"🔍 Connection info: room_id={conn_room_id}, role={conn_role}, user_id={conn_user_id}")
+                else:
+                    print(f"⚠️ WebSocket not in connection_info!")
+            
             # Route message based on type
             try:
                 if message_type == "JOIN_QUEUE":
@@ -109,6 +185,51 @@ async def websocket_endpoint(
                         if room_info:
                             reviewer_id, reviewee_id, _ = room_info
                             current_role = "reviewer" if current_user_id == reviewer_id else "reviewee"
+                
+                elif message_type == "JOIN_ROOM":
+                    # Handle explicit room join (e.g., when ReviewerView/RevieweeView mounts with roomId)
+                    room_id_to_join = message.get("room_id")
+                    if not room_id_to_join:
+                        await websocket.send_json({
+                            "type": "ERROR",
+                            "message": "room_id is required for JOIN_ROOM"
+                        })
+                        continue
+                    
+                    # Verify room exists and user is part of it
+                    room_info = queue_service.get_room_info(room_id_to_join)
+                    if not room_info:
+                        await websocket.send_json({
+                            "type": "ERROR",
+                            "message": f"Room {room_id_to_join} does not exist"
+                        })
+                        continue
+                    
+                    reviewer_id, reviewee_id, _ = room_info
+                    if current_user_id not in [reviewer_id, reviewee_id]:
+                        await websocket.send_json({
+                            "type": "ERROR",
+                            "message": "You are not authorized to join this room"
+                        })
+                        continue
+                    
+                    # Determine role
+                    user_role = "reviewer" if current_user_id == reviewer_id else "reviewee"
+                    
+                    # Add connection to room
+                    await room_service.add_connection(room_id_to_join, websocket, current_user_id, user_role)
+                    current_room_id = room_id_to_join
+                    current_role = user_role
+                    
+                    print(f"✅ User {current_user_id} joined room {room_id_to_join} as {user_role}")
+                    logger.info(f"✅ User {current_user_id} joined room {room_id_to_join} as {user_role}")
+                    
+                    await websocket.send_json({
+                        "type": "ROOM_JOINED",
+                        "room_id": room_id_to_join,
+                        "role": user_role,
+                        "timestamp": datetime.now().isoformat()
+                    })
                 
                 elif message_type == "SEND_MESSAGE":
                     await handle_send_message(
@@ -174,13 +295,20 @@ async def websocket_endpoint(
     except WebSocketDisconnect:
         logger.info(f"🔌 WebSocket disconnected for user {current_user_id}")
     except Exception as e:
-        logger.error(f"❌ WebSocket error for user {current_user_id}: {e}")
+        logger.error(f"❌ WebSocket error for user {current_user_id}: {e}", exc_info=True)
+        try:
+            await websocket.close(code=1011, reason=f"Server error: {str(e)}")
+        except:
+            pass
     finally:
         # Cleanup
-        await cleanup_connection(
-            websocket, current_user_id, current_room_id,
-            queue_service, room_service
-        )
+        try:
+            await cleanup_connection(
+                websocket, current_user_id, current_room_id,
+                queue_service, room_service
+            )
+        except Exception as e:
+            logger.error(f"Error during cleanup: {e}")
 
 
 async def handle_join_queue(
@@ -233,10 +361,47 @@ async def handle_join_queue(
                     "timestamp": datetime.now().isoformat()
                 })
                 
-                # TODO: Notify partner if they have an active WebSocket connection
-                # For MVP, the partner will be notified when they check queue status
-                # or when they reconnect. In production, we should track waiting
-                # WebSocket connections in queue_service to notify immediately.
+                # Notify partner if they have an active WebSocket connection
+                # Check if partner has any connections and notify them
+                partner_connections = room_service.get_user_connections(partner_id)
+                logger.info(f"🔍 Looking for partner {partner_id} connections. Found {len(partner_connections)} connection(s)")
+                
+                if len(partner_connections) == 0:
+                    logger.warning(f"⚠️ No connections found for partner {partner_id}")
+                else:
+                    notified_count = 0
+                    for partner_ws in partner_connections:
+                        # Skip if this is the same WebSocket (same connection)
+                        if partner_ws == websocket:
+                            logger.info(f"⏭️ Skipping same WebSocket connection for partner {partner_id}")
+                            continue
+                        
+                        # Check if this connection is not already in a room
+                        partner_room = room_service.get_connection_room(partner_ws)
+                        logger.info(f"🔍 Partner connection room status: {partner_room}")
+                        
+                        if not partner_room:
+                            # This connection is waiting, add it to the room and notify
+                            try:
+                                logger.info(f"➕ Adding partner {partner_id} connection to room {room_id} as {partner_role}")
+                                await room_service.add_connection(room_id, partner_ws, partner_id, partner_role)
+                                await partner_ws.send_json({
+                                    "type": "MATCHED",
+                                    "room_id": room_id,
+                                    "partner_id": user_id,
+                                    "partner_role": role,
+                                    "resume_id": matched_resume_id if partner_role == "reviewer" else resume_id,
+                                    "timestamp": datetime.now().isoformat()
+                                })
+                                notified_count += 1
+                                logger.info(f"✅ Notified partner {partner_id} connection about match in room {room_id}")
+                            except Exception as e:
+                                logger.error(f"❌ Error notifying partner connection: {e}")
+                        else:
+                            logger.info(f"ℹ️ Partner {partner_id} connection already in room {partner_room}")
+                    
+                    if notified_count == 0 and len(partner_connections) > 1:
+                        logger.warning(f"⚠️ Found {len(partner_connections)} partner connections but notified none (all may be in rooms or same connection)")
                 
                 logger.info(f"🎉 User {user_id} matched immediately in room {room_id}")
         else:
@@ -265,14 +430,44 @@ async def handle_send_message(
     room_service
 ):
     """Handle SEND_MESSAGE."""
+    print(f"💬 handle_send_message called: user_id={user_id}, room_id={room_id}, role={role}")
+    
     if not room_id:
+        error_msg = f"Not in a room. Join queue first. user_id={user_id}"
+        print(f"❌ {error_msg}")
+        logger.error(error_msg)
         await websocket.send_json({
             "type": "ERROR",
-            "message": "Not in a room. Join queue first."
+            "message": error_msg
+        })
+        return
+    
+    # Check if connection is in the room
+    if websocket not in room_service.connection_info:
+        error_msg = f"Connection not in room_service.connection_info. user_id={user_id}, room_id={room_id}"
+        print(f"❌ {error_msg}")
+        logger.error(error_msg)
+        await websocket.send_json({
+            "type": "ERROR",
+            "message": "Connection not properly registered in room"
+        })
+        return
+    
+    conn_room_id, conn_user_id, conn_role = room_service.connection_info[websocket]
+    if conn_room_id != room_id:
+        error_msg = f"Connection room mismatch. Expected {room_id}, got {conn_room_id}. user_id={user_id}"
+        print(f"❌ {error_msg}")
+        logger.error(error_msg)
+        await websocket.send_json({
+            "type": "ERROR",
+            "message": f"Room mismatch: connection in {conn_room_id}, expected {room_id}"
         })
         return
     
     if not room_service.is_user_in_room(user_id, room_id):
+        error_msg = f"User not in room. user_id={user_id}, room_id={room_id}"
+        print(f"❌ {error_msg}")
+        logger.error(error_msg)
         await websocket.send_json({
             "type": "ERROR",
             "message": "Not connected to this room"
@@ -288,7 +483,10 @@ async def handle_send_message(
         return
     
     # Broadcast to room
-    await room_service.broadcast(
+    print(f"📢 Broadcasting message from {user_id} ({role}) to room {room_id}")
+    logger.info(f"📢 Broadcasting message from {user_id} ({role}) to room {room_id}")
+    
+    sent_count = await room_service.broadcast(
         room_id,
         {
             "type": "NEW_MESSAGE",
@@ -300,7 +498,8 @@ async def handle_send_message(
         exclude_websocket=websocket
     )
     
-    logger.debug(f"💬 Message sent by {user_id} in room {room_id}")
+    print(f"✅ Message broadcasted to {sent_count} connection(s) in room {room_id}")
+    logger.info(f"💬 Message sent by {user_id} in room {room_id}, delivered to {sent_count} connection(s)")
 
 
 async def handle_create_highlight(
@@ -585,8 +784,14 @@ async def cleanup_connection(
     room_service
 ):
     """Clean up connection on disconnect."""
-    # Remove from room service
+    # Remove from room service (handles both in-room and waiting connections)
     removed_room_id = await room_service.remove_connection(websocket)
+    
+    # Also manually clean up from user_connections if not already removed
+    if user_id in room_service.user_connections:
+        room_service.user_connections[user_id].discard(websocket)
+        if not room_service.user_connections[user_id]:
+            del room_service.user_connections[user_id]
     
     # Remove from queue if still in queue (async function)
     await queue_service.leave_queue(user_id)
