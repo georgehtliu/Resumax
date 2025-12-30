@@ -12,9 +12,11 @@ graph TD
         Popup["<b>Popup View</b><br>Master Resume • Generate • Saved"]:::component
         Manager["<b>Manager View</b><br>Full App • Coaching • Community"]:::component
         Components["<b>Shared Components</b><br>Editors • Preview • WebSocket"]:::component
+        Auth["<b>OAuth Handler</b><br>Background Worker<br>Supabase Auth"]:::component
         
         Popup --> Components
         Manager --> Components
+        Auth --> Components
     end
     class Client container
 
@@ -41,7 +43,7 @@ graph TD
 
     %% --- EXTERNAL SERVICES & DATA --- %%
     OpenAI["<b>OpenAI</b><br>GPT-4o-mini"]:::external
-    Supabase[("<b>Supabase</b><br>PostgreSQL")]:::database
+    Supabase[("<b>Supabase</b><br>PostgreSQL<br>OAuth 2.0")]:::database
     ChromaDB[("<b>ChromaDB</b><br>Vector DB")]:::database
     Tectonic["<b>Tectonic</b><br>LaTeX PDF"]:::external
     Redis[("<b>Redis</b><br>Optional<br>Queue/PubSub")]:::database
@@ -51,5 +53,6 @@ graph TD
     Core --> ChromaDB
     REST --> OpenAI
     Components --> Supabase
+    Auth -->|OAuth 2.0| Supabase
     REST -.-> Tectonic
     WS_Layer -.-> Redis
