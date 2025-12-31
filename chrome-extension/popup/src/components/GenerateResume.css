@@ -4,6 +4,8 @@
   flex-direction: column;
   gap: var(--space-6);
   position: relative;
+  height: auto;
+  min-height: fit-content;
 }
 
 /* Header Section */
@@ -161,6 +163,9 @@
   border-radius: var(--radius-lg);
   padding: var(--space-6);
   transition: all var(--transition-base);
+  height: auto;
+  min-height: fit-content;
+  overflow: visible;
 }
 
 .section-modern:hover {
@@ -479,21 +484,16 @@
   grid-template-columns: 1fr 1fr;
   gap: var(--space-6);
   width: 100%;
-  height: calc(100vh - 250px);
-  max-height: calc(100vh - 250px);
-  overflow: hidden;
   align-items: start;
+  min-height: 600px;
 }
 
 .generate-resume-left-column {
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
   overflow-x: hidden;
-  height: 100%;
-  max-height: 100%;
-  min-height: 0;
-  -webkit-overflow-scrolling: touch;
+  height: auto;
+  min-height: fit-content;
 }
 
 .generate-resume-left-column .section {
@@ -506,7 +506,10 @@
 .generate-resume-left-column .section-modern {
   flex: 0 0 auto;
   height: auto;
+  min-height: fit-content;
   overflow: visible;
+  display: flex;
+  flex-direction: column;
 }
 
 .generate-resume-right-column {
@@ -516,6 +519,7 @@
   top: var(--space-4);
   height: fit-content;
   max-height: calc(100vh - 200px);
+  align-self: start;
 }
 
 /* LaTeX Preview Panel */

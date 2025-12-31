@@ -96,6 +96,8 @@ body {
   max-width: 100%;
   box-sizing: border-box;
   overflow-x: hidden;
+  height: auto;
+  min-height: fit-content;
 }
 
 .view-content:hover {
