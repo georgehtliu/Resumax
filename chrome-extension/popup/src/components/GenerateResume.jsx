@@ -393,11 +393,13 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
         </div>
       )}
 
-      {/* Header Section */}
-      <div className="generate-resume-header">
-        <h1>Generate Resume</h1>
-        <p className="generate-resume-subtitle">Create a tailored resume for any job description</p>
-      </div>
+      {/* Header Section - Hide after resume is generated */}
+      {!optimizationResult && (
+        <div className="generate-resume-header">
+          <h1>Generate Resume</h1>
+          <p className="generate-resume-subtitle">Create a tailored resume for any job description</p>
+        </div>
+      )}
 
       {/* Job Description Section - Hide after resume is generated */}
       {!optimizationResult && (
@@ -507,19 +509,6 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
               )}
             </div>
           )}
-        </div>
-      )}
-
-      {/* Keyword Scanner - Show when there's keyword data, even after resume is generated */}
-      {(keywordData || scanningKeywords) && (
-        <div className="section section-modern">
-          <div className="section-header-modern">
-            <h2>Keyword Analysis</h2>
-            <p className="section-description">
-              See which keywords from the job description match your resume
-            </p>
-          </div>
-          <KeywordScanner keywordData={keywordData} loading={scanningKeywords} />
         </div>
       )}
 
@@ -645,6 +634,19 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Keyword Scanner - Show below editor and resume preview */}
+      {optimizationResult && (keywordData || scanningKeywords) && (
+        <div className="section section-modern">
+          <div className="section-header-modern">
+            <h2>Keyword Analysis</h2>
+            <p className="section-description">
+              See which keywords from the job description match your resume
+            </p>
+          </div>
+          <KeywordScanner keywordData={keywordData} loading={scanningKeywords} />
         </div>
       )}
 

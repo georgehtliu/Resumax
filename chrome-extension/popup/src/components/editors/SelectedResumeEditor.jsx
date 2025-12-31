@@ -523,6 +523,11 @@ function SectionEditor({
   onBulletChange,
   onDeleteBullet
 }) {
+  // Custom layout for experiences
+  const isExperience = config.key === 'experiences';
+  const isEducation = config.key === 'education';
+  const isProject = config.key === 'projects';
+
   return (
     <div className="selected-section">
       <div className="selected-section-header">
@@ -538,28 +543,172 @@ function SectionEditor({
       ) : (
         entries.map((entry) => (
           <div key={entry.id} className="selected-entry">
-            <div className="entry-fields">
-              {config.fields.map((field) => (
-                <div key={field.name} className="entry-field">
-                  <label>{field.label}</label>
-                  {field.multiline ? (
-                    <textarea
-                      value={entry[field.name] || ''}
-                      onChange={(e) => onFieldChange(config.key, entry.id, field.name, e.target.value)}
-                      placeholder={field.placeholder}
-                      rows={3}
-                    />
-                  ) : (
+            {isExperience ? (
+              /* Compact Experience Layout: Company | Start | End on one line, Role below */
+              <div className="entry-fields-compact">
+                <div className="entry-row-top">
+                  <div className="entry-field-compact entry-field-company">
+                    <label>Company</label>
                     <input
                       type="text"
-                      value={entry[field.name] || ''}
-                      onChange={(e) => onFieldChange(config.key, entry.id, field.name, e.target.value)}
-                      placeholder={field.placeholder}
+                      value={entry.company || ''}
+                      onChange={(e) => onFieldChange(config.key, entry.id, 'company', e.target.value)}
+                      placeholder="e.g., Google"
                     />
-                  )}
+                  </div>
+                  <div className="entry-field-compact entry-field-date">
+                    <label>Start</label>
+                    <input
+                      type="text"
+                      value={entry.startDate || ''}
+                      onChange={(e) => onFieldChange(config.key, entry.id, 'startDate', e.target.value)}
+                      placeholder="e.g., Jun 2022"
+                    />
+                  </div>
+                  <div className="entry-field-compact entry-field-date">
+                    <label>End</label>
+                    <input
+                      type="text"
+                      value={entry.endDate || ''}
+                      onChange={(e) => onFieldChange(config.key, entry.id, 'endDate', e.target.value)}
+                      placeholder="e.g., Present"
+                    />
+                  </div>
                 </div>
-              ))}
-            </div>
+                <div className="entry-row-role">
+                  <div className="entry-field-compact entry-field-role">
+                    <label>Role</label>
+                    <input
+                      type="text"
+                      value={entry.role || ''}
+                      onChange={(e) => onFieldChange(config.key, entry.id, 'role', e.target.value)}
+                      placeholder="e.g., Software Engineer"
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : isEducation ? (
+              /* Compact Education Layout: School | Start | End on one line, Degree/Field below */
+              <div className="entry-fields-compact">
+                <div className="entry-row-top">
+                  <div className="entry-field-compact entry-field-company">
+                    <label>School</label>
+                    <input
+                      type="text"
+                      value={entry.school || ''}
+                      onChange={(e) => onFieldChange(config.key, entry.id, 'school', e.target.value)}
+                      placeholder="e.g., Stanford University"
+                    />
+                  </div>
+                  <div className="entry-field-compact entry-field-date">
+                    <label>Start</label>
+                    <input
+                      type="text"
+                      value={entry.startDate || ''}
+                      onChange={(e) => onFieldChange(config.key, entry.id, 'startDate', e.target.value)}
+                      placeholder="e.g., Sep 2018"
+                    />
+                  </div>
+                  <div className="entry-field-compact entry-field-date">
+                    <label>End</label>
+                    <input
+                      type="text"
+                      value={entry.endDate || ''}
+                      onChange={(e) => onFieldChange(config.key, entry.id, 'endDate', e.target.value)}
+                      placeholder="e.g., Jun 2022"
+                    />
+                  </div>
+                </div>
+                <div className="entry-row-role entry-row-two-fields">
+                  <div className="entry-field-compact entry-field-role">
+                    <label>Degree</label>
+                    <input
+                      type="text"
+                      value={entry.degree || ''}
+                      onChange={(e) => onFieldChange(config.key, entry.id, 'degree', e.target.value)}
+                      placeholder="e.g., B.S."
+                    />
+                  </div>
+                  <div className="entry-field-compact entry-field-role">
+                    <label>Field</label>
+                    <input
+                      type="text"
+                      value={entry.field || ''}
+                      onChange={(e) => onFieldChange(config.key, entry.id, 'field', e.target.value)}
+                      placeholder="e.g., Computer Science"
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : isProject ? (
+              /* Compact Project Layout: Name | Start | End on one line, Description/Technologies below */
+              <div className="entry-fields-compact">
+                <div className="entry-row-top">
+                  <div className="entry-field-compact entry-field-company">
+                    <label>Project Name</label>
+                    <input
+                      type="text"
+                      value={entry.name || ''}
+                      onChange={(e) => onFieldChange(config.key, entry.id, 'name', e.target.value)}
+                      placeholder="e.g., Distributed Task Scheduler"
+                    />
+                  </div>
+                  <div className="entry-field-compact entry-field-date">
+                    <label>Start</label>
+                    <input
+                      type="text"
+                      value={entry.startDate || ''}
+                      onChange={(e) => onFieldChange(config.key, entry.id, 'startDate', e.target.value)}
+                      placeholder="e.g., Jan 2022"
+                    />
+                  </div>
+                  <div className="entry-field-compact entry-field-date">
+                    <label>End</label>
+                    <input
+                      type="text"
+                      value={entry.endDate || ''}
+                      onChange={(e) => onFieldChange(config.key, entry.id, 'endDate', e.target.value)}
+                      placeholder="e.g., May 2022"
+                    />
+                  </div>
+                </div>
+                <div className="entry-row-role">
+                  <div className="entry-field-compact entry-field-role">
+                    <label>Technologies</label>
+                    <input
+                      type="text"
+                      value={entry.technologies || ''}
+                      onChange={(e) => onFieldChange(config.key, entry.id, 'technologies', e.target.value)}
+                      placeholder="e.g., Go, Kubernetes"
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* Default layout for custom sections */
+              <div className="entry-fields">
+                {config.fields.map((field) => (
+                  <div key={field.name} className="entry-field">
+                    <label>{field.label}</label>
+                    {field.multiline ? (
+                      <textarea
+                        value={entry[field.name] || ''}
+                        onChange={(e) => onFieldChange(config.key, entry.id, field.name, e.target.value)}
+                        placeholder={field.placeholder}
+                        rows={3}
+                      />
+                    ) : (
+                      <input
+                        type="text"
+                        value={entry[field.name] || ''}
+                        onChange={(e) => onFieldChange(config.key, entry.id, field.name, e.target.value)}
+                        placeholder={field.placeholder}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
 
             <div className="selected-bullets">
               <div className="selected-bullets-header">

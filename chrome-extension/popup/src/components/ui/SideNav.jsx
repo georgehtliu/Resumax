@@ -20,6 +20,13 @@ function SideNav({ activeView, onViewChange, userEmail, onSignOut }) {
     }
   }, [activeView]);
 
+  // Auto-collapse sidebar when on generate view
+  useEffect(() => {
+    if (activeView === 'generate') {
+      setIsCollapsed(true);
+    }
+  }, [activeView]);
+
   const navItems = [
     { id: 'about', label: 'About', icon: Info },
     { id: 'tips', label: 'Resume Tips', icon: Lightbulb },
