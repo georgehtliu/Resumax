@@ -303,6 +303,43 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
     }
   }
 
+  function downloadPdf() {
+    if (!latexPdfBase64) {
+      alert('No PDF available to download. Please regenerate the PDF first.');
+      return;
+    }
+
+    try {
+      // Convert base64 to blob
+      const byteCharacters = atob(latexPdfBase64);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: 'application/pdf' });
+
+      // Create download link
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Generate filename with timestamp
+      const timestamp = new Date().toISOString().slice(0, 10);
+      const jobTitle = currentJob?.title || 'resume';
+      const filename = `${jobTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${timestamp}.pdf`;
+      
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download PDF failed:', error);
+      alert('Failed to download PDF. Please try again.');
+    }
+  }
+
   /**
    * Handle save with name
    */
@@ -581,38 +618,49 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
             <div className="latex-preview-panel">
               <div className="latex-preview-panel-header">
                 <h3>LaTeX Preview</h3>
-                <button
-                  className="btn btn-primary btn-small"
-                  onClick={async () => {
-                    const resumeSource = customizedResume || optimizationResult?.selectedResume;
-                    if (!resumeSource) return;
-                    
-                    // Generate LaTeX source
-                    try {
-                      const latex = buildLatexDocument(resumeSource);
-                      setLatexSource(latex);
+                <div className="latex-preview-actions">
+                  <button
+                    className="btn btn-primary btn-small"
+                    onClick={async () => {
+                      const resumeSource = customizedResume || optimizationResult?.selectedResume;
+                      if (!resumeSource) return;
                       
-                      // Render PDF
-                      await renderPdfPreview();
-                    } catch (error) {
-                      console.error('Error building LaTeX preview:', error);
-                      alert('Could not generate LaTeX preview. Please try again.');
-                    }
-                  }}
-                  disabled={renderingPdf}
-                >
-                  {renderingPdf ? (
-                    <>
-                      <Icon name="loader" size={14} />
-                      Rendering...
-                    </>
-                  ) : (
-                    <>
-                      <Icon name="refresh" size={14} />
-                      Regenerate PDF
-                    </>
-                  )}
-                </button>
+                      // Generate LaTeX source
+                      try {
+                        const latex = buildLatexDocument(resumeSource);
+                        setLatexSource(latex);
+                        
+                        // Render PDF
+                        await renderPdfPreview();
+                      } catch (error) {
+                        console.error('Error building LaTeX preview:', error);
+                        alert('Could not generate LaTeX preview. Please try again.');
+                      }
+                    }}
+                    disabled={renderingPdf}
+                  >
+                    {renderingPdf ? (
+                      <>
+                        <Icon name="loader" size={14} />
+                        Rendering...
+                      </>
+                    ) : (
+                      <>
+                        <Icon name="refresh" size={14} />
+                        Regenerate PDF
+                      </>
+                    )}
+                  </button>
+                  <button
+                    className="btn btn-secondary btn-small"
+                    onClick={downloadPdf}
+                    disabled={!latexPdfBase64 || renderingPdf}
+                    title="Download PDF"
+                  >
+                    <Icon name="download" size={14} />
+                    Download PDF
+                  </button>
+                </div>
               </div>
               
               <div className="latex-preview-panel-content">
