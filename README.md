@@ -49,6 +49,7 @@ Resume Master helps candidates create stronger resumes by:
 ### 📄 Professional Formatting
 - LaTeX-based template ensures clean, professional formatting
 - Automatic one-page optimization that adapts to your content
+- High-fidelity resume preview with side-by-side editing and real-time PDF rendering
 - PDF preview and sharing capabilities
 
 ### 💾 Master Resume System
