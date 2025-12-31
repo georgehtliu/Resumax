@@ -9,6 +9,7 @@ import { Icon } from './ui/Icons';
 import SelectedResumeEditor from './editors/SelectedResumeEditor';
 import LatexPreviewModal from './modals/LatexPreviewModal';
 import ShareResumeButton from './ShareResumeButton';
+import ToastContainer from './ui/ToastContainer';
 import { renderLatex } from '../services/api';
 import { buildLatexDocument } from '../utils/latexTemplate';
 import './SavedResumes.css';
@@ -273,7 +274,7 @@ function flattenStructuredResume(resume) {
 function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
   const [savedResumes, setSavedResumes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { success, error: showError } = useToast();
+  const { toasts, removeToast, success, error: showError } = useToast();
   const [selectedResume, setSelectedResume] = useState(null);
   const [editedResume, setEditedResume] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
@@ -450,7 +451,7 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
 
   function openLatexPreview() {
     if (!editedResume) {
-      alert('Select a resume to preview.');
+      showError('Select a resume to preview.');
       return;
     }
 
@@ -462,17 +463,17 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
       setShowLatexPreview(true);
     } catch (error) {
       console.error('Error building LaTeX for saved resume:', error);
-      alert('Unable to generate LaTeX for this resume. Please check that all sections are filled out correctly.');
+      showError('Unable to generate LaTeX for this resume. Please check that all sections are filled out correctly.');
     }
   }
 
   async function copyLatexToClipboard() {
     try {
       await navigator.clipboard.writeText(latexSource);
-      alert('LaTeX copied to clipboard!');
+      success('LaTeX copied to clipboard!');
     } catch (error) {
       console.error('Clipboard copy failed:', error);
-      alert('Could not copy to clipboard. Please copy manually.');
+      showError('Could not copy to clipboard. Please copy manually.');
     }
   }
 
@@ -506,11 +507,11 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
       if (response?.pdf_base64) {
         setLatexPdfBase64(response.pdf_base64);
       } else {
-        alert('LaTeX render did not return a PDF.');
+        showError('LaTeX render did not return a PDF.');
       }
     } catch (error) {
       console.error('Failed to render PDF for saved resume:', error);
-      alert(error?.message || 'Failed to render PDF preview.');
+      showError(error?.message || 'Failed to render PDF preview.');
     } finally {
       setRenderingPdf(false);
     }
@@ -519,7 +520,7 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
 
   async function handleSaveAsNew() {
     if (!newResumeName.trim()) {
-      alert('Please enter a name for the new resume');
+      showError('Please enter a name for the new resume');
       return;
     }
 
@@ -844,6 +845,8 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
           </div>
         </div>
       )}
+      
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   );
 }

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Icon } from './ui/Icons';
+import { useToast } from '../hooks/useToast';
+import ToastContainer from './ui/ToastContainer';
 import './JobMatcher.css';
 
 /**
@@ -12,6 +14,7 @@ import './JobMatcher.css';
  * - Displaying job description in collapsible textbox
  */
 function JobMatcher({ jobDescription, onExtract, onSelect, loading }) {
+  const { toasts, removeToast, warning } = useToast();
   const [manualJD, setManualJD] = useState(jobDescription || '');
   const [extractionStatus, setExtractionStatus] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
@@ -43,12 +46,12 @@ function JobMatcher({ jobDescription, onExtract, onSelect, loading }) {
   function handleProcess() {
     const jd = manualJD.trim();
     if (!jd) {
-      alert('Please enter or extract a job description first.');
+      warning('Please enter or extract a job description first.');
       return;
     }
 
     if (jd.length < 100) {
-      alert('Job description seems too short. Please provide more details.');
+      warning('Job description seems too short. Please provide more details.');
       return;
     }
 

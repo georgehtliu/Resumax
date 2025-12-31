@@ -6,6 +6,8 @@ import Tabs from '../ui/Tabs';
 import { Icon } from '../ui/Icons';
 import BulletSelectionModal from './BulletSelectionModal';
 import EntrySelectionModal from './EntrySelectionModal';
+import { useToast } from '../../hooks/useToast';
+import ToastContainer from '../ui/ToastContainer';
 import './SelectedResumeEditor.css';
 
 const DEFAULT_PERSONAL_INFO = {
@@ -79,6 +81,7 @@ function SelectedResumeEditor({
   showEducation = true,
   verticalLayout = false
 }) {
+  const { toasts, removeToast, warning } = useToast();
   const [localResume, setLocalResume] = useState(() => normalizeResume(resume));
   const [activeTab, setActiveTab] = useState('personalInfo');
   // Initialize all sections as collapsed by default
@@ -245,7 +248,7 @@ function SelectedResumeEditor({
     // Ensure bullet has valid text (required by backend)
     const bulletText = (bullet.text || '').trim();
     if (!bulletText) {
-      alert('Cannot add bullet: bullet text is empty');
+      warning('Cannot add bullet: bullet text is empty');
       return;
     }
     
@@ -786,6 +789,8 @@ function SelectedResumeEditor({
           }}
         />
       )}
+      
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   );
 }

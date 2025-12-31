@@ -794,10 +794,10 @@ function App() {
       }
       await initializeMockData();
       await loadResumeData();
-      alert('Mock data initialized! Check the console for details.');
+      success('Mock data initialized! Check the console for details.');
     } catch (error) {
       console.error('Error force initializing:', error);
-      alert('Error: ' + error.message);
+      showError('Error: ' + error.message);
     }
   }
 
@@ -1004,7 +1004,7 @@ function App() {
       setLoading(false);
     } catch (error) {
       console.error('❌ Error saving uploaded resume:', error);
-      alert('Failed to save uploaded resume. Please try again.');
+      showError('Failed to save uploaded resume. Please try again.');
       setLoading(false);
     }
   }

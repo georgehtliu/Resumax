@@ -21,6 +21,8 @@ import {
   getAvailableAreas
 } from '../utils/jobDescriptionTemplates';
 import { Icon } from './ui/Icons';
+import { useToast } from '../hooks/useToast';
+import ToastContainer from './ui/ToastContainer';
 import './GenerateResume.css';
 
 /**
@@ -29,6 +31,7 @@ import './GenerateResume.css';
  * Tab 2: Generate optimized resume from job description
  */
 function GenerateResume({ masterResume, onSave, onResumeUpdate, onSelectionComplete, hideExtract = false }) {
+  const { toasts, removeToast, success, error, warning, info } = useToast();
   const [currentJob, setCurrentJob] = useState(null);
   const [optimizationResult, setOptimizationResult] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -62,11 +65,11 @@ function GenerateResume({ masterResume, onSave, onResumeUpdate, onSelectionCompl
           source: result.source || 'manual'
         });
       } else {
-        alert('Could not extract job description: ' + result.error);
+        error('Could not extract job description: ' + result.error);
       }
     } catch (error) {
       console.error('Error extracting job description:', error);
-      alert('Error extracting job description');
+      error('Error extracting job description');
     } finally {
       setLoading(false);
     }
@@ -78,7 +81,7 @@ function GenerateResume({ masterResume, onSave, onResumeUpdate, onSelectionCompl
   async function handleSelect(jobDescription) {
     const trimmedDescription = (jobDescription || '').trim();
     if (!trimmedDescription) {
-      alert('Please provide a job description before selecting bullets.');
+      warning('Please provide a job description before selecting bullets.');
       return;
     }
 
@@ -95,7 +98,7 @@ function GenerateResume({ masterResume, onSave, onResumeUpdate, onSelectionCompl
         structuredResume.projects.length === 0 &&
         structuredResume.customSections.length === 0
       ) {
-        alert('Your master resume is empty. Please add experiences, education, projects, or skills first.');
+        warning('Your master resume is empty. Please add experiences, education, projects, or skills first.');
         return;
       }
 
@@ -173,7 +176,7 @@ function GenerateResume({ masterResume, onSave, onResumeUpdate, onSelectionCompl
       }, 100);
     } catch (error) {
       console.error('Error selecting bullets:', error);
-      alert(error?.message || 'Unable to select bullets. Please try again.');
+      error(error?.message || 'Unable to select bullets. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -257,17 +260,17 @@ function GenerateResume({ masterResume, onSave, onResumeUpdate, onSelectionCompl
       setLatexPdfBase64(null);
     } catch (error) {
       console.error('Error building LaTeX preview:', error);
-      alert('Could not generate LaTeX preview. Please try again.');
+      error('Could not generate LaTeX preview. Please try again.');
     }
   }
 
   async function copyLatexToClipboard() {
     try {
       await navigator.clipboard.writeText(latexSource);
-      alert('LaTeX copied to clipboard!');
+      success('LaTeX copied to clipboard!');
     } catch (error) {
       console.error('Clipboard copy failed:', error);
-      alert('Could not copy to clipboard. Please copy manually.');
+      error('Could not copy to clipboard. Please copy manually.');
     }
   }
 
@@ -294,11 +297,11 @@ function GenerateResume({ masterResume, onSave, onResumeUpdate, onSelectionCompl
       if (response?.pdf_base64) {
         setLatexPdfBase64(response.pdf_base64);
       } else {
-        alert('LaTeX render did not return a PDF.');
+        error('LaTeX render did not return a PDF.');
       }
     } catch (error) {
       console.error('Render PDF failed:', error);
-      alert(error?.message || 'Failed to render PDF preview.');
+      error(error?.message || 'Failed to render PDF preview.');
     } finally {
       setRenderingPdf(false);
     }
@@ -306,7 +309,7 @@ function GenerateResume({ masterResume, onSave, onResumeUpdate, onSelectionCompl
 
   function downloadPdf() {
     if (!latexPdfBase64) {
-      alert('No PDF available to download. Please regenerate the PDF first.');
+      warning('No PDF available to download. Please regenerate the PDF first.');
       return;
     }
 
@@ -337,7 +340,7 @@ function GenerateResume({ masterResume, onSave, onResumeUpdate, onSelectionCompl
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Download PDF failed:', error);
-      alert('Failed to download PDF. Please try again.');
+      error('Failed to download PDF. Please try again.');
     }
   }
 
@@ -346,12 +349,12 @@ function GenerateResume({ masterResume, onSave, onResumeUpdate, onSelectionCompl
    */
   async function handleSave() {
     if (!optimizationResult) {
-      alert('Please generate a resume first');
+      warning('Please generate a resume first');
       return;
     }
 
     if (!resumeName.trim()) {
-      alert('Please enter a name for this resume');
+      warning('Please enter a name for this resume');
       return;
     }
 
@@ -409,10 +412,10 @@ function GenerateResume({ masterResume, onSave, onResumeUpdate, onSelectionCompl
         onSave();
       }
 
-      alert('Resume saved successfully!');
+      success('Resume saved successfully!');
     } catch (error) {
       console.error('Error saving resume:', error);
-      alert('Error saving resume');
+      error('Error saving resume');
     } finally {
       setSaving(false);
     }
@@ -771,7 +774,7 @@ function GenerateResume({ masterResume, onSave, onResumeUpdate, onSelectionCompl
                       }
                     }
                     
-                    alert(`Added "${capitalizedKeyword}" to this resume's skills!`);
+                    success(`Added "${capitalizedKeyword}" to this resume's skills!`);
                   }}
                 />
               </div>
@@ -799,7 +802,7 @@ function GenerateResume({ masterResume, onSave, onResumeUpdate, onSelectionCompl
                         await renderPdfPreview();
                       } catch (error) {
                         console.error('Error building LaTeX preview:', error);
-                        alert('Could not generate LaTeX preview. Please try again.');
+                        error('Could not generate LaTeX preview. Please try again.');
                       }
                     }}
                     disabled={renderingPdf}
@@ -906,6 +909,8 @@ function GenerateResume({ masterResume, onSave, onResumeUpdate, onSelectionCompl
         loadingPdf={renderingPdf}
         resumeData={customizedResume || optimizationResult?.selectedResume}
       />
+      
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   );
 }

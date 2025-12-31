@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import ResumeUpload from './ResumeUpload';
 import { Icon } from './ui/Icons';
+import { useToast } from '../hooks/useToast';
+import ToastContainer from './ui/ToastContainer';
 import './Onboarding.css';
 
 /**
@@ -9,6 +11,7 @@ import './Onboarding.css';
  * Allows them to choose between uploading a resume or manually entering data
  */
 function Onboarding({ onUploadComplete, onSkip }) {
+  const { toasts, removeToast, warning, error: showError } = useToast();
   const [mode, setMode] = useState(null); // 'upload' or 'manual'
 
   async function handleUpload(fileData) {
@@ -35,15 +38,15 @@ function Onboarding({ onUploadComplete, onSkip }) {
         customSections: []
       };
 
-      // Show alert that parsing is not yet implemented
-      alert('Resume parsing is not yet implemented. For now, please enter your resume information manually.');
+      // Show warning that parsing is not yet implemented
+      warning('Resume parsing is not yet implemented. For now, please enter your resume information manually.');
 
       if (onUploadComplete) {
         await onUploadComplete(mockParsedResume, fileData);
       }
     } catch (error) {
       console.error('Upload error:', error);
-      alert('Failed to upload resume. Please try again.');
+      showError('Failed to upload resume. Please try again.');
       throw error;
     }
   }
@@ -115,6 +118,8 @@ function Onboarding({ onUploadComplete, onSkip }) {
       <div className="onboarding-footer">
         <p>You can always add more information later</p>
       </div>
+      
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   );
 }
