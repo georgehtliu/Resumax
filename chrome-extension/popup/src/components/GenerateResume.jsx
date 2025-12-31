@@ -37,7 +37,6 @@ function GenerateResume({ masterResume, onSave, onResumeUpdate, onSelectionCompl
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [customizedBullets, setCustomizedBullets] = useState(null);
   const [customizedResume, setCustomizedResume] = useState(null);
-  const renderTimerRef = useRef(null);
   const [showLatexPreview, setShowLatexPreview] = useState(false);
   const [latexSource, setLatexSource] = useState('');
   const [latexPdfBase64, setLatexPdfBase64] = useState(null);
@@ -213,18 +212,7 @@ function GenerateResume({ masterResume, onSave, onResumeUpdate, onSelectionCompl
 
   function handleResumeUpdate(updatedResume) {
     setCustomizedResume(updatedResume);
-    // Auto-trigger PDF re-render after resume update (debounced)
-    if (optimizationResult && latexPdfBase64) {
-      // Only auto-render if we already have a PDF (to avoid rendering on initial load)
-      // Clear any existing timer
-      if (renderTimerRef.current) {
-        clearTimeout(renderTimerRef.current);
-      }
-      // Set new timer
-      renderTimerRef.current = setTimeout(() => {
-        renderPdfPreview();
-      }, 500); // Debounce by 500ms to avoid excessive API calls
-    }
+    // Don't auto-trigger PDF re-render - user must manually regenerate or add skills
   }
 
   // Auto-generate LaTeX when resume is generated or updated
@@ -805,14 +793,6 @@ function GenerateResume({ masterResume, onSave, onResumeUpdate, onSelectionCompl
               
               // Update the generated resume (not master resume)
               handleResumeUpdate(updatedResume);
-              
-              // Auto-trigger PDF re-render after adding skill
-              if (optimizationResult && latexPdfBase64) {
-                setTimeout(() => {
-                  renderPdfPreview();
-                }, 300);
-              }
-              
               alert(`Added "${capitalizedKeyword}" to this resume's skills!`);
             }}
           />
