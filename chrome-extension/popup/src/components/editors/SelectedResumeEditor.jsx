@@ -4,6 +4,7 @@ import PersonalInfoEditor from './PersonalInfoEditor';
 import SkillsEditor from './SkillsEditor';
 import Tabs from '../ui/Tabs';
 import { Icon } from '../ui/Icons';
+import BulletSelectionModal from './BulletSelectionModal';
 import './SelectedResumeEditor.css';
 
 const DEFAULT_PERSONAL_INFO = {
@@ -69,6 +70,7 @@ const SECTION_CONFIG = [
 
 function SelectedResumeEditor({
   resume,
+  masterResume,
   onUpdate,
   summary,
   showPersonalInfo = true,
@@ -87,6 +89,8 @@ function SelectedResumeEditor({
     projects: true,
     customSections: true
   }));
+  const [bulletModalOpen, setBulletModalOpen] = useState(false);
+  const [bulletModalContext, setBulletModalContext] = useState(null); // { sectionKey, entryId }
   const isLocalUpdateRef = useRef(false);
   const lastResumeRef = useRef(JSON.stringify(resume));
   const updateTimerRef = useRef(null);
@@ -180,12 +184,37 @@ function SelectedResumeEditor({
   }
 
   function handleAddBullet(sectionKey, entryId) {
+    // Find the entry to get its identifying information
+    const entry = localResume[sectionKey]?.find(e => e.id === entryId);
+    if (!entry) return;
+    
+    // Open modal to select from existing bullets or create new
+    setBulletModalContext({ sectionKey, entryId, entry });
+    setBulletModalOpen(true);
+  }
+
+  function handleSelectBullet(bullet) {
+    if (!bulletModalContext) return;
+    const { sectionKey, entryId } = bulletModalContext;
+    
+    // Ensure bullet has valid text (required by backend)
+    const bulletText = (bullet.text || '').trim();
+    if (!bulletText) {
+      alert('Cannot add bullet: bullet text is empty');
+      return;
+    }
+    
     updateResume((draft) => {
       draft[sectionKey] = (draft[sectionKey] || []).map((entry) => {
         if (entry.id !== entryId) return entry;
         const newBullet = {
           id: generateId('bullet'),
-          text: ''
+          text: bulletText,
+          relevanceScore: bullet.relevanceScore || 0.5, // Default relevance score if not provided
+          lineCount: bullet.lineCount || null,
+          original: bullet.original || null,
+          rewritten: bullet.rewritten || null,
+          reasoning: bullet.reasoning || null
         };
         return {
           ...entry,
@@ -193,6 +222,36 @@ function SelectedResumeEditor({
         };
       });
     });
+    
+    setBulletModalOpen(false);
+    setBulletModalContext(null);
+  }
+
+  function handleCreateNewBullet() {
+    if (!bulletModalContext) return;
+    const { sectionKey, entryId } = bulletModalContext;
+    
+    updateResume((draft) => {
+      draft[sectionKey] = (draft[sectionKey] || []).map((entry) => {
+        if (entry.id !== entryId) return entry;
+        const newBullet = {
+          id: generateId('bullet'),
+          text: '',
+          relevanceScore: 0.5, // Default relevance score for new bullets
+          lineCount: null,
+          original: null,
+          rewritten: null,
+          reasoning: null
+        };
+        return {
+          ...entry,
+          selectedBullets: [...(entry.selectedBullets || []), newBullet]
+        };
+      });
+    });
+    
+    setBulletModalOpen(false);
+    setBulletModalContext(null);
   }
 
   function handleDeleteBullet(sectionKey, entryId, bulletId) {
@@ -217,6 +276,112 @@ function SelectedResumeEditor({
   const isSectionCollapsed = (sectionId) => {
     return collapsedSections[sectionId] === true;
   };
+
+  // Get available bullets from master resume for a given section and entry
+  const getAvailableBullets = useCallback((sectionKey, currentEntry) => {
+    if (!masterResume || !currentEntry) return [];
+    
+    const sectionMap = {
+      'experiences': masterResume.experiences || [],
+      'education': masterResume.education || [],
+      'projects': masterResume.projects || [],
+      'customSections': masterResume.customSections || []
+    };
+    
+    const entries = sectionMap[sectionKey] || [];
+    const bullets = [];
+    
+    // Find matching entry in master resume based on identifying fields
+    // Only match if the identifying fields have values and match exactly
+    let matchingEntry = null;
+    
+    if (sectionKey === 'experiences') {
+      // Match by company and role - both must have values and match
+      const currentCompany = currentEntry.company?.toLowerCase().trim();
+      const currentRole = currentEntry.role?.toLowerCase().trim();
+      
+      if (currentCompany && currentRole) {
+        matchingEntry = entries.find(entry => {
+          const entryCompany = entry.company?.toLowerCase().trim();
+          const entryRole = entry.role?.toLowerCase().trim();
+          return entryCompany && entryRole && 
+                 entryCompany === currentCompany && 
+                 entryRole === currentRole;
+        });
+      }
+    } else if (sectionKey === 'education') {
+      // Match by school, degree, and field - all must have values and match
+      const currentSchool = currentEntry.school?.toLowerCase().trim();
+      const currentDegree = currentEntry.degree?.toLowerCase().trim();
+      const currentField = currentEntry.field?.toLowerCase().trim();
+      
+      if (currentSchool && currentDegree && currentField) {
+        matchingEntry = entries.find(entry => {
+          const entrySchool = entry.school?.toLowerCase().trim();
+          const entryDegree = entry.degree?.toLowerCase().trim();
+          const entryField = entry.field?.toLowerCase().trim();
+          return entrySchool && entryDegree && entryField &&
+                 entrySchool === currentSchool && 
+                 entryDegree === currentDegree &&
+                 entryField === currentField;
+        });
+      }
+    } else if (sectionKey === 'projects') {
+      // Match by project name - must have value and match
+      const currentName = currentEntry.name?.toLowerCase().trim();
+      
+      if (currentName) {
+        matchingEntry = entries.find(entry => {
+          const entryName = entry.name?.toLowerCase().trim();
+          return entryName && entryName === currentName;
+        });
+      }
+    } else if (sectionKey === 'customSections') {
+      // Match by title - must have value and match
+      const currentTitle = currentEntry.title?.toLowerCase().trim();
+      
+      if (currentTitle) {
+        matchingEntry = entries.find(entry => {
+          const entryTitle = entry.title?.toLowerCase().trim();
+          return entryTitle && entryTitle === currentTitle;
+        });
+      }
+    }
+    
+    // Only return bullets from the matching entry
+    if (matchingEntry) {
+      (matchingEntry.bullets || []).forEach((bullet) => {
+        bullets.push({
+          id: bullet.id,
+          text: bullet.text || '',
+          parentEntry: {
+            company: matchingEntry.company,
+            school: matchingEntry.school,
+            name: matchingEntry.name,
+            title: matchingEntry.title,
+            role: matchingEntry.role,
+            degree: matchingEntry.degree
+          }
+        });
+      });
+    } else {
+      // No matching entry found - return empty array (don't show bullets from other entries)
+      console.log('[BulletSelection] No matching entry found for:', {
+        sectionKey,
+        currentEntry: {
+          company: currentEntry.company,
+          role: currentEntry.role,
+          school: currentEntry.school,
+          degree: currentEntry.degree,
+          field: currentEntry.field,
+          name: currentEntry.name,
+          title: currentEntry.title
+        }
+      });
+    }
+    
+    return bullets;
+  }, [masterResume]);
 
   const visibleSections = useMemo(() => {
     return SECTION_CONFIG.filter((section) => {
@@ -480,6 +645,20 @@ function SelectedResumeEditor({
             })}
           </div>
         </>
+      )}
+
+      {/* Bullet Selection Modal */}
+      {bulletModalOpen && bulletModalContext && bulletModalContext.entry && (
+        <BulletSelectionModal
+          sectionKey={bulletModalContext.sectionKey}
+          availableBullets={getAvailableBullets(bulletModalContext.sectionKey, bulletModalContext.entry)}
+          onSelectBullet={handleSelectBullet}
+          onCreateNew={handleCreateNewBullet}
+          onClose={() => {
+            setBulletModalOpen(false);
+            setBulletModalContext(null);
+          }}
+        />
       )}
     </div>
   );

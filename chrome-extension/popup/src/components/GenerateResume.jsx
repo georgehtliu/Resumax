@@ -560,6 +560,7 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
               
               <SelectedResumeEditor
                 resume={customizedResume || optimizationResult.selectedResume}
+                masterResume={masterResume}
                 onUpdate={handleResumeUpdate}
                 showPersonalInfo={false}
                 showSkills={true}
