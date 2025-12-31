@@ -512,7 +512,7 @@ function SelectedResumeEditor({
       tabList.push({ id: 'personalInfo', label: 'Personal Info' });
     }
     
-    if (showSkills) {
+    if (showSkills && localResume.skills && localResume.skills.length > 0) {
       tabList.push({ id: 'skills', label: 'Skills' });
     }
     
@@ -521,7 +521,7 @@ function SelectedResumeEditor({
     });
     
     return tabList;
-  }, [showPersonalInfo, showSkills, visibleSections]);
+  }, [showPersonalInfo, showSkills, visibleSections, localResume.skills]);
 
   // Set initial active tab when tabs change
   useEffect(() => {
@@ -541,8 +541,8 @@ function SelectedResumeEditor({
         <div className="resume-summary">
           <div className="summary-item">
             <span className="summary-label">One-Page Fit</span>
-            <span className={`summary-value ${fitsOnePage ? 'summary-good' : 'summary-warning'}`}>
-              {fitsOnePage ? (
+            <span className={`summary-value ${summary.fitsOnePage ? 'summary-good' : 'summary-warning'}`}>
+              {summary.fitsOnePage ? (
                 <>
                   <Icon name="checkCircle" size={16} style={{ marginRight: '4px', verticalAlign: 'middle', display: 'inline-block' }} />
                   Fits on one page
@@ -558,7 +558,7 @@ function SelectedResumeEditor({
           <div className="summary-item">
             <span className="summary-label">Estimated Lines</span>
             <span className="summary-value">
-              {lineTotals} / {maxLines}
+              {summary.totalLineCount || lineTotals} / {summary.maxLines || maxLines}
             </span>
           </div>
           {summary.processingTime && (
@@ -657,7 +657,7 @@ function SelectedResumeEditor({
           )}
 
           {/* Skills - matches LaTeX order */}
-          {showSkills && (
+          {showSkills && localResume.skills && localResume.skills.length > 0 && (
             <CollapsibleSection
               sectionId="skills"
               title="Skills"
@@ -723,7 +723,7 @@ function SelectedResumeEditor({
               </div>
             )}
 
-            {activeTab === 'skills' && showSkills && (
+            {activeTab === 'skills' && showSkills && localResume.skills && localResume.skills.length > 0 && (
               <div className="selected-section">
                 <SkillsEditor
                   skills={localResume.skills || []}

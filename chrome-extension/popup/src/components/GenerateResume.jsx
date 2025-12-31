@@ -560,9 +560,7 @@ function GenerateResume({ masterResume, onSave, onResumeUpdate, onSelectionCompl
                 <div>
                   <h2>Selected Resume</h2>
                   <p className="section-description">
-                    Review and customize your selected resume. {optimizationResult.fitsOnePage 
-                      ? '✅ Fits on one page' 
-                      : '⚠️ Exceeds one page limit'}
+                    Review and customize your selected resume.
                   </p>
                 </div>
                 <div className="section-header-actions">
@@ -612,6 +610,172 @@ function GenerateResume({ masterResume, onSave, onResumeUpdate, onSelectionCompl
                 verticalLayout={true}
               />
             </div>
+            
+            {/* Keyword Scanner - In left column below editor */}
+            {optimizationResult && (keywordData || scanningKeywords) && (
+              <div className="section section-modern keyword-scanner-section">
+                <div className="section-header-modern">
+                  <h3>Keyword Analysis</h3>
+                  <p className="section-description">
+                    Keywords from the job description
+                  </p>
+                </div>
+                <KeywordScanner 
+                  keywordData={keywordData} 
+                  loading={scanningKeywords}
+                  masterResume={masterResume}
+                  currentResume={customizedResume || optimizationResult?.selectedResume}
+                  onAddToSkills={async (keyword, skillGroupId, newGroupTitle = null) => {
+                    // Update the generated resume (not master resume) with new skill
+                    const currentResume = customizedResume || optimizationResult?.selectedResume;
+                    if (!currentResume) return;
+                    
+                    // Capitalize keyword properly (preserve original case formatting)
+                    const capitalizeKeyword = (kw) => {
+                      const trimmed = kw.trim();
+                      const lower = trimmed.toLowerCase();
+                      
+                      // Common all-caps abbreviations
+                      const allCapsTerms = ['aws', 'api', 'ci/cd', 'rest', 'graphql', 'grpc', 'sql', 'nosql', 
+                        'ui', 'ux', 'ml', 'ai', 'nlp', 'rag', 'etl', 'iot', 'saas', 'paas', 'iaas', 
+                        'devops', 'qa', 'tdd', 'bdd', 'oop', 'fp', 'crud', 'jwt', 'oauth', 'ssl', 'tls', 
+                        'http', 'https', 'tcp', 'udp', 'dns', 'cdn', 'sso', 'ldap', 'saml', 'oauth2'];
+                      
+                      if (allCapsTerms.includes(lower)) {
+                        return trimmed.toUpperCase();
+                      }
+                      
+                      // Handle camelCase/PascalCase (preserve as-is if detected)
+                      if (trimmed.match(/^[A-Z][a-z]+[A-Z]/)) {
+                        return trimmed;
+                      }
+                      
+                      // Handle dot notation (e.g., "node.js", "next.js")
+                      if (trimmed.includes('.')) {
+                        return trimmed.split('.').map(part => 
+                          part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
+                        ).join('.');
+                      }
+                      
+                      // Handle hyphenated (e.g., "react-native", "machine-learning")
+                      if (trimmed.includes('-')) {
+                        return trimmed.split('-').map(part => 
+                          part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
+                        ).join('-');
+                      }
+                      
+                      // Handle slash-separated (e.g., "ci/cd")
+                      if (trimmed.includes('/')) {
+                        return trimmed.split('/').map(part => 
+                          part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
+                        ).join('/');
+                      }
+                      
+                      // Default: Title case (first letter uppercase, rest lowercase)
+                      return trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
+                    };
+                    
+                    const capitalizedKeyword = capitalizeKeyword(keyword);
+                    
+                    const currentSkills = currentResume.skills || [];
+                    let updatedSkills;
+                    
+                    // Check if this is a new group (newGroupTitle is provided)
+                    if (newGroupTitle) {
+                      // Create new skill group
+                      updatedSkills = [
+                        ...currentSkills,
+                        {
+                          id: skillGroupId,
+                          title: newGroupTitle,
+                          skills: [capitalizedKeyword]
+                        }
+                      ];
+                    } else {
+                      // Update existing group
+                      updatedSkills = currentSkills.map(group => {
+                        if (group.id === skillGroupId) {
+                          // Add keyword if not already present
+                          const skills = group.skills || [];
+                          const keywordLower = keyword.toLowerCase().trim();
+                          if (!skills.some(s => s.toLowerCase().trim() === keywordLower)) {
+                            return {
+                              ...group,
+                              skills: [...skills, capitalizedKeyword]
+                            };
+                          }
+                        }
+                        return group;
+                      });
+                    }
+                    
+                    const updatedResume = {
+                      ...currentResume,
+                      skills: updatedSkills
+                    };
+                    
+                    // Update the generated resume (not master resume)
+                    handleResumeUpdate(updatedResume);
+                    
+                    // Update keyword data: move from missing to found
+                    if (keywordData) {
+                      const keywordLower = keyword.toLowerCase().trim();
+                      const updatedKeywordData = { ...keywordData };
+                      
+                      // Find and remove from missing_keywords
+                      const missingIndex = updatedKeywordData.missing_keywords?.findIndex(
+                        k => k.keyword?.toLowerCase().trim() === keywordLower
+                      );
+                      
+                      if (missingIndex !== undefined && missingIndex >= 0) {
+                        const movedKeyword = updatedKeywordData.missing_keywords[missingIndex];
+                        
+                        // Remove from missing
+                        updatedKeywordData.missing_keywords = [
+                          ...updatedKeywordData.missing_keywords.slice(0, missingIndex),
+                          ...updatedKeywordData.missing_keywords.slice(missingIndex + 1)
+                        ];
+                        
+                        // Add to found (check if already exists)
+                        const existingFoundIndex = updatedKeywordData.found_keywords?.findIndex(
+                          k => k.keyword?.toLowerCase().trim() === keywordLower
+                        );
+                        
+                        if (existingFoundIndex !== undefined && existingFoundIndex >= 0) {
+                          // Increment match_count if already exists
+                          updatedKeywordData.found_keywords[existingFoundIndex].match_count = 
+                            (updatedKeywordData.found_keywords[existingFoundIndex].match_count || 1) + 1;
+                        } else {
+                          // Add new found keyword
+                          updatedKeywordData.found_keywords = [
+                            ...(updatedKeywordData.found_keywords || []),
+                            {
+                              ...movedKeyword,
+                              keyword: capitalizedKeyword, // Use capitalized version
+                              match_count: 1
+                            }
+                          ];
+                        }
+                        
+                        // Update statistics
+                        updatedKeywordData.statistics = {
+                          ...updatedKeywordData.statistics,
+                          found_count: (updatedKeywordData.statistics.found_count || 0) + 1,
+                          missing_count: Math.max(0, (updatedKeywordData.statistics.missing_count || 0) - 1),
+                          match_percentage: updatedKeywordData.statistics.total_keywords > 0
+                            ? Math.round(((updatedKeywordData.statistics.found_count || 0) + 1) / updatedKeywordData.statistics.total_keywords * 100)
+                            : 0
+                        };
+                        
+                        setKeywordData(updatedKeywordData);
+                      }
+                    }
+                    
+                    alert(`Added "${capitalizedKeyword}" to this resume's skills!`);
+                  }}
+                />
+              </div>
+            )}
           </div>
 
           {/* Right Column: LaTeX Preview */}
@@ -685,172 +849,6 @@ function GenerateResume({ masterResume, onSave, onResumeUpdate, onSelectionCompl
               </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Keyword Scanner - Show below editor and resume preview */}
-      {optimizationResult && (keywordData || scanningKeywords) && (
-        <div className="section section-modern">
-          <div className="section-header-modern">
-            <h2>Keyword Analysis</h2>
-            <p className="section-description">
-              See which keywords from the job description match your resume
-            </p>
-          </div>
-          <KeywordScanner 
-            keywordData={keywordData} 
-            loading={scanningKeywords}
-            masterResume={masterResume}
-            currentResume={customizedResume || optimizationResult?.selectedResume}
-            onAddToSkills={async (keyword, skillGroupId, newGroupTitle = null) => {
-              // Update the generated resume (not master resume) with new skill
-              const currentResume = customizedResume || optimizationResult?.selectedResume;
-              if (!currentResume) return;
-              
-              // Capitalize keyword properly (preserve original case formatting)
-              const capitalizeKeyword = (kw) => {
-                const trimmed = kw.trim();
-                const lower = trimmed.toLowerCase();
-                
-                // Common all-caps abbreviations
-                const allCapsTerms = ['aws', 'api', 'ci/cd', 'rest', 'graphql', 'grpc', 'sql', 'nosql', 
-                  'ui', 'ux', 'ml', 'ai', 'nlp', 'rag', 'etl', 'iot', 'saas', 'paas', 'iaas', 
-                  'devops', 'qa', 'tdd', 'bdd', 'oop', 'fp', 'crud', 'jwt', 'oauth', 'ssl', 'tls', 
-                  'http', 'https', 'tcp', 'udp', 'dns', 'cdn', 'sso', 'ldap', 'saml', 'oauth2'];
-                
-                if (allCapsTerms.includes(lower)) {
-                  return trimmed.toUpperCase();
-                }
-                
-                // Handle camelCase/PascalCase (preserve as-is if detected)
-                if (trimmed.match(/^[A-Z][a-z]+[A-Z]/)) {
-                  return trimmed;
-                }
-                
-                // Handle dot notation (e.g., "node.js", "next.js")
-                if (trimmed.includes('.')) {
-                  return trimmed.split('.').map(part => 
-                    part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
-                  ).join('.');
-                }
-                
-                // Handle hyphenated (e.g., "react-native", "machine-learning")
-                if (trimmed.includes('-')) {
-                  return trimmed.split('-').map(part => 
-                    part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
-                  ).join('-');
-                }
-                
-                // Handle slash-separated (e.g., "ci/cd")
-                if (trimmed.includes('/')) {
-                  return trimmed.split('/').map(part => 
-                    part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
-                  ).join('/');
-                }
-                
-                // Default: Title case (first letter uppercase, rest lowercase)
-                return trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
-              };
-              
-              const capitalizedKeyword = capitalizeKeyword(keyword);
-              
-              const currentSkills = currentResume.skills || [];
-              let updatedSkills;
-              
-              // Check if this is a new group (newGroupTitle is provided)
-              if (newGroupTitle) {
-                // Create new skill group
-                updatedSkills = [
-                  ...currentSkills,
-                  {
-                    id: skillGroupId,
-                    title: newGroupTitle,
-                    skills: [capitalizedKeyword]
-                  }
-                ];
-              } else {
-                // Update existing group
-                updatedSkills = currentSkills.map(group => {
-                  if (group.id === skillGroupId) {
-                    // Add keyword if not already present
-                    const skills = group.skills || [];
-                    const keywordLower = keyword.toLowerCase().trim();
-                    if (!skills.some(s => s.toLowerCase().trim() === keywordLower)) {
-                      return {
-                        ...group,
-                        skills: [...skills, capitalizedKeyword]
-                      };
-                    }
-                  }
-                  return group;
-                });
-              }
-              
-              const updatedResume = {
-                ...currentResume,
-                skills: updatedSkills
-              };
-              
-              // Update the generated resume (not master resume)
-              handleResumeUpdate(updatedResume);
-              
-              // Update keyword data: move from missing to found
-              if (keywordData) {
-                const keywordLower = keyword.toLowerCase().trim();
-                const updatedKeywordData = { ...keywordData };
-                
-                // Find and remove from missing_keywords
-                const missingIndex = updatedKeywordData.missing_keywords?.findIndex(
-                  k => k.keyword?.toLowerCase().trim() === keywordLower
-                );
-                
-                if (missingIndex !== undefined && missingIndex >= 0) {
-                  const movedKeyword = updatedKeywordData.missing_keywords[missingIndex];
-                  
-                  // Remove from missing
-                  updatedKeywordData.missing_keywords = [
-                    ...updatedKeywordData.missing_keywords.slice(0, missingIndex),
-                    ...updatedKeywordData.missing_keywords.slice(missingIndex + 1)
-                  ];
-                  
-                  // Add to found (check if already exists)
-                  const existingFoundIndex = updatedKeywordData.found_keywords?.findIndex(
-                    k => k.keyword?.toLowerCase().trim() === keywordLower
-                  );
-                  
-                  if (existingFoundIndex !== undefined && existingFoundIndex >= 0) {
-                    // Increment match_count if already exists
-                    updatedKeywordData.found_keywords[existingFoundIndex].match_count = 
-                      (updatedKeywordData.found_keywords[existingFoundIndex].match_count || 1) + 1;
-                  } else {
-                    // Add new found keyword
-                    updatedKeywordData.found_keywords = [
-                      ...(updatedKeywordData.found_keywords || []),
-                      {
-                        ...movedKeyword,
-                        keyword: capitalizedKeyword, // Use capitalized version
-                        match_count: 1
-                      }
-                    ];
-                  }
-                  
-                  // Update statistics
-                  updatedKeywordData.statistics = {
-                    ...updatedKeywordData.statistics,
-                    found_count: (updatedKeywordData.statistics.found_count || 0) + 1,
-                    missing_count: Math.max(0, (updatedKeywordData.statistics.missing_count || 0) - 1),
-                    match_percentage: updatedKeywordData.statistics.total_keywords > 0
-                      ? Math.round(((updatedKeywordData.statistics.found_count || 0) + 1) / updatedKeywordData.statistics.total_keywords * 100)
-                      : 0
-                  };
-                  
-                  setKeywordData(updatedKeywordData);
-                }
-              }
-              
-              alert(`Added "${capitalizedKeyword}" to this resume's skills!`);
-            }}
-          />
         </div>
       )}
 
