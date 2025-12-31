@@ -793,6 +793,61 @@ function GenerateResume({ masterResume, onSave, onResumeUpdate, onSelectionCompl
               
               // Update the generated resume (not master resume)
               handleResumeUpdate(updatedResume);
+              
+              // Update keyword data: move from missing to found
+              if (keywordData) {
+                const keywordLower = keyword.toLowerCase().trim();
+                const updatedKeywordData = { ...keywordData };
+                
+                // Find and remove from missing_keywords
+                const missingIndex = updatedKeywordData.missing_keywords?.findIndex(
+                  k => k.keyword?.toLowerCase().trim() === keywordLower
+                );
+                
+                if (missingIndex !== undefined && missingIndex >= 0) {
+                  const movedKeyword = updatedKeywordData.missing_keywords[missingIndex];
+                  
+                  // Remove from missing
+                  updatedKeywordData.missing_keywords = [
+                    ...updatedKeywordData.missing_keywords.slice(0, missingIndex),
+                    ...updatedKeywordData.missing_keywords.slice(missingIndex + 1)
+                  ];
+                  
+                  // Add to found (check if already exists)
+                  const existingFoundIndex = updatedKeywordData.found_keywords?.findIndex(
+                    k => k.keyword?.toLowerCase().trim() === keywordLower
+                  );
+                  
+                  if (existingFoundIndex !== undefined && existingFoundIndex >= 0) {
+                    // Increment match_count if already exists
+                    updatedKeywordData.found_keywords[existingFoundIndex].match_count = 
+                      (updatedKeywordData.found_keywords[existingFoundIndex].match_count || 1) + 1;
+                  } else {
+                    // Add new found keyword
+                    updatedKeywordData.found_keywords = [
+                      ...(updatedKeywordData.found_keywords || []),
+                      {
+                        ...movedKeyword,
+                        keyword: capitalizedKeyword, // Use capitalized version
+                        match_count: 1
+                      }
+                    ];
+                  }
+                  
+                  // Update statistics
+                  updatedKeywordData.statistics = {
+                    ...updatedKeywordData.statistics,
+                    found_count: (updatedKeywordData.statistics.found_count || 0) + 1,
+                    missing_count: Math.max(0, (updatedKeywordData.statistics.missing_count || 0) - 1),
+                    match_percentage: updatedKeywordData.statistics.total_keywords > 0
+                      ? Math.round(((updatedKeywordData.statistics.found_count || 0) + 1) / updatedKeywordData.statistics.total_keywords * 100)
+                      : 0
+                  };
+                  
+                  setKeywordData(updatedKeywordData);
+                }
+              }
+              
               alert(`Added "${capitalizedKeyword}" to this resume's skills!`);
             }}
           />
