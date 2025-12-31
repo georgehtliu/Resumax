@@ -7,6 +7,20 @@
   box-sizing: border-box;
 }
 
+/* Vertical Layout - Show all sections */
+.selected-resume-editor.vertical-layout {
+  gap: var(--space-4);
+}
+
+.selected-resume-vertical-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
 /* Tabs Wrapper */
 .selected-resume-tabs-wrapper {
   border-bottom: 1px solid var(--color-slate-200);

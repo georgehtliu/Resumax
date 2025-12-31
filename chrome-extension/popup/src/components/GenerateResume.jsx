@@ -1,8 +1,9 @@
-import React, { useState, startTransition } from 'react';
+import React, { useState, startTransition, useEffect } from 'react';
 import JobMatcher from './JobMatcher';
 import SelectedResumeEditor from './editors/SelectedResumeEditor';
 import LatexPreviewModal from './modals/LatexPreviewModal';
 import KeywordScanner from './KeywordScanner';
+import PdfViewerWithOverlays from './pdf/PdfViewerWithOverlays';
 import { storageService } from '../services/storage';
 import { supabase } from '../config/supabase';
 import { buildStructuredResume, selectResume, renderLatex, scanKeywords } from '../services/api';
@@ -212,6 +213,36 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
   function handleResumeUpdate(updatedResume) {
     setCustomizedResume(updatedResume);
   }
+
+  // Auto-generate LaTeX when resume is generated or updated
+  useEffect(() => {
+    if (optimizationResult) {
+      const resumeSource = customizedResume || optimizationResult?.selectedResume;
+      if (resumeSource) {
+        try {
+          const latex = buildLatexDocument(resumeSource);
+          setLatexSource(latex);
+        } catch (error) {
+          console.error('Error building LaTeX preview:', error);
+        }
+      }
+    }
+  }, [optimizationResult, customizedResume]);
+
+  // Auto-render PDF when resume is first generated (but not on every update to avoid excessive API calls)
+  useEffect(() => {
+    if (optimizationResult && !latexPdfBase64 && !renderingPdf) {
+      const resumeSource = customizedResume || optimizationResult?.selectedResume;
+      if (resumeSource) {
+        // Small delay to let LaTeX generate first
+        const timer = setTimeout(() => {
+          renderPdfPreview();
+        }, 500);
+        return () => clearTimeout(timer);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [optimizationResult]);
 
   function openLatexPreview() {
     const resumeSource = customizedResume || optimizationResult?.selectedResume;
@@ -492,71 +523,128 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
         </div>
       )}
 
-      {/* Optimization Results */}
+      {/* Optimization Results - Two Column Layout */}
       {optimizationResult && (
-        <div className="section section-modern">
-          <div className="section-header-modern-with-action">
-            <div>
-              <h2>Selected Resume</h2>
-              <p className="section-description">
-                Review and customize your selected resume. {optimizationResult.fitsOnePage 
-                  ? '✅ Fits on one page' 
-                  : '⚠️ Exceeds one page limit'}
-              </p>
-            </div>
-            <div className="section-header-actions">
-              <button
-                className="btn btn-secondary btn-modern"
-                onClick={() => {
-                  setOptimizationResult(null);
-                  setCurrentJob(null);
-                  setCustomizedBullets(null);
-                  setCustomizedResume(null);
-                  setKeywordData(null);
-                  setLatexSource('');
-                  setLatexPdfBase64(null);
-                  setShowLatexPreview(false);
-                  setInputMode('paste');
-                  setSelectedArea(null);
+        <div className="generate-resume-results-container">
+          {/* Left Column: Resume Sections */}
+          <div className="generate-resume-left-column">
+            <div className="section section-modern">
+              <div className="section-header-modern-with-action">
+                <div>
+                  <h2>Selected Resume</h2>
+                  <p className="section-description">
+                    Review and customize your selected resume. {optimizationResult.fitsOnePage 
+                      ? '✅ Fits on one page' 
+                      : '⚠️ Exceeds one page limit'}
+                  </p>
+                </div>
+                <div className="section-header-actions">
+                  <button
+                    className="btn btn-secondary btn-modern"
+                    onClick={() => {
+                      setOptimizationResult(null);
+                      setCurrentJob(null);
+                      setCustomizedBullets(null);
+                      setCustomizedResume(null);
+                      setKeywordData(null);
+                      setLatexSource('');
+                      setLatexPdfBase64(null);
+                      setShowLatexPreview(false);
+                      setInputMode('paste');
+                      setSelectedArea(null);
+                    }}
+                    title="Generate a new resume for a different job"
+                  >
+                    <Icon name="refresh" size={16} />
+                    Generate New Resume
+                  </button>
+                  <button
+                    className="btn btn-primary btn-modern"
+                    onClick={() => setShowSaveDialog(true)}
+                    disabled={saving}
+                  >
+                    <Icon name="save" size={16} />
+                    Save Resume
+                  </button>
+                </div>
+              </div>
+              
+              <SelectedResumeEditor
+                resume={customizedResume || optimizationResult.selectedResume}
+                onUpdate={handleResumeUpdate}
+                showPersonalInfo={false}
+                showSkills={true}
+                showEducation={false}
+                summary={{
+                  fitsOnePage: optimizationResult.fitsOnePage,
+                  totalLineCount: optimizationResult.totalLineCount,
+                  maxLines: optimizationResult.maxLines,
+                  processingTime: optimizationResult.processingTime
                 }}
-                title="Generate a new resume for a different job"
-              >
-                <Icon name="refresh" size={16} />
-                Generate New Resume
-              </button>
-              {optimizationResult.mode === 'select' && (
-                <button
-                  className="btn btn-secondary btn-modern"
-                  onClick={openLatexPreview}
-                >
-                  <Icon name="eye" size={16} />
-                  LaTeX Preview
-                </button>
-              )}
-              <button
-                className="btn btn-primary btn-modern"
-                onClick={() => setShowSaveDialog(true)}
-                disabled={saving}
-              >
-                <Icon name="save" size={16} />
-                Save Resume
-              </button>
+                verticalLayout={true}
+              />
             </div>
           </div>
-          
-          <SelectedResumeEditor
-            resume={customizedResume || optimizationResult.selectedResume}
-            onUpdate={handleResumeUpdate}
-            showPersonalInfo={false}
-            showSkills={true}
-            showEducation={false}
-            summary={{
-              fitsOnePage: optimizationResult.fitsOnePage,
-              totalLineCount: optimizationResult.totalLineCount,
-              maxLines: optimizationResult.maxLines,
-              processingTime: optimizationResult.processingTime
-            }}
-          />
+
+          {/* Right Column: LaTeX Preview */}
+          <div className="generate-resume-right-column">
+            <div className="latex-preview-panel">
+              <div className="latex-preview-panel-header">
+                <h3>LaTeX Preview</h3>
+                <button
+                  className="btn btn-primary btn-small"
+                  onClick={async () => {
+                    const resumeSource = customizedResume || optimizationResult?.selectedResume;
+                    if (!resumeSource) return;
+                    
+                    // Generate LaTeX source
+                    try {
+                      const latex = buildLatexDocument(resumeSource);
+                      setLatexSource(latex);
+                      
+                      // Render PDF
+                      await renderPdfPreview();
+                    } catch (error) {
+                      console.error('Error building LaTeX preview:', error);
+                      alert('Could not generate LaTeX preview. Please try again.');
+                    }
+                  }}
+                  disabled={renderingPdf}
+                >
+                  {renderingPdf ? (
+                    <>
+                      <Icon name="loader" size={14} />
+                      Rendering...
+                    </>
+                  ) : (
+                    <>
+                      <Icon name="refresh" size={14} />
+                      Regenerate PDF
+                    </>
+                  )}
+                </button>
+              </div>
+              
+              <div className="latex-preview-panel-content">
+                {renderingPdf && <div className="pdf-loading">Rendering PDF…</div>}
+                {!renderingPdf && latexPdfBase64 && (
+                  <PdfViewerWithOverlays
+                    pdfBase64={latexPdfBase64}
+                    comments={[]}
+                    onTextSelect={(anchor) => {
+                      console.log('Text selected:', anchor);
+                    }}
+                    scale={1.0}
+                  />
+                )}
+                {!renderingPdf && !latexPdfBase64 && (
+                  <div className="pdf-empty">
+                    <p>Click "Regenerate PDF" to generate a preview.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

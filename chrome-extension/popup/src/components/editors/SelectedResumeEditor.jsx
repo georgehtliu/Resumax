@@ -73,7 +73,8 @@ function SelectedResumeEditor({
   summary,
   showPersonalInfo = true,
   showSkills = true,
-  showEducation = true
+  showEducation = true,
+  verticalLayout = false
 }) {
   const [localResume, setLocalResume] = useState(() => normalizeResume(resume));
   const [activeTab, setActiveTab] = useState('personalInfo');
@@ -238,7 +239,7 @@ function SelectedResumeEditor({
   }, [showSkills, localResume.skills]);
 
   return (
-    <div className="selected-resume-editor">
+    <div className={`selected-resume-editor ${verticalLayout ? 'vertical-layout' : ''}`}>
       {summary && (
         <div className="resume-summary">
           <div className="summary-item">
@@ -272,61 +273,111 @@ function SelectedResumeEditor({
         </div>
       )}
 
-      {/* Tabs Navigation */}
-      {tabs.length > 1 && (
-        <div className="selected-resume-tabs-wrapper">
-          <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
-        </div>
-      )}
-
-      {/* Tab Content */}
-      <div className="selected-resume-tab-content">
-        {activeTab === 'personalInfo' && showPersonalInfo && (
-          <div className="selected-section">
-            <h3>Personal Information</h3>
-            <PersonalInfoEditor
-              value={localResume.personalInfo}
-              onChange={(info) => updateResume((draft) => {
-                draft.personalInfo = info;
-              })}
-              variant="compact"
-            />
-          </div>
-        )}
-
-        {activeTab === 'skills' && showSkills && (
-          <div className="selected-section">
-            <SkillsEditor
-              skills={localResume.skills || []}
-              onChange={(updatedSkills) => {
-                console.log('[SelectedResumeEditor] Skills updated:', updatedSkills);
-                updateResume((draft) => {
-                  draft.skills = updatedSkills;
-                });
-              }}
-            />
-          </div>
-        )}
-
-        {visibleSections.map((section) => {
-          if (activeTab === section.key) {
-            return (
-              <SectionEditor
-                key={section.key}
-                config={section}
-                entries={localResume[section.key] || []}
-                onFieldChange={handleEntryFieldChange}
-                onAddEntry={handleAddEntry}
-                onDeleteEntry={handleDeleteEntry}
-                onAddBullet={handleAddBullet}
-                onBulletChange={handleBulletChange}
-                onDeleteBullet={handleDeleteBullet}
+      {verticalLayout ? (
+        /* Vertical Layout: Show all sections */
+        <div className="selected-resume-vertical-content">
+          {showPersonalInfo && (
+            <div className="selected-section">
+              <h3>Personal Information</h3>
+              <PersonalInfoEditor
+                value={localResume.personalInfo}
+                onChange={(info) => updateResume((draft) => {
+                  draft.personalInfo = info;
+                })}
+                variant="compact"
               />
-            );
-          }
-          return null;
-        })}
-      </div>
+            </div>
+          )}
+
+          {showSkills && (
+            <div className="selected-section">
+              <h3>Skills</h3>
+              <SkillsEditor
+                skills={localResume.skills || []}
+                onChange={(updatedSkills) => {
+                  console.log('[SelectedResumeEditor] Skills updated:', updatedSkills);
+                  updateResume((draft) => {
+                    draft.skills = updatedSkills;
+                  });
+                }}
+              />
+            </div>
+          )}
+
+          {visibleSections.map((section) => (
+            <SectionEditor
+              key={section.key}
+              config={section}
+              entries={localResume[section.key] || []}
+              onFieldChange={handleEntryFieldChange}
+              onAddEntry={handleAddEntry}
+              onDeleteEntry={handleDeleteEntry}
+              onAddBullet={handleAddBullet}
+              onBulletChange={handleBulletChange}
+              onDeleteBullet={handleDeleteBullet}
+            />
+          ))}
+        </div>
+      ) : (
+        /* Tab Layout: Original tab-based view */
+        <>
+          {/* Tabs Navigation */}
+          {tabs.length > 1 && (
+            <div className="selected-resume-tabs-wrapper">
+              <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+            </div>
+          )}
+
+          {/* Tab Content */}
+          <div className="selected-resume-tab-content">
+            {activeTab === 'personalInfo' && showPersonalInfo && (
+              <div className="selected-section">
+                <h3>Personal Information</h3>
+                <PersonalInfoEditor
+                  value={localResume.personalInfo}
+                  onChange={(info) => updateResume((draft) => {
+                    draft.personalInfo = info;
+                  })}
+                  variant="compact"
+                />
+              </div>
+            )}
+
+            {activeTab === 'skills' && showSkills && (
+              <div className="selected-section">
+                <SkillsEditor
+                  skills={localResume.skills || []}
+                  onChange={(updatedSkills) => {
+                    console.log('[SelectedResumeEditor] Skills updated:', updatedSkills);
+                    updateResume((draft) => {
+                      draft.skills = updatedSkills;
+                    });
+                  }}
+                />
+              </div>
+            )}
+
+            {visibleSections.map((section) => {
+              if (activeTab === section.key) {
+                return (
+                  <SectionEditor
+                    key={section.key}
+                    config={section}
+                    entries={localResume[section.key] || []}
+                    onFieldChange={handleEntryFieldChange}
+                    onAddEntry={handleAddEntry}
+                    onDeleteEntry={handleDeleteEntry}
+                    onAddBullet={handleAddBullet}
+                    onBulletChange={handleBulletChange}
+                    onDeleteBullet={handleDeleteBullet}
+                  />
+                );
+              }
+              return null;
+            })}
+          </div>
+        </>
+      )}
     </div>
   );
 }
