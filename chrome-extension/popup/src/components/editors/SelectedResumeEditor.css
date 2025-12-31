@@ -7,6 +7,20 @@
   box-sizing: border-box;
 }
 
+/* Vertical Layout - Show all sections */
+.selected-resume-editor.vertical-layout {
+  gap: var(--space-3);
+}
+
+.selected-resume-vertical-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
 /* Tabs Wrapper */
 .selected-resume-tabs-wrapper {
   border-bottom: 1px solid var(--color-slate-200);
@@ -25,11 +39,11 @@
 .resume-summary {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-3);
-  padding: var(--space-4);
+  gap: var(--space-2);
+  padding: var(--space-3);
   background: var(--color-primary-50);
   border: 1px solid var(--color-slate-200);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   transition: all var(--transition-base);
   width: 100%;
   box-sizing: border-box;
@@ -69,11 +83,11 @@
 
 .selected-section {
   border: 1px solid var(--color-slate-200);
-  border-radius: var(--radius-lg);
-  padding: var(--space-4) var(--space-4);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
   background: var(--bg-primary);
   transition: all var(--transition-base);
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-2);
   width: 100%;
   box-sizing: border-box;
 }
@@ -91,19 +105,66 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--space-4);
-  padding-bottom: var(--space-3);
+  margin-bottom: var(--space-3);
+  padding-bottom: var(--space-2);
   border-bottom: 1px solid var(--color-slate-200);
   flex-wrap: wrap;
   gap: var(--space-2);
+  cursor: pointer;
 }
 
 .selected-section-header h3 {
   margin: 0;
-  font-size: var(--font-size-xl);
+  font-size: var(--font-size-lg);
   font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
   background-clip: text;
+  flex: 1;
+  user-select: none;
+}
+
+.selected-section-header:hover {
+  opacity: 0.8;
+}
+
+.section-toggle-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-base);
+  flex-shrink: 0;
+  margin-right: var(--space-2);
+}
+
+.section-toggle-button:hover {
+  background: var(--color-slate-100);
+  color: var(--text-primary);
+}
+
+.section-toggle-button:active {
+  transform: scale(0.95);
+}
+
+.selected-section-content {
+  transition: all var(--transition-base);
+  overflow: hidden;
+}
+
+.selected-section.collapsed .selected-section-content {
+  display: none;
+}
+
+.selected-section.collapsed .selected-section-header {
+  margin-bottom: 0;
+  border-bottom: none;
 }
 
 .selected-section-empty {
@@ -130,8 +191,8 @@
 .selected-entry {
   border: 1px solid var(--color-slate-200);
   border-radius: var(--radius-md);
-  padding: var(--space-4);
-  margin-bottom: var(--space-3);
+  padding: var(--space-3);
+  margin-bottom: var(--space-2);
   background: var(--bg-primary);
   transition: all var(--transition-base);
   width: 100%;
@@ -147,14 +208,75 @@
 .entry-fields {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: var(--space-3);
+  gap: var(--space-2);
   width: 100%;
+}
+
+/* Compact layout for experiences, education, projects */
+.entry-fields-compact {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.entry-row-top {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.entry-row-role {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.entry-row-role.entry-row-two-fields {
+  grid-template-columns: 1fr 1fr;
+}
+
+.entry-field-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.entry-field-compact label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted, #66758c);
+}
+
+.entry-field-compact input {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-slate-200);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  transition: all var(--transition-base);
+  font-family: inherit;
+}
+
+.entry-field-compact input::placeholder {
+  color: var(--text-tertiary);
+  font-style: italic;
+}
+
+.entry-field-compact input:focus {
+  border-color: var(--color-primary-500);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-primary-100);
 }
 
 .entry-field {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.25rem;
 }
 
 .entry-field label {
@@ -166,9 +288,9 @@
 .entry-field input,
 .entry-field textarea {
   width: 100%;
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-2) var(--space-3);
   border: 1px solid var(--color-slate-200);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   font-size: var(--font-size-sm);
   background: var(--bg-primary);
   color: var(--text-primary);
@@ -184,7 +306,7 @@
 
 .entry-field textarea {
   resize: vertical;
-  min-height: 90px;
+  min-height: 70px;
 }
 
 .entry-field input:focus,
@@ -195,26 +317,26 @@
 }
 
 .selected-bullets {
-  margin-top: 1rem;
+  margin-top: var(--space-3);
   border-top: 1px solid var(--border-light, #eceff8);
-  padding-top: 1rem;
+  padding-top: var(--space-3);
 }
 
 .selected-bullets-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 0.75rem;
+  margin-bottom: var(--space-2);
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.875rem;
 }
 
 .selected-bullet-row {
   display: grid;
   grid-template-columns: auto 1fr auto;
-  gap: var(--space-3);
+  gap: var(--space-2);
   align-items: center;
-  padding: var(--space-3) 0;
+  padding: var(--space-2) 0;
   border-bottom: 1px solid var(--color-slate-200);
   transition: all var(--transition-base);
 }
@@ -246,9 +368,9 @@
 
 .bullet-text-group textarea {
   width: 100%;
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-2) var(--space-3);
   border: 1px solid var(--color-slate-200);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   font-size: var(--font-size-sm);
   resize: vertical;
   background: var(--bg-primary);

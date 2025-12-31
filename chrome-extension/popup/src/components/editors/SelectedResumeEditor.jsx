@@ -4,6 +4,8 @@ import PersonalInfoEditor from './PersonalInfoEditor';
 import SkillsEditor from './SkillsEditor';
 import Tabs from '../ui/Tabs';
 import { Icon } from '../ui/Icons';
+import BulletSelectionModal from './BulletSelectionModal';
+import EntrySelectionModal from './EntrySelectionModal';
 import './SelectedResumeEditor.css';
 
 const DEFAULT_PERSONAL_INFO = {
@@ -69,14 +71,29 @@ const SECTION_CONFIG = [
 
 function SelectedResumeEditor({
   resume,
+  masterResume,
   onUpdate,
   summary,
   showPersonalInfo = true,
   showSkills = true,
-  showEducation = true
+  showEducation = true,
+  verticalLayout = false
 }) {
   const [localResume, setLocalResume] = useState(() => normalizeResume(resume));
   const [activeTab, setActiveTab] = useState('personalInfo');
+  // Initialize all sections as collapsed by default
+  const [collapsedSections, setCollapsedSections] = useState(() => ({
+    personalInfo: true,
+    skills: true,
+    education: true,
+    experiences: true,
+    projects: true,
+    customSections: true
+  }));
+  const [bulletModalOpen, setBulletModalOpen] = useState(false);
+  const [bulletModalContext, setBulletModalContext] = useState(null); // { sectionKey, entryId }
+  const [entryModalOpen, setEntryModalOpen] = useState(false);
+  const [entryModalContext, setEntryModalContext] = useState(null); // { sectionKey }
   const isLocalUpdateRef = useRef(false);
   const lastResumeRef = useRef(JSON.stringify(resume));
   const updateTimerRef = useRef(null);
@@ -155,12 +172,54 @@ function SelectedResumeEditor({
   }
 
   function handleAddEntry(sectionKey) {
+    // Open modal to select from existing entries or create new
+    setEntryModalContext({ sectionKey });
+    setEntryModalOpen(true);
+  }
+
+  function handleSelectEntry(entry) {
+    if (!entryModalContext) return;
+    const { sectionKey } = entryModalContext;
+    
+    // Create a new entry based on the selected one, with new IDs
+    const newEntry = {
+      ...entry,
+      id: generateId(sectionKey.slice(0, 3) || 'entry'),
+      selectedBullets: (entry.bullets || []).map((bullet) => ({
+        id: generateId('bullet'),
+        text: bullet.text || '',
+        relevanceScore: 0.5,
+        lineCount: null,
+        original: null,
+        rewritten: null,
+        reasoning: null
+      }))
+    };
+    
+    updateResume((draft) => {
+      draft[sectionKey] = [
+        ...(draft[sectionKey] || []),
+        newEntry
+      ];
+    });
+    
+    setEntryModalOpen(false);
+    setEntryModalContext(null);
+  }
+
+  function handleCreateNewEntry() {
+    if (!entryModalContext) return;
+    const { sectionKey } = entryModalContext;
+    
     updateResume((draft) => {
       draft[sectionKey] = [
         ...(draft[sectionKey] || []),
         createEmptyEntry(sectionKey)
       ];
     });
+    
+    setEntryModalOpen(false);
+    setEntryModalContext(null);
   }
 
   function handleDeleteEntry(sectionKey, entryId) {
@@ -170,12 +229,37 @@ function SelectedResumeEditor({
   }
 
   function handleAddBullet(sectionKey, entryId) {
+    // Find the entry to get its identifying information
+    const entry = localResume[sectionKey]?.find(e => e.id === entryId);
+    if (!entry) return;
+    
+    // Open modal to select from existing bullets or create new
+    setBulletModalContext({ sectionKey, entryId, entry });
+    setBulletModalOpen(true);
+  }
+
+  function handleSelectBullet(bullet) {
+    if (!bulletModalContext) return;
+    const { sectionKey, entryId } = bulletModalContext;
+    
+    // Ensure bullet has valid text (required by backend)
+    const bulletText = (bullet.text || '').trim();
+    if (!bulletText) {
+      alert('Cannot add bullet: bullet text is empty');
+      return;
+    }
+    
     updateResume((draft) => {
       draft[sectionKey] = (draft[sectionKey] || []).map((entry) => {
         if (entry.id !== entryId) return entry;
         const newBullet = {
           id: generateId('bullet'),
-          text: ''
+          text: bulletText,
+          relevanceScore: bullet.relevanceScore || 0.5, // Default relevance score if not provided
+          lineCount: bullet.lineCount || null,
+          original: bullet.original || null,
+          rewritten: bullet.rewritten || null,
+          reasoning: bullet.reasoning || null
         };
         return {
           ...entry,
@@ -183,6 +267,36 @@ function SelectedResumeEditor({
         };
       });
     });
+    
+    setBulletModalOpen(false);
+    setBulletModalContext(null);
+  }
+
+  function handleCreateNewBullet() {
+    if (!bulletModalContext) return;
+    const { sectionKey, entryId } = bulletModalContext;
+    
+    updateResume((draft) => {
+      draft[sectionKey] = (draft[sectionKey] || []).map((entry) => {
+        if (entry.id !== entryId) return entry;
+        const newBullet = {
+          id: generateId('bullet'),
+          text: '',
+          relevanceScore: 0.5, // Default relevance score for new bullets
+          lineCount: null,
+          original: null,
+          rewritten: null,
+          reasoning: null
+        };
+        return {
+          ...entry,
+          selectedBullets: [...(entry.selectedBullets || []), newBullet]
+        };
+      });
+    });
+    
+    setBulletModalOpen(false);
+    setBulletModalContext(null);
   }
 
   function handleDeleteBullet(sectionKey, entryId, bulletId) {
@@ -196,6 +310,190 @@ function SelectedResumeEditor({
       });
     });
   }
+
+  const toggleSection = (sectionId) => {
+    setCollapsedSections(prev => ({
+      ...prev,
+      [sectionId]: !prev[sectionId]
+    }));
+  };
+
+  const isSectionCollapsed = (sectionId) => {
+    return collapsedSections[sectionId] === true;
+  };
+
+  // Get available entries from master resume for a given section (excluding already added ones)
+  const getAvailableEntries = useCallback((sectionKey) => {
+    if (!masterResume) return [];
+    
+    const sectionMap = {
+      'experiences': masterResume.experiences || [],
+      'education': masterResume.education || [],
+      'projects': masterResume.projects || [],
+      'customSections': masterResume.customSections || []
+    };
+    
+    const masterEntries = sectionMap[sectionKey] || [];
+    const currentEntries = localResume[sectionKey] || [];
+    
+    // Create a set of identifying fields from current entries to avoid duplicates
+    const existingIdentifiers = new Set();
+    
+    currentEntries.forEach(entry => {
+      if (sectionKey === 'experiences') {
+        const key = `${entry.company?.toLowerCase().trim()}|${entry.role?.toLowerCase().trim()}`;
+        if (key !== '|') existingIdentifiers.add(key);
+      } else if (sectionKey === 'education') {
+        const key = `${entry.school?.toLowerCase().trim()}|${entry.degree?.toLowerCase().trim()}|${entry.field?.toLowerCase().trim()}`;
+        if (key !== '||') existingIdentifiers.add(key);
+      } else if (sectionKey === 'projects') {
+        const key = entry.name?.toLowerCase().trim();
+        if (key) existingIdentifiers.add(key);
+      } else if (sectionKey === 'customSections') {
+        const key = entry.title?.toLowerCase().trim();
+        if (key) existingIdentifiers.add(key);
+      }
+    });
+    
+    // Filter out entries that are already in the current resume
+    return masterEntries.filter(entry => {
+      if (sectionKey === 'experiences') {
+        const key = `${entry.company?.toLowerCase().trim()}|${entry.role?.toLowerCase().trim()}`;
+        return key !== '|' && !existingIdentifiers.has(key);
+      } else if (sectionKey === 'education') {
+        const key = `${entry.school?.toLowerCase().trim()}|${entry.degree?.toLowerCase().trim()}|${entry.field?.toLowerCase().trim()}`;
+        return key !== '||' && !existingIdentifiers.has(key);
+      } else if (sectionKey === 'projects') {
+        const key = entry.name?.toLowerCase().trim();
+        return key && !existingIdentifiers.has(key);
+      } else if (sectionKey === 'customSections') {
+        const key = entry.title?.toLowerCase().trim();
+        return key && !existingIdentifiers.has(key);
+      }
+      return true;
+    });
+  }, [masterResume, localResume]);
+
+  // Get available bullets from master resume for a given section and entry
+  const getAvailableBullets = useCallback((sectionKey, currentEntry) => {
+    if (!masterResume || !currentEntry) return [];
+    
+    const sectionMap = {
+      'experiences': masterResume.experiences || [],
+      'education': masterResume.education || [],
+      'projects': masterResume.projects || [],
+      'customSections': masterResume.customSections || []
+    };
+    
+    const entries = sectionMap[sectionKey] || [];
+    const bullets = [];
+    
+    // Find matching entry in master resume based on identifying fields
+    // Only match if the identifying fields have values and match exactly
+    let matchingEntry = null;
+    
+    if (sectionKey === 'experiences') {
+      // Match by company and role - both must have values and match
+      const currentCompany = currentEntry.company?.toLowerCase().trim();
+      const currentRole = currentEntry.role?.toLowerCase().trim();
+      
+      if (currentCompany && currentRole) {
+        matchingEntry = entries.find(entry => {
+          const entryCompany = entry.company?.toLowerCase().trim();
+          const entryRole = entry.role?.toLowerCase().trim();
+          return entryCompany && entryRole && 
+                 entryCompany === currentCompany && 
+                 entryRole === currentRole;
+        });
+      }
+    } else if (sectionKey === 'education') {
+      // Match by school, degree, and field - all must have values and match
+      const currentSchool = currentEntry.school?.toLowerCase().trim();
+      const currentDegree = currentEntry.degree?.toLowerCase().trim();
+      const currentField = currentEntry.field?.toLowerCase().trim();
+      
+      if (currentSchool && currentDegree && currentField) {
+        matchingEntry = entries.find(entry => {
+          const entrySchool = entry.school?.toLowerCase().trim();
+          const entryDegree = entry.degree?.toLowerCase().trim();
+          const entryField = entry.field?.toLowerCase().trim();
+          return entrySchool && entryDegree && entryField &&
+                 entrySchool === currentSchool && 
+                 entryDegree === currentDegree &&
+                 entryField === currentField;
+        });
+      }
+    } else if (sectionKey === 'projects') {
+      // Match by project name - must have value and match
+      const currentName = currentEntry.name?.toLowerCase().trim();
+      
+      if (currentName) {
+        matchingEntry = entries.find(entry => {
+          const entryName = entry.name?.toLowerCase().trim();
+          return entryName && entryName === currentName;
+        });
+      }
+    } else if (sectionKey === 'customSections') {
+      // Match by title - must have value and match
+      const currentTitle = currentEntry.title?.toLowerCase().trim();
+      
+      if (currentTitle) {
+        matchingEntry = entries.find(entry => {
+          const entryTitle = entry.title?.toLowerCase().trim();
+          return entryTitle && entryTitle === currentTitle;
+        });
+      }
+    }
+    
+    // Only return bullets from the matching entry
+    if (matchingEntry) {
+      // Get text of bullets already in the current entry (to avoid duplicates)
+      const existingBulletTexts = new Set(
+        (currentEntry.selectedBullets || [])
+          .map(b => (b.text || '').trim().toLowerCase())
+          .filter(text => text.length > 0)
+      );
+      
+      (matchingEntry.bullets || []).forEach((bullet) => {
+        const bulletText = (bullet.text || '').trim();
+        const bulletTextLower = bulletText.toLowerCase();
+        
+        // Skip if this bullet is already in the current entry
+        if (existingBulletTexts.has(bulletTextLower)) {
+          return;
+        }
+        
+        bullets.push({
+          id: bullet.id,
+          text: bulletText,
+          parentEntry: {
+            company: matchingEntry.company,
+            school: matchingEntry.school,
+            name: matchingEntry.name,
+            title: matchingEntry.title,
+            role: matchingEntry.role,
+            degree: matchingEntry.degree
+          }
+        });
+      });
+    } else {
+      // No matching entry found - return empty array (don't show bullets from other entries)
+      console.log('[BulletSelection] No matching entry found for:', {
+        sectionKey,
+        currentEntry: {
+          company: currentEntry.company,
+          role: currentEntry.role,
+          school: currentEntry.school,
+          degree: currentEntry.degree,
+          field: currentEntry.field,
+          name: currentEntry.name,
+          title: currentEntry.title
+        }
+      });
+    }
+    
+    return bullets;
+  }, [masterResume]);
 
   const visibleSections = useMemo(() => {
     return SECTION_CONFIG.filter((section) => {
@@ -214,7 +512,7 @@ function SelectedResumeEditor({
       tabList.push({ id: 'personalInfo', label: 'Personal Info' });
     }
     
-    if (showSkills) {
+    if (showSkills && localResume.skills && localResume.skills.length > 0) {
       tabList.push({ id: 'skills', label: 'Skills' });
     }
     
@@ -223,7 +521,7 @@ function SelectedResumeEditor({
     });
     
     return tabList;
-  }, [showPersonalInfo, showSkills, visibleSections]);
+  }, [showPersonalInfo, showSkills, visibleSections, localResume.skills]);
 
   // Set initial active tab when tabs change
   useEffect(() => {
@@ -238,13 +536,13 @@ function SelectedResumeEditor({
   }, [showSkills, localResume.skills]);
 
   return (
-    <div className="selected-resume-editor">
+    <div className={`selected-resume-editor ${verticalLayout ? 'vertical-layout' : ''}`}>
       {summary && (
         <div className="resume-summary">
           <div className="summary-item">
             <span className="summary-label">One-Page Fit</span>
-            <span className={`summary-value ${fitsOnePage ? 'summary-good' : 'summary-warning'}`}>
-              {fitsOnePage ? (
+            <span className={`summary-value ${summary.fitsOnePage ? 'summary-good' : 'summary-warning'}`}>
+              {summary.fitsOnePage ? (
                 <>
                   <Icon name="checkCircle" size={16} style={{ marginRight: '4px', verticalAlign: 'middle', display: 'inline-block' }} />
                   Fits on one page
@@ -260,7 +558,7 @@ function SelectedResumeEditor({
           <div className="summary-item">
             <span className="summary-label">Estimated Lines</span>
             <span className="summary-value">
-              {lineTotals} / {maxLines}
+              {summary.totalLineCount || lineTotals} / {summary.maxLines || maxLines}
             </span>
           </div>
           {summary.processingTime && (
@@ -272,49 +570,38 @@ function SelectedResumeEditor({
         </div>
       )}
 
-      {/* Tabs Navigation */}
-      {tabs.length > 1 && (
-        <div className="selected-resume-tabs-wrapper">
-          <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
-        </div>
-      )}
+      {verticalLayout ? (
+        /* Vertical Layout: Show all sections in resume order */
+        <div className="selected-resume-vertical-content">
+          {showPersonalInfo && (
+            <CollapsibleSection
+              sectionId="personalInfo"
+              title="Personal Information"
+              isCollapsed={isSectionCollapsed('personalInfo')}
+              onToggle={() => toggleSection('personalInfo')}
+            >
+              <PersonalInfoEditor
+                value={localResume.personalInfo}
+                onChange={(info) => updateResume((draft) => {
+                  draft.personalInfo = info;
+                })}
+                variant="compact"
+              />
+            </CollapsibleSection>
+          )}
 
-      {/* Tab Content */}
-      <div className="selected-resume-tab-content">
-        {activeTab === 'personalInfo' && showPersonalInfo && (
-          <div className="selected-section">
-            <h3>Personal Information</h3>
-            <PersonalInfoEditor
-              value={localResume.personalInfo}
-              onChange={(info) => updateResume((draft) => {
-                draft.personalInfo = info;
-              })}
-              variant="compact"
-            />
-          </div>
-        )}
-
-        {activeTab === 'skills' && showSkills && (
-          <div className="selected-section">
-            <SkillsEditor
-              skills={localResume.skills || []}
-              onChange={(updatedSkills) => {
-                console.log('[SelectedResumeEditor] Skills updated:', updatedSkills);
-                updateResume((draft) => {
-                  draft.skills = updatedSkills;
-                });
-              }}
-            />
-          </div>
-        )}
-
-        {visibleSections.map((section) => {
-          if (activeTab === section.key) {
-            return (
+          {/* Education - matches LaTeX order */}
+          {visibleSections.find(s => s.key === 'education') && (
+            <CollapsibleSection
+              sectionId="education"
+              title={visibleSections.find(s => s.key === 'education')?.title || 'Education'}
+              isCollapsed={isSectionCollapsed('education')}
+              onToggle={() => toggleSection('education')}
+            >
               <SectionEditor
-                key={section.key}
-                config={section}
-                entries={localResume[section.key] || []}
+                key="education"
+                config={visibleSections.find(s => s.key === 'education')}
+                entries={localResume.education || []}
                 onFieldChange={handleEntryFieldChange}
                 onAddEntry={handleAddEntry}
                 onDeleteEntry={handleDeleteEntry}
@@ -322,11 +609,211 @@ function SelectedResumeEditor({
                 onBulletChange={handleBulletChange}
                 onDeleteBullet={handleDeleteBullet}
               />
-            );
-          }
-          return null;
-        })}
+            </CollapsibleSection>
+          )}
+
+          {/* Experience - matches LaTeX order */}
+          {visibleSections.find(s => s.key === 'experiences') && (
+            <CollapsibleSection
+              sectionId="experiences"
+              title={visibleSections.find(s => s.key === 'experiences')?.title || 'Work Experience'}
+              isCollapsed={isSectionCollapsed('experiences')}
+              onToggle={() => toggleSection('experiences')}
+            >
+              <SectionEditor
+                key="experiences"
+                config={visibleSections.find(s => s.key === 'experiences')}
+                entries={localResume.experiences || []}
+                onFieldChange={handleEntryFieldChange}
+                onAddEntry={handleAddEntry}
+                onDeleteEntry={handleDeleteEntry}
+                onAddBullet={handleAddBullet}
+                onBulletChange={handleBulletChange}
+                onDeleteBullet={handleDeleteBullet}
+              />
+            </CollapsibleSection>
+          )}
+
+          {/* Projects - matches LaTeX order */}
+          {visibleSections.find(s => s.key === 'projects') && (
+            <CollapsibleSection
+              sectionId="projects"
+              title={visibleSections.find(s => s.key === 'projects')?.title || 'Projects'}
+              isCollapsed={isSectionCollapsed('projects')}
+              onToggle={() => toggleSection('projects')}
+            >
+              <SectionEditor
+                key="projects"
+                config={visibleSections.find(s => s.key === 'projects')}
+                entries={localResume.projects || []}
+                onFieldChange={handleEntryFieldChange}
+                onAddEntry={handleAddEntry}
+                onDeleteEntry={handleDeleteEntry}
+                onAddBullet={handleAddBullet}
+                onBulletChange={handleBulletChange}
+                onDeleteBullet={handleDeleteBullet}
+              />
+            </CollapsibleSection>
+          )}
+
+          {/* Skills - matches LaTeX order */}
+          {showSkills && localResume.skills && localResume.skills.length > 0 && (
+            <CollapsibleSection
+              sectionId="skills"
+              title="Skills"
+              isCollapsed={isSectionCollapsed('skills')}
+              onToggle={() => toggleSection('skills')}
+            >
+              <SkillsEditor
+                skills={localResume.skills || []}
+                onChange={(updatedSkills) => {
+                  console.log('[SelectedResumeEditor] Skills updated:', updatedSkills);
+                  updateResume((draft) => {
+                    draft.skills = updatedSkills;
+                  });
+                }}
+              />
+            </CollapsibleSection>
+          )}
+
+          {/* Custom Sections - matches LaTeX order */}
+          {visibleSections.find(s => s.key === 'customSections') && (
+            <CollapsibleSection
+              sectionId="customSections"
+              title={visibleSections.find(s => s.key === 'customSections')?.title || 'Additional Sections'}
+              isCollapsed={isSectionCollapsed('customSections')}
+              onToggle={() => toggleSection('customSections')}
+            >
+              <SectionEditor
+                key="customSections"
+                config={visibleSections.find(s => s.key === 'customSections')}
+                entries={localResume.customSections || []}
+                onFieldChange={handleEntryFieldChange}
+                onAddEntry={handleAddEntry}
+                onDeleteEntry={handleDeleteEntry}
+                onAddBullet={handleAddBullet}
+                onBulletChange={handleBulletChange}
+                onDeleteBullet={handleDeleteBullet}
+              />
+            </CollapsibleSection>
+          )}
+        </div>
+      ) : (
+        /* Tab Layout: Original tab-based view */
+        <>
+          {/* Tabs Navigation */}
+          {tabs.length > 1 && (
+            <div className="selected-resume-tabs-wrapper">
+              <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+            </div>
+          )}
+
+          {/* Tab Content */}
+          <div className="selected-resume-tab-content">
+            {activeTab === 'personalInfo' && showPersonalInfo && (
+              <div className="selected-section">
+                <h3>Personal Information</h3>
+                <PersonalInfoEditor
+                  value={localResume.personalInfo}
+                  onChange={(info) => updateResume((draft) => {
+                    draft.personalInfo = info;
+                  })}
+                  variant="compact"
+                />
+              </div>
+            )}
+
+            {activeTab === 'skills' && showSkills && localResume.skills && localResume.skills.length > 0 && (
+              <div className="selected-section">
+                <SkillsEditor
+                  skills={localResume.skills || []}
+                  onChange={(updatedSkills) => {
+                    console.log('[SelectedResumeEditor] Skills updated:', updatedSkills);
+                    updateResume((draft) => {
+                      draft.skills = updatedSkills;
+                    });
+                  }}
+                />
+              </div>
+            )}
+
+            {visibleSections.map((section) => {
+              if (activeTab === section.key) {
+                return (
+                  <SectionEditor
+                    key={section.key}
+                    config={section}
+                    entries={localResume[section.key] || []}
+                    onFieldChange={handleEntryFieldChange}
+                    onAddEntry={handleAddEntry}
+                    onDeleteEntry={handleDeleteEntry}
+                    onAddBullet={handleAddBullet}
+                    onBulletChange={handleBulletChange}
+                    onDeleteBullet={handleDeleteBullet}
+                  />
+                );
+              }
+              return null;
+            })}
+          </div>
+        </>
+      )}
+
+      {/* Bullet Selection Modal */}
+      {bulletModalOpen && bulletModalContext && bulletModalContext.entry && (
+        <BulletSelectionModal
+          sectionKey={bulletModalContext.sectionKey}
+          availableBullets={getAvailableBullets(bulletModalContext.sectionKey, bulletModalContext.entry)}
+          onSelectBullet={handleSelectBullet}
+          onCreateNew={handleCreateNewBullet}
+          onClose={() => {
+            setBulletModalOpen(false);
+            setBulletModalContext(null);
+          }}
+        />
+      )}
+
+      {/* Entry Selection Modal */}
+      {entryModalOpen && entryModalContext && (
+        <EntrySelectionModal
+          sectionKey={entryModalContext.sectionKey}
+          availableEntries={getAvailableEntries(entryModalContext.sectionKey)}
+          onSelectEntry={handleSelectEntry}
+          onCreateNew={handleCreateNewEntry}
+          onClose={() => {
+            setEntryModalOpen(false);
+            setEntryModalContext(null);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function CollapsibleSection({ sectionId, title, isCollapsed, onToggle, children }) {
+  return (
+    <div className={`selected-section ${isCollapsed ? 'collapsed' : ''}`}>
+      <div className="selected-section-header" onClick={onToggle}>
+        <button
+          className="section-toggle-button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggle();
+          }}
+          aria-label={isCollapsed ? `Expand ${title}` : `Collapse ${title}`}
+        >
+          <Icon 
+            name={isCollapsed ? 'chevronRight' : 'chevronDown'} 
+            size={16} 
+          />
+        </button>
+        <h3>{title}</h3>
       </div>
+      {!isCollapsed && (
+        <div className="selected-section-content">
+          {children}
+        </div>
+      )}
     </div>
   );
 }
@@ -341,6 +828,11 @@ function SectionEditor({
   onBulletChange,
   onDeleteBullet
 }) {
+  // Custom layout for experiences
+  const isExperience = config.key === 'experiences';
+  const isEducation = config.key === 'education';
+  const isProject = config.key === 'projects';
+
   return (
     <div className="selected-section">
       <div className="selected-section-header">
@@ -349,34 +841,179 @@ function SectionEditor({
           + Add {config.title.replace(/s$/, '')}
         </button>
       </div>
+      <div className="selected-section-content">
 
       {entries.length === 0 ? (
         <div className="selected-section-empty">{config.emptyMessage}</div>
       ) : (
         entries.map((entry) => (
           <div key={entry.id} className="selected-entry">
-            <div className="entry-fields">
-              {config.fields.map((field) => (
-                <div key={field.name} className="entry-field">
-                  <label>{field.label}</label>
-                  {field.multiline ? (
-                    <textarea
-                      value={entry[field.name] || ''}
-                      onChange={(e) => onFieldChange(config.key, entry.id, field.name, e.target.value)}
-                      placeholder={field.placeholder}
-                      rows={3}
-                    />
-                  ) : (
+            {isExperience ? (
+              /* Compact Experience Layout: Company | Start | End on one line, Role below */
+              <div className="entry-fields-compact">
+                <div className="entry-row-top">
+                  <div className="entry-field-compact entry-field-company">
+                    <label>Company</label>
                     <input
                       type="text"
-                      value={entry[field.name] || ''}
-                      onChange={(e) => onFieldChange(config.key, entry.id, field.name, e.target.value)}
-                      placeholder={field.placeholder}
+                      value={entry.company || ''}
+                      onChange={(e) => onFieldChange(config.key, entry.id, 'company', e.target.value)}
+                      placeholder="e.g., Google"
                     />
-                  )}
+                  </div>
+                  <div className="entry-field-compact entry-field-date">
+                    <label>Start</label>
+                    <input
+                      type="text"
+                      value={entry.startDate || ''}
+                      onChange={(e) => onFieldChange(config.key, entry.id, 'startDate', e.target.value)}
+                      placeholder="e.g., Jun 2022"
+                    />
+                  </div>
+                  <div className="entry-field-compact entry-field-date">
+                    <label>End</label>
+                    <input
+                      type="text"
+                      value={entry.endDate || ''}
+                      onChange={(e) => onFieldChange(config.key, entry.id, 'endDate', e.target.value)}
+                      placeholder="e.g., Present"
+                    />
+                  </div>
                 </div>
-              ))}
-            </div>
+                <div className="entry-row-role">
+                  <div className="entry-field-compact entry-field-role">
+                    <label>Role</label>
+                    <input
+                      type="text"
+                      value={entry.role || ''}
+                      onChange={(e) => onFieldChange(config.key, entry.id, 'role', e.target.value)}
+                      placeholder="e.g., Software Engineer"
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : isEducation ? (
+              /* Compact Education Layout: School | Start | End on one line, Degree/Field below */
+              <div className="entry-fields-compact">
+                <div className="entry-row-top">
+                  <div className="entry-field-compact entry-field-company">
+                    <label>School</label>
+                    <input
+                      type="text"
+                      value={entry.school || ''}
+                      onChange={(e) => onFieldChange(config.key, entry.id, 'school', e.target.value)}
+                      placeholder="e.g., Stanford University"
+                    />
+                  </div>
+                  <div className="entry-field-compact entry-field-date">
+                    <label>Start</label>
+                    <input
+                      type="text"
+                      value={entry.startDate || ''}
+                      onChange={(e) => onFieldChange(config.key, entry.id, 'startDate', e.target.value)}
+                      placeholder="e.g., Sep 2018"
+                    />
+                  </div>
+                  <div className="entry-field-compact entry-field-date">
+                    <label>End</label>
+                    <input
+                      type="text"
+                      value={entry.endDate || ''}
+                      onChange={(e) => onFieldChange(config.key, entry.id, 'endDate', e.target.value)}
+                      placeholder="e.g., Jun 2022"
+                    />
+                  </div>
+                </div>
+                <div className="entry-row-role entry-row-two-fields">
+                  <div className="entry-field-compact entry-field-role">
+                    <label>Degree</label>
+                    <input
+                      type="text"
+                      value={entry.degree || ''}
+                      onChange={(e) => onFieldChange(config.key, entry.id, 'degree', e.target.value)}
+                      placeholder="e.g., B.S."
+                    />
+                  </div>
+                  <div className="entry-field-compact entry-field-role">
+                    <label>Field</label>
+                    <input
+                      type="text"
+                      value={entry.field || ''}
+                      onChange={(e) => onFieldChange(config.key, entry.id, 'field', e.target.value)}
+                      placeholder="e.g., Computer Science"
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : isProject ? (
+              /* Compact Project Layout: Name | Start | End on one line, Description/Technologies below */
+              <div className="entry-fields-compact">
+                <div className="entry-row-top">
+                  <div className="entry-field-compact entry-field-company">
+                    <label>Project Name</label>
+                    <input
+                      type="text"
+                      value={entry.name || ''}
+                      onChange={(e) => onFieldChange(config.key, entry.id, 'name', e.target.value)}
+                      placeholder="e.g., Distributed Task Scheduler"
+                    />
+                  </div>
+                  <div className="entry-field-compact entry-field-date">
+                    <label>Start</label>
+                    <input
+                      type="text"
+                      value={entry.startDate || ''}
+                      onChange={(e) => onFieldChange(config.key, entry.id, 'startDate', e.target.value)}
+                      placeholder="e.g., Jan 2022"
+                    />
+                  </div>
+                  <div className="entry-field-compact entry-field-date">
+                    <label>End</label>
+                    <input
+                      type="text"
+                      value={entry.endDate || ''}
+                      onChange={(e) => onFieldChange(config.key, entry.id, 'endDate', e.target.value)}
+                      placeholder="e.g., May 2022"
+                    />
+                  </div>
+                </div>
+                <div className="entry-row-role">
+                  <div className="entry-field-compact entry-field-role">
+                    <label>Technologies</label>
+                    <input
+                      type="text"
+                      value={entry.technologies || ''}
+                      onChange={(e) => onFieldChange(config.key, entry.id, 'technologies', e.target.value)}
+                      placeholder="e.g., Go, Kubernetes"
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* Default layout for custom sections */
+              <div className="entry-fields">
+                {config.fields.map((field) => (
+                  <div key={field.name} className="entry-field">
+                    <label>{field.label}</label>
+                    {field.multiline ? (
+                      <textarea
+                        value={entry[field.name] || ''}
+                        onChange={(e) => onFieldChange(config.key, entry.id, field.name, e.target.value)}
+                        placeholder={field.placeholder}
+                        rows={3}
+                      />
+                    ) : (
+                      <input
+                        type="text"
+                        value={entry[field.name] || ''}
+                        onChange={(e) => onFieldChange(config.key, entry.id, field.name, e.target.value)}
+                        placeholder={field.placeholder}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
 
             <div className="selected-bullets">
               <div className="selected-bullets-header">
@@ -439,6 +1076,7 @@ function SectionEditor({
           </div>
         ))
       )}
+      </div>
     </div>
   );
 }

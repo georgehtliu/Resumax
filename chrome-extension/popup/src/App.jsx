@@ -326,174 +326,146 @@ function App() {
         // Initialize master resume with comprehensive realistic mock data
         const mockMasterResume = {
           personalInfo: {
-            firstName: 'Jane',
-            lastName: 'Doe',
-            email: 'jane.doe@example.com',
-            phone: '+1 (555) 123-4567',
-            linkedin: 'linkedin.com/in/janedoe',
-            github: 'github.com/janedoe'
+            firstName: 'George',
+            lastName: 'Liu',
+            email: 'georgeliu220@gmail.com',
+            phone: '+1 (613) 261-6934',
+            linkedin: 'linkedin.com/in/georgehtliu',
+            github: 'github.com/georgehtliu'
           },
           skills: [
             {
               id: 'skill-1',
-              title: 'Languages',
-              skills: ['Python', 'JavaScript', 'Go', 'Java', 'SQL']
+              title: 'Programming Languages',
+              skills: ['C++', 'C#', 'JavaScript', 'Golang', 'Python', 'Java']
             },
             {
               id: 'skill-2',
-              title: 'Frameworks & Libraries',
-              skills: ['React', 'Node.js', 'Django', 'Spring Boot', 'GraphQL']
+              title: 'Frameworks',
+              skills: ['.NET', 'Node', 'Express', 'React', 'Angular', 'FastAPI', 'LangGraph', 'LangChain']
             },
             {
               id: 'skill-3',
-              title: 'Cloud & DevOps',
-              skills: ['AWS', 'Docker', 'Kubernetes', 'Terraform', 'CI/CD']
+              title: 'Tools',
+              skills: ['AWS', 'Kafka', 'RabbitMQ', 'Jenkins', 'Git', 'Docker', 'Kubernetes', 'Splunk', 'MongoDB', 'PostgreSQL', 'Redis']
+            },
+            {
+              id: 'skill-4',
+              title: 'Concepts',
+              skills: ['Back-End Development', 'Full-Stack Development', 'Networking', 'Microservices', 'CI/CD', 'Automation', 'Agile']
             }
           ],
           experiences: [
             {
               id: 'exp-1',
-              company: 'Google',
-              role: 'Software Engineer II',
-              startDate: 'Jun 2022',
-              endDate: 'Present',
+              company: 'Tesla',
+              role: 'Software Engineer Intern (AI Agent/Back-End)',
+              startDate: 'May 2025',
+              endDate: 'Aug. 2025',
+              location: 'Fremont, CA',
               bullets: [
-                { id: 'bullet-1', text: 'Scaled Go/Python microservices for 10M+ daily requests while keeping uptime at 99.9%' },
-                { id: 'bullet-2', text: 'Cut API latency 40% by tuning SQL and cache layers, saving $50K in annual infra costs through smarter resource allocation and query optimization strategies' },
-                { id: 'bullet-3', text: 'Led three engineers to launch recommendations that raised engagement 25% and revenue $2M' },
-                { id: 'bullet-4', text: 'Automated Jenkins and Docker pipelines enabling daily releases and trimming deploy time 60%, reducing manual errors and increasing team productivity through streamlined workflows' },
-                { id: 'bullet-5', text: 'Built REST and gRPC services for 5M+ calls with sub-100ms latency to speed the mobile app' },
-                { id: 'bullet-6', text: 'Mentored two junior engineers through reviews and design sessions, boosting velocity 20% and improving code quality standards across the team through knowledge sharing' }
+                { id: 'bullet-1', text: 'Automated 90% of Tier-1 vehicle support inquiries by developing an AI agent via LangGraph/FastAPI.' },
+                { id: 'bullet-2', text: 'Developed agent routing for conditional intent, selecting RAG data or Elasticsearch-optimized tool calls.' },
+                { id: 'bullet-3', text: 'Engineered async SSE pipeline to stream real-time tokens, reducing time-to-first-byte by 200ms.' },
+                { id: 'bullet-4', text: 'Vectorized policy docs into a RAG system, increasing answer accuracy by 82% across valid evaluation datasets.' },
+                { id: 'bullet-5', text: 'Implemented Llama Guard moderation to enforce policy compliance and prevent unsafe customer queries.' }
               ]
             },
             {
               id: 'exp-2',
-              company: 'Meta',
-              role: 'Software Engineering Intern',
-              startDate: 'Jun 2021',
-              endDate: 'Aug 2021',
+              company: 'Tesla',
+              role: 'Software Engineer Intern (Full-Stack)',
+              startDate: 'Jan. 2025',
+              endDate: 'May 2025',
+              location: 'Fremont, CA',
               bullets: [
-                { id: 'bullet-9', text: 'Shipped accessible Marketplace UI components that lifted conversion by 15%' },
-                { id: 'bullet-10', text: 'Built WebSocket plus Redis alerts trimming latency 30% and boosting engagement through real-time updates and improved user experience metrics' },
-                { id: 'bullet-11', text: 'Optimized GraphQL queries to cut server load 25% and speed page renders' },
-                { id: 'bullet-12', text: 'Launched A/B framework enabling data-led releases and reducing regression risk while increasing experiment velocity and team confidence in deployments' },
-                { id: 'bullet-13', text: 'Delivered WCAG AA compliant flows with full keyboard navigation support' },
-                { id: 'bullet-14', text: 'Implemented optimistic UI patterns to drop perceived latency from 400ms to 120ms, directly improving user satisfaction scores and reducing bounce rates through faster interactions' }
+                { id: 'bullet-6', text: 'Re-architected vehicle registration flow into dynamic, rule-driven steps serving 5M+ customers across all regions.' },
+                { id: 'bullet-7', text: 'Built step-persistence APIs in C#/.NET with Angular UI, reducing vehicle registration drop-off by 40%.' },
+                { id: 'bullet-8', text: 'Generated region-aware JSON rules enforcing vehicle registration compliance across 10+ countries globally.' },
+                { id: 'bullet-9', text: 'Slashed read-heavy API latency by 62% (8s to 3s) by implementing Redis caching for complex regional rules.' },
+                { id: 'bullet-10', text: 'Developed idempotent K8s CronJob service to port 4M+ records to MongoDB; offloaded 70% of MySQL load.' }
               ]
             },
             {
               id: 'exp-3',
-              company: 'Amazon Web Services',
-              role: 'Software Development Engineer Intern',
-              startDate: 'Jun 2020',
-              endDate: 'Aug 2020',
+              company: 'Ford Motor Company',
+              role: 'Software Developer Intern (Vehicle Platform)',
+              startDate: 'Sep. 2024',
+              endDate: 'Dec. 2024',
+              location: 'Waterloo, ON',
               bullets: [
-                { id: 'bullet-15', text: 'Automated Java Spring tooling that saved 40 weekly hours on deployment prep' },
-                { id: 'bullet-16', text: 'Built CloudWatch and Lambda alerts that halved incident detection time, reducing MTTR from 45 minutes to under 20 minutes through proactive monitoring' },
-                { id: 'bullet-17', text: 'Tuned DynamoDB and ElastiCache to cut query latency by 35%' },
-                { id: 'bullet-18', text: 'Containerized legacy batch jobs onto Fargate to lower ops overhead by 60% and improve resource utilization, enabling better cost management and scalability' },
-                { id: 'bullet-19', text: 'Implemented blue/green deployment strategy to eliminate release downtime' },
-                { id: 'bullet-20', text: 'Published CloudFormation modules standardizing VPC and IAM provisioning, reducing setup time from days to hours and ensuring consistent security configurations across all environments' }
+                { id: 'bullet-11', text: 'Leveraged Kotlin coroutines to visualize async driver-assist signals, ensuring sub-50ms UI updates on IVI.' },
+                { id: 'bullet-12', text: 'Engineered HAL layer C++ code to integrate 12 AUTOSAR skeletons with Android\'s service layer Java API.' },
+                { id: 'bullet-13', text: 'Developed rigorous GTest & JUnit testing framework enforcing 95%+ coverage, ensuring stable vehicle software.' }
+              ]
+            },
+            {
+              id: 'exp-4',
+              company: 'Huawei (Canada R&D)',
+              role: 'Software Engineer Intern (Compiler)',
+              startDate: 'May 2023',
+              endDate: 'Jul. 2023',
+              location: 'Toronto, ON',
+              bullets: [
+                { id: 'bullet-14', text: 'Implemented 10 compiler passes in C++ lowering MLIR to optimized LLVM IR for the Ascend AI accelerator.' },
+                { id: 'bullet-15', text: 'Applied loop tiling & polyhedral analysis to maximize cache utilization, increasing hardware throughput by 40%.' }
+              ]
+            },
+            {
+              id: 'exp-5',
+              company: 'Trend Micro',
+              role: 'Software Developer Intern (Back-End)',
+              startDate: 'Sep. 2022',
+              endDate: 'Dec. 2022',
+              location: 'Ottawa, ON',
+              bullets: [
+                { id: 'bullet-16', text: 'Developed secure multi-cloud authentication with OIDC protocol using Golang and AWS Lambda functions.' },
+                { id: 'bullet-17', text: 'Automated CronJob DynamoDB security metric extraction to S3 and improved reporting, saving 15+ hrs/week.' }
+              ]
+            },
+            {
+              id: 'exp-6',
+              company: 'BlackBerry',
+              role: 'Software Developer Intern (Full-Stack)',
+              startDate: 'Jan. 2022',
+              endDate: 'Apr. 2022',
+              location: 'Ottawa, ON',
+              bullets: [
+                { id: 'bullet-18', text: 'Drove Eclipse-to-Electron IDE migration; unified 10+ trace views using React/TS and Trace Compass API.' },
+                { id: 'bullet-19', text: 'Designed 15 Java API endpoints to serve kernel trace data, supporting 250+ daily analysis runs within new IDE.' }
               ]
             }
           ],
           education: [
             {
               id: 'edu-1',
-              school: 'Stanford University',
-              degree: 'B.S.',
-              field: 'Computer Science',
-              startDate: 'Sep 2018',
-              endDate: 'Jun 2022',
+              school: 'University of Waterloo',
+              degree: 'Bachelor of Computer Science',
+              field: 'Co-Op',
+              startDate: 'Sep. 2020',
+              endDate: 'Dec. 2025',
               bullets: [
-                { id: 'bullet-18', text: 'GPA 3.9/4.0, Magna Cum Laude, Dean\'s List in every term' },
-                { id: 'bullet-19', text: 'Core courses: Algorithms, Machine Learning, Distributed Systems, Databases' },
-                { id: 'bullet-20', text: 'Teaching assistant for CS161 supporting 50+ students with labs and grading' },
-                { id: 'bullet-21', text: 'ML lab researcher building computer vision models for real-world datasets' }
+                { id: 'bullet-20', text: 'Relevant Coursework: Algorithms, Operating Systems, Distributed Systems, Compilers, Software Architecture' }
               ]
             }
           ],
           projects: [
             {
               id: 'proj-1',
-              name: 'Distributed Task Scheduler',
-              description: 'High-performance distributed task scheduling system with fault tolerance',
-              technologies: 'Go, Kubernetes, Redis, PostgreSQL, gRPC',
-              startDate: 'Jan 2022',
-              endDate: 'May 2022',
+              name: 'Resume Master',
+              description: 'AI-powered resume optimization platform',
+              technologies: 'Python, React, FastAPI, WebSocket, PostgreSQL, OAuth 2.0',
+              startDate: '',
+              endDate: '',
               bullets: [
-                { id: 'bullet-22', text: 'Built Go + Kubernetes scheduler processing 100K concurrent jobs at 99.95% uptime' },
-                { id: 'bullet-23', text: 'Implemented Raft-based leader election to coordinate task execution' },
-                { id: 'bullet-24', text: 'Designed failover with replication to prevent task loss during node outages' },
-                { id: 'bullet-25', text: 'Delivered Prometheus and Grafana dashboards for real-time system health' }
-              ]
-            },
-            {
-              id: 'proj-2',
-              name: 'E-commerce Platform',
-              description: 'Full-stack e-commerce platform with payment integration and inventory management',
-              technologies: 'React, Node.js, Express, PostgreSQL, Stripe API, AWS',
-              startDate: 'Sep 2020',
-              endDate: 'Dec 2021',
-              bullets: [
-                { id: 'bullet-26', text: 'Shipped commerce app for 1000+ users with live inventory updates and order tracking' },
-                { id: 'bullet-27', text: 'Integrated Stripe payments processing $50K+ with PCI-safe fraud checks' },
-                { id: 'bullet-28', text: 'Implemented JWT RBAC to secure both admin and customer flows' },
-                { id: 'bullet-29', text: 'Deployed on AWS EC2, RDS, S3, and CloudFront with backups and auto scaling' },
-                { id: 'bullet-30', text: 'Tuned Postgres schema and queries to cut page load times by 45%' }
-              ]
-            },
-            {
-              id: 'proj-3',
-              name: 'Machine Learning Recommender System',
-              description: 'Content-based recommendation engine for video streaming platform',
-              technologies: 'Python, TensorFlow, Scikit-learn, Flask, Redis',
-              startDate: 'Jan 2021',
-              endDate: 'May 2021',
-              bullets: [
-                { id: 'bullet-31', text: 'Trained hybrid recommendation model reaching 85% accuracy on streaming content' },
-                { id: 'bullet-32', text: 'Processed 1M+ interactions with pandas pipelines and feature engineering' },
-                { id: 'bullet-33', text: 'Hosted Flask API serving 10K requests per minute at 50ms latency' },
-                { id: 'bullet-34', text: 'Added Redis caching to drop inference time 70% for returning users' }
-              ]
-            },
-            {
-              id: 'proj-4',
-              name: 'Real-time Chat Application',
-              description: 'WebSocket-based chat application with end-to-end encryption',
-              technologies: 'React, Node.js, Socket.io, MongoDB, Redis, Docker',
-              startDate: 'Jun 2020',
-              endDate: 'Aug 2020',
-              bullets: [
-                { id: 'bullet-35', text: 'Built WebSocket chat supporting 500 users with persistent message storage' },
-                { id: 'bullet-36', text: 'Implemented end-to-end encrypted messaging using the Web Crypto API' },
-                { id: 'bullet-37', text: 'Scaled Node.js and MongoDB backend with Redis caching under 100ms latency' }
+                { id: 'bullet-21', text: 'Architected RAG resume optimizer using hybrid vector search (semantic+keyword) for 90%+ relevance accuracy.' },
+                { id: 'bullet-22', text: 'Implemented unified optimizer consolidating tasks into one GPT-4o-mini call, cutting API costs by 66%.' },
+                { id: 'bullet-23', text: 'Developed React/FastAPI Chrome extension with async backend for real-time collaboration via WebSockets.' },
+                { id: 'bullet-24', text: 'Designed adaptive selection algorithm using 4-phase compression strategy for strict one-page constraints.' }
               ]
             }
           ],
-          customSections: [
-            {
-              id: 'custom-2',
-              title: 'Awards & Recognition',
-              subtitle: '',
-              bullets: [
-                { id: 'bullet-45', text: 'Won Google Hackathon 2022 with an AI-powered code review companion' },
-                { id: 'bullet-46', text: 'Received Stanford Engineering Excellence Award 2021 for top 5% GPA' },
-                { id: 'bullet-47', text: 'Published consensus research at ACM Distributed Computing 2021' },
-                { id: 'bullet-48', text: 'Won Meta intern hackathon with an accessibility helper for visually impaired users' }
-              ]
-            },
-            {
-              id: 'custom-3',
-              title: 'Certifications',
-              subtitle: '',
-              bullets: [
-                { id: 'bullet-49', text: 'AWS Certified Solutions Architect – Associate (2022)' },
-                { id: 'bullet-50', text: 'Kubernetes Certified Application Developer (CKAD) (2023)' },
-                { id: 'bullet-51', text: 'Google Cloud Professional Cloud Architect (2023)' }
-              ]
-            }
-          ],
+          customSections: [],
           totalBullets: 0
         };
         
@@ -1242,6 +1214,7 @@ function App() {
                 <GenerateResume
                   masterResume={resume}
                   onSave={handleResumeSaved}
+                  onResumeUpdate={saveResumeData}
                   onSelectionComplete={handleSelectionComplete}
                   hideExtract={true}
                 />

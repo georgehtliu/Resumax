@@ -1,8 +1,9 @@
-import React, { useState, startTransition } from 'react';
+import React, { useState, startTransition, useEffect, useRef } from 'react';
 import JobMatcher from './JobMatcher';
 import SelectedResumeEditor from './editors/SelectedResumeEditor';
 import LatexPreviewModal from './modals/LatexPreviewModal';
 import KeywordScanner from './KeywordScanner';
+import PdfViewerWithOverlays from './pdf/PdfViewerWithOverlays';
 import { storageService } from '../services/storage';
 import { supabase } from '../config/supabase';
 import { buildStructuredResume, selectResume, renderLatex, scanKeywords } from '../services/api';
@@ -27,7 +28,7 @@ import './GenerateResume.css';
  * 
  * Tab 2: Generate optimized resume from job description
  */
-function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract = false }) {
+function GenerateResume({ masterResume, onSave, onResumeUpdate, onSelectionComplete, hideExtract = false }) {
   const [currentJob, setCurrentJob] = useState(null);
   const [optimizationResult, setOptimizationResult] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -211,7 +212,38 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
 
   function handleResumeUpdate(updatedResume) {
     setCustomizedResume(updatedResume);
+    // Don't auto-trigger PDF re-render - user must manually regenerate or add skills
   }
+
+  // Auto-generate LaTeX when resume is generated or updated
+  useEffect(() => {
+    if (optimizationResult) {
+      const resumeSource = customizedResume || optimizationResult?.selectedResume;
+      if (resumeSource) {
+        try {
+          const latex = buildLatexDocument(resumeSource);
+          setLatexSource(latex);
+        } catch (error) {
+          console.error('Error building LaTeX preview:', error);
+        }
+      }
+    }
+  }, [optimizationResult, customizedResume]);
+
+  // Auto-render PDF when resume is first generated (but not on every update to avoid excessive API calls)
+  useEffect(() => {
+    if (optimizationResult && !latexPdfBase64 && !renderingPdf) {
+      const resumeSource = customizedResume || optimizationResult?.selectedResume;
+      if (resumeSource) {
+        // Small delay to let LaTeX generate first
+        const timer = setTimeout(() => {
+          renderPdfPreview();
+        }, 500);
+        return () => clearTimeout(timer);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [optimizationResult]);
 
   function openLatexPreview() {
     const resumeSource = customizedResume || optimizationResult?.selectedResume;
@@ -269,6 +301,43 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
       alert(error?.message || 'Failed to render PDF preview.');
     } finally {
       setRenderingPdf(false);
+    }
+  }
+
+  function downloadPdf() {
+    if (!latexPdfBase64) {
+      alert('No PDF available to download. Please regenerate the PDF first.');
+      return;
+    }
+
+    try {
+      // Convert base64 to blob
+      const byteCharacters = atob(latexPdfBase64);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: 'application/pdf' });
+
+      // Create download link
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Generate filename with timestamp
+      const timestamp = new Date().toISOString().slice(0, 10);
+      const jobTitle = currentJob?.title || 'resume';
+      const filename = `${jobTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${timestamp}.pdf`;
+      
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download PDF failed:', error);
+      alert('Failed to download PDF. Please try again.');
     }
   }
 
@@ -362,11 +431,13 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
         </div>
       )}
 
-      {/* Header Section */}
-      <div className="generate-resume-header">
-        <h1>Generate Resume</h1>
-        <p className="generate-resume-subtitle">Create a tailored resume for any job description</p>
-      </div>
+      {/* Header Section - Hide after resume is generated */}
+      {!optimizationResult && (
+        <div className="generate-resume-header">
+          <h1>Generate Resume</h1>
+          <p className="generate-resume-subtitle">Create a tailored resume for any job description</p>
+        </div>
+      )}
 
       {/* Job Description Section - Hide after resume is generated */}
       {!optimizationResult && (
@@ -479,84 +550,305 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
         </div>
       )}
 
-      {/* Keyword Scanner - Show when there's keyword data, even after resume is generated */}
-      {(keywordData || scanningKeywords) && (
-        <div className="section section-modern">
-          <div className="section-header-modern">
-            <h2>Keyword Analysis</h2>
-            <p className="section-description">
-              See which keywords from the job description match your resume
-            </p>
-          </div>
-          <KeywordScanner keywordData={keywordData} loading={scanningKeywords} />
-        </div>
-      )}
-
-      {/* Optimization Results */}
+      {/* Optimization Results - Two Column Layout */}
       {optimizationResult && (
-        <div className="section section-modern">
-          <div className="section-header-modern-with-action">
-            <div>
-              <h2>Selected Resume</h2>
-              <p className="section-description">
-                Review and customize your selected resume. {optimizationResult.fitsOnePage 
-                  ? '✅ Fits on one page' 
-                  : '⚠️ Exceeds one page limit'}
-              </p>
-            </div>
-            <div className="section-header-actions">
-              <button
-                className="btn btn-secondary btn-modern"
-                onClick={() => {
-                  setOptimizationResult(null);
-                  setCurrentJob(null);
-                  setCustomizedBullets(null);
-                  setCustomizedResume(null);
-                  setKeywordData(null);
-                  setLatexSource('');
-                  setLatexPdfBase64(null);
-                  setShowLatexPreview(false);
-                  setInputMode('paste');
-                  setSelectedArea(null);
+        <div className="generate-resume-results-container">
+          {/* Left Column: Resume Sections */}
+          <div className="generate-resume-left-column">
+            <div className="section section-modern">
+              <div className="section-header-modern-with-action">
+                <div>
+                  <h2>Selected Resume</h2>
+                  <p className="section-description">
+                    Review and customize your selected resume.
+                  </p>
+                </div>
+                <div className="section-header-actions">
+                  <button
+                    className="btn btn-secondary btn-modern"
+                    onClick={() => {
+                      setOptimizationResult(null);
+                      setCurrentJob(null);
+                      setCustomizedBullets(null);
+                      setCustomizedResume(null);
+                      setKeywordData(null);
+                      setLatexSource('');
+                      setLatexPdfBase64(null);
+                      setShowLatexPreview(false);
+                      setInputMode('paste');
+                      setSelectedArea(null);
+                    }}
+                    title="Generate a new resume for a different job"
+                  >
+                    <Icon name="refresh" size={16} />
+                    Generate New Resume
+                  </button>
+                  <button
+                    className="btn btn-primary btn-modern"
+                    onClick={() => setShowSaveDialog(true)}
+                    disabled={saving}
+                  >
+                    <Icon name="save" size={16} />
+                    Save Resume
+                  </button>
+                </div>
+              </div>
+              
+              <SelectedResumeEditor
+                resume={customizedResume || optimizationResult.selectedResume}
+                masterResume={masterResume}
+                onUpdate={handleResumeUpdate}
+                showPersonalInfo={false}
+                showSkills={true}
+                showEducation={true}
+                summary={{
+                  fitsOnePage: optimizationResult.fitsOnePage,
+                  totalLineCount: optimizationResult.totalLineCount,
+                  maxLines: optimizationResult.maxLines,
+                  processingTime: optimizationResult.processingTime
                 }}
-                title="Generate a new resume for a different job"
-              >
-                <Icon name="refresh" size={16} />
-                Generate New Resume
-              </button>
-              {optimizationResult.mode === 'select' && (
-                <button
-                  className="btn btn-secondary btn-modern"
-                  onClick={openLatexPreview}
-                >
-                  <Icon name="eye" size={16} />
-                  LaTeX Preview
-                </button>
-              )}
-              <button
-                className="btn btn-primary btn-modern"
-                onClick={() => setShowSaveDialog(true)}
-                disabled={saving}
-              >
-                <Icon name="save" size={16} />
-                Save Resume
-              </button>
+                verticalLayout={true}
+              />
+            </div>
+            
+            {/* Keyword Scanner - In left column below editor */}
+            {optimizationResult && (keywordData || scanningKeywords) && (
+              <div className="section section-modern keyword-scanner-section">
+                <div className="section-header-modern">
+                  <h3>Keyword Analysis</h3>
+                  <p className="section-description">
+                    Keywords from the job description
+                  </p>
+                </div>
+                <KeywordScanner 
+                  keywordData={keywordData} 
+                  loading={scanningKeywords}
+                  masterResume={masterResume}
+                  currentResume={customizedResume || optimizationResult?.selectedResume}
+                  onAddToSkills={async (keyword, skillGroupId, newGroupTitle = null) => {
+                    // Update the generated resume (not master resume) with new skill
+                    const currentResume = customizedResume || optimizationResult?.selectedResume;
+                    if (!currentResume) return;
+                    
+                    // Capitalize keyword properly (preserve original case formatting)
+                    const capitalizeKeyword = (kw) => {
+                      const trimmed = kw.trim();
+                      const lower = trimmed.toLowerCase();
+                      
+                      // Common all-caps abbreviations
+                      const allCapsTerms = ['aws', 'api', 'ci/cd', 'rest', 'graphql', 'grpc', 'sql', 'nosql', 
+                        'ui', 'ux', 'ml', 'ai', 'nlp', 'rag', 'etl', 'iot', 'saas', 'paas', 'iaas', 
+                        'devops', 'qa', 'tdd', 'bdd', 'oop', 'fp', 'crud', 'jwt', 'oauth', 'ssl', 'tls', 
+                        'http', 'https', 'tcp', 'udp', 'dns', 'cdn', 'sso', 'ldap', 'saml', 'oauth2'];
+                      
+                      if (allCapsTerms.includes(lower)) {
+                        return trimmed.toUpperCase();
+                      }
+                      
+                      // Handle camelCase/PascalCase (preserve as-is if detected)
+                      if (trimmed.match(/^[A-Z][a-z]+[A-Z]/)) {
+                        return trimmed;
+                      }
+                      
+                      // Handle dot notation (e.g., "node.js", "next.js")
+                      if (trimmed.includes('.')) {
+                        return trimmed.split('.').map(part => 
+                          part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
+                        ).join('.');
+                      }
+                      
+                      // Handle hyphenated (e.g., "react-native", "machine-learning")
+                      if (trimmed.includes('-')) {
+                        return trimmed.split('-').map(part => 
+                          part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
+                        ).join('-');
+                      }
+                      
+                      // Handle slash-separated (e.g., "ci/cd")
+                      if (trimmed.includes('/')) {
+                        return trimmed.split('/').map(part => 
+                          part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
+                        ).join('/');
+                      }
+                      
+                      // Default: Title case (first letter uppercase, rest lowercase)
+                      return trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
+                    };
+                    
+                    const capitalizedKeyword = capitalizeKeyword(keyword);
+                    
+                    const currentSkills = currentResume.skills || [];
+                    let updatedSkills;
+                    
+                    // Check if this is a new group (newGroupTitle is provided)
+                    if (newGroupTitle) {
+                      // Create new skill group
+                      updatedSkills = [
+                        ...currentSkills,
+                        {
+                          id: skillGroupId,
+                          title: newGroupTitle,
+                          skills: [capitalizedKeyword]
+                        }
+                      ];
+                    } else {
+                      // Update existing group
+                      updatedSkills = currentSkills.map(group => {
+                        if (group.id === skillGroupId) {
+                          // Add keyword if not already present
+                          const skills = group.skills || [];
+                          const keywordLower = keyword.toLowerCase().trim();
+                          if (!skills.some(s => s.toLowerCase().trim() === keywordLower)) {
+                            return {
+                              ...group,
+                              skills: [...skills, capitalizedKeyword]
+                            };
+                          }
+                        }
+                        return group;
+                      });
+                    }
+                    
+                    const updatedResume = {
+                      ...currentResume,
+                      skills: updatedSkills
+                    };
+                    
+                    // Update the generated resume (not master resume)
+                    handleResumeUpdate(updatedResume);
+                    
+                    // Update keyword data: move from missing to found
+                    if (keywordData) {
+                      const keywordLower = keyword.toLowerCase().trim();
+                      const updatedKeywordData = { ...keywordData };
+                      
+                      // Find and remove from missing_keywords
+                      const missingIndex = updatedKeywordData.missing_keywords?.findIndex(
+                        k => k.keyword?.toLowerCase().trim() === keywordLower
+                      );
+                      
+                      if (missingIndex !== undefined && missingIndex >= 0) {
+                        const movedKeyword = updatedKeywordData.missing_keywords[missingIndex];
+                        
+                        // Remove from missing
+                        updatedKeywordData.missing_keywords = [
+                          ...updatedKeywordData.missing_keywords.slice(0, missingIndex),
+                          ...updatedKeywordData.missing_keywords.slice(missingIndex + 1)
+                        ];
+                        
+                        // Add to found (check if already exists)
+                        const existingFoundIndex = updatedKeywordData.found_keywords?.findIndex(
+                          k => k.keyword?.toLowerCase().trim() === keywordLower
+                        );
+                        
+                        if (existingFoundIndex !== undefined && existingFoundIndex >= 0) {
+                          // Increment match_count if already exists
+                          updatedKeywordData.found_keywords[existingFoundIndex].match_count = 
+                            (updatedKeywordData.found_keywords[existingFoundIndex].match_count || 1) + 1;
+                        } else {
+                          // Add new found keyword
+                          updatedKeywordData.found_keywords = [
+                            ...(updatedKeywordData.found_keywords || []),
+                            {
+                              ...movedKeyword,
+                              keyword: capitalizedKeyword, // Use capitalized version
+                              match_count: 1
+                            }
+                          ];
+                        }
+                        
+                        // Update statistics
+                        updatedKeywordData.statistics = {
+                          ...updatedKeywordData.statistics,
+                          found_count: (updatedKeywordData.statistics.found_count || 0) + 1,
+                          missing_count: Math.max(0, (updatedKeywordData.statistics.missing_count || 0) - 1),
+                          match_percentage: updatedKeywordData.statistics.total_keywords > 0
+                            ? Math.round(((updatedKeywordData.statistics.found_count || 0) + 1) / updatedKeywordData.statistics.total_keywords * 100)
+                            : 0
+                        };
+                        
+                        setKeywordData(updatedKeywordData);
+                      }
+                    }
+                    
+                    alert(`Added "${capitalizedKeyword}" to this resume's skills!`);
+                  }}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Right Column: LaTeX Preview */}
+          <div className="generate-resume-right-column">
+            <div className="latex-preview-panel">
+              <div className="latex-preview-panel-header">
+                <h3>LaTeX Preview</h3>
+                <div className="latex-preview-actions">
+                  <button
+                    className="btn btn-primary btn-small"
+                    onClick={async () => {
+                      const resumeSource = customizedResume || optimizationResult?.selectedResume;
+                      if (!resumeSource) return;
+                      
+                      // Generate LaTeX source
+                      try {
+                        const latex = buildLatexDocument(resumeSource);
+                        setLatexSource(latex);
+                        
+                        // Render PDF
+                        await renderPdfPreview();
+                      } catch (error) {
+                        console.error('Error building LaTeX preview:', error);
+                        alert('Could not generate LaTeX preview. Please try again.');
+                      }
+                    }}
+                    disabled={renderingPdf}
+                  >
+                    {renderingPdf ? (
+                      <>
+                        <Icon name="loader" size={14} />
+                        Rendering...
+                      </>
+                    ) : (
+                      <>
+                        <Icon name="refresh" size={14} />
+                        Regenerate PDF
+                      </>
+                    )}
+                  </button>
+                  <button
+                    className="btn btn-secondary btn-small"
+                    onClick={downloadPdf}
+                    disabled={!latexPdfBase64 || renderingPdf}
+                    title="Download PDF"
+                  >
+                    <Icon name="download" size={14} />
+                    Download PDF
+                  </button>
+                </div>
+              </div>
+              
+              <div className="latex-preview-panel-content">
+                {renderingPdf && <div className="pdf-loading">Rendering PDF…</div>}
+                {!renderingPdf && latexPdfBase64 && (
+                  <PdfViewerWithOverlays
+                    pdfBase64={latexPdfBase64}
+                    comments={[]}
+                    onTextSelect={(anchor) => {
+                      console.log('Text selected:', anchor);
+                    }}
+                    scale={1.0}
+                    hideControls={true}
+                  />
+                )}
+                {!renderingPdf && !latexPdfBase64 && (
+                  <div className="pdf-empty">
+                    <p>Click "Regenerate PDF" to generate a preview.</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-          
-          <SelectedResumeEditor
-            resume={customizedResume || optimizationResult.selectedResume}
-            onUpdate={handleResumeUpdate}
-            showPersonalInfo={false}
-            showSkills={true}
-            showEducation={false}
-            summary={{
-              fitsOnePage: optimizationResult.fitsOnePage,
-              totalLineCount: optimizationResult.totalLineCount,
-              maxLines: optimizationResult.maxLines,
-              processingTime: optimizationResult.processingTime
-            }}
-          />
         </div>
       )}
 

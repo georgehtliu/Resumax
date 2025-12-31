@@ -34,7 +34,8 @@ body {
 }
 
 .app-content.with-sidebar {
-  margin-left: 260px;
+  margin-left: var(--sidebar-width, 260px);
+  transition: margin-left var(--transition-base);
 }
 
 .app-main {
@@ -95,6 +96,8 @@ body {
   max-width: 100%;
   box-sizing: border-box;
   overflow-x: hidden;
+  height: auto;
+  min-height: fit-content;
 }
 
 .view-content:hover {
