@@ -33,6 +33,7 @@ function SharedResumeView({ shareToken }) {
   const [resumeHtml, setResumeHtml] = useState(null); // HTML content from pdf2htmlEX
   const [loadingHtml, setLoadingHtml] = useState(false);
   const [htmlError, setHtmlError] = useState(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   
   // Keep ref in sync with state
   useEffect(() => {
@@ -934,6 +935,8 @@ function SharedResumeView({ shareToken }) {
             hoveredCommentId={hoveredCommentId}
             setHoveredCommentId={setHoveredCommentId}
             scrollToBulletInHtml={scrollToBulletInHtml}
+            collapsed={sidebarCollapsed}
+            onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
           />
         )}
       </div>

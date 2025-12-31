@@ -19,7 +19,9 @@ export default function CommentsSidePanel({
   pdfViewerRef,
   hoveredCommentId,
   setHoveredCommentId,
-  scrollToBulletInHtml
+  scrollToBulletInHtml,
+  collapsed = false,
+  onToggleCollapse
 }) {
   const [activeBulletId, setActiveBulletId] = useState(selectedBulletId);
 
@@ -37,12 +39,23 @@ export default function CommentsSidePanel({
   };
 
   return (
-    <div className="comments-side-panel">
+    <div className={`comments-side-panel ${collapsed ? 'collapsed' : ''}`}>
       <div className="side-panel-header">
-        <h3>Comments</h3>
-        <span className="comment-count">{bulletsWithComments.length} bullet{bulletsWithComments.length !== 1 ? 's' : ''} with comments</span>
+        <div className="side-panel-header-content">
+          <h3>Comments</h3>
+          {!collapsed && <span className="comment-count">{bulletsWithComments.length} bullet{bulletsWithComments.length !== 1 ? 's' : ''} with comments</span>}
+        </div>
+        <button 
+          className="sidebar-toggle-btn"
+          onClick={onToggleCollapse}
+          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          {collapsed ? '▶' : '◀'}
+        </button>
       </div>
 
+      {!collapsed && (
       <div className="side-panel-content">
         {selectedBulletId && !bulletsWithComments.find(b => b.bulletId === selectedBulletId) && (
           <div className="side-panel-new-comment">
@@ -247,6 +260,7 @@ export default function CommentsSidePanel({
           ))
         )}
       </div>
+      )}
     </div>
   );
 }

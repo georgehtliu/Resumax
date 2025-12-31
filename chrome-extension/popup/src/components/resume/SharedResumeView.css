@@ -25,11 +25,12 @@
 .resume-html-wrapper {
   display: flex;
   justify-content: center;
-  padding: 24px;
-  background: #f8fafc;
-  border-radius: 8px;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
   margin-bottom: 32px;
   position: relative;
+  width: 100%;
 }
 
 .resume-page {
@@ -57,6 +58,10 @@
   overflow: visible; /* Allow content to display at full size without clipping */
   height: auto; /* Don't constrain height - let pdf2htmlEX content determine it */
   min-height: 0; /* Don't force minimum height */
+  width: 100%;
+  background: transparent;
+  border: none;
+  box-shadow: none;
   position: relative; /* Establish positioning context for absolutely positioned children */
 }
 
@@ -766,6 +771,13 @@
   top: 80px;
   overflow-y: auto;
   box-shadow: -2px 0 8px rgba(0, 0, 0, 0.05);
+  transition: width 0.3s ease, min-width 0.3s ease;
+}
+
+.comments-side-panel.collapsed {
+  width: 48px;
+  min-width: 48px;
+  overflow: hidden;
 }
 
 .side-panel-header {
@@ -775,6 +787,55 @@
   position: sticky;
   top: 0;
   z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.comments-side-panel.collapsed .side-panel-header {
+  padding: 16px 8px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.side-panel-header-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.comments-side-panel.collapsed .side-panel-header-content {
+  display: none;
+}
+
+.sidebar-toggle-btn {
+  background: transparent;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #6b7280;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.sidebar-toggle-btn:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  color: #374151;
+}
+
+.comments-side-panel.collapsed .sidebar-toggle-btn {
+  width: 32px;
+  height: 32px;
+  font-size: 14px;
 }
 
 .side-panel-header h3 {
@@ -782,6 +843,9 @@
   font-size: 16px;
   font-weight: 600;
   color: #111;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .comment-count {
