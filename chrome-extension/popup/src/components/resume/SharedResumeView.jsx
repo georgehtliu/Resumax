@@ -14,7 +14,6 @@ function SharedResumeView({ shareToken }) {
   const [bulletComments, setBulletComments] = useState({}); // { bulletId: [comments] }
   const [selectedBulletId, setSelectedBulletId] = useState(null);
   const [hoveredBulletId, setHoveredBulletId] = useState(null);
-  const [bulletRefs, setBulletRefs] = useState({}); // Refs for scrolling to bullets
   const [loading, setLoading] = useState(true);
   const [generalCommentText, setGeneralCommentText] = useState('');
   const [bulletCommentText, setBulletCommentText] = useState('');
@@ -302,6 +301,13 @@ function SharedResumeView({ shareToken }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resume?.id, loading]);
 
+  // Remove markers when HTML changes (markers will be added on-demand if needed)
+  useEffect(() => {
+    if (resumePageRef.current) {
+      resumePageRef.current.querySelectorAll('.bullet-comment-marker').forEach(marker => marker.remove());
+    }
+  }, [resumeHtml]);
+
   const loadComments = async () => {
     try {
       // Get share link ID
@@ -466,16 +472,77 @@ function SharedResumeView({ shareToken }) {
     }
   };
 
-  // Scroll to bullet in HTML view
-  const scrollToBulletInHtml = (bulletId) => {
-    const bulletElement = bulletRefs[bulletId];
-    if (bulletElement) {
-      bulletElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  // Scroll to bullet in HTML view and highlight it - simplified linear search
+  const scrollToBulletInHtml = useCallback((bulletId) => {
+    if (!resumePageRef.current || !resume) return;
+    
+    // Get the bullet text we're looking for
+    const bulletText = findBulletTextUtil(resume, bulletId);
+    if (!bulletText) return;
+    
+    // Normalize text for comparison
+    const normalizeText = (text) => {
+      return text
+        .replace(/\s+/g, ' ')
+        .replace(/[•\u2022\u2023\u25E6\u2043\u2219]/g, '') // Remove bullet characters
+        .trim()
+        .toLowerCase();
+    };
+    
+    // Remove leading bullet character if present
+    const cleanText = bulletText.replace(/^[•\u2022\u2023\u25E6\u2043\u2219\s]+/, '').trim();
+    if (!cleanText) return;
+    
+    const normalizedSearch = normalizeText(cleanText);
+    
+    // Remove previous highlights
+    if (resumePageRef.current) {
+      resumePageRef.current.querySelectorAll('.bullet-highlighted').forEach(el => {
+        el.classList.remove('bullet-highlighted');
+      });
+    }
+    
+    // Linear search through all text elements
+    const textElements = resumePageRef.current.querySelectorAll('.t');
+    let foundElement = null;
+    
+    for (const element of textElements) {
+      const elementText = element.textContent || '';
+      const normalizedElement = normalizeText(elementText);
+      
+      // Try exact match first
+      if (normalizedElement === normalizedSearch) {
+        foundElement = element;
+        break;
+      }
+      
+      // Try substring match
+      if (normalizedElement.includes(normalizedSearch) || normalizedSearch.includes(normalizedElement)) {
+        foundElement = element;
+        break;
+      }
+    }
+    
+    if (foundElement) {
+      // Highlight the found element
+      foundElement.classList.add('bullet-highlighted');
+      
+      // Scroll to it
+      foundElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      
       setSelectedBulletId(bulletId);
       setHighlightedBulletInPdf(bulletId);
-      setTimeout(() => setHighlightedBulletInPdf(null), 3000);
+      
+      // Remove highlight after 3 seconds
+      setTimeout(() => {
+        if (foundElement) {
+          foundElement.classList.remove('bullet-highlighted');
+        }
+        setHighlightedBulletInPdf(null);
+      }, 3000);
     }
-  };
+  }, [resume]);
+
 
   const findBulletText = useCallback((bulletId) => {
     return findBulletTextUtil(resume, bulletId);

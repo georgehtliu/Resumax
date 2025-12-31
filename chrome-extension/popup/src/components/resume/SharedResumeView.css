@@ -74,6 +74,67 @@
   margin: 0 auto; /* Center the page */
 }
 
+/* Bullet elements in HTML resume */
+.resume-html-content .resume-bullet-element {
+  position: relative;
+}
+
+/* Comment markers for bullets in HTML resume */
+.pf .bullet-comment-marker {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+  background: #6366f1;
+  color: white;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  transition: transform 0.2s, box-shadow 0.2s;
+  pointer-events: auto;
+  line-height: 24px;
+}
+
+.pf .bullet-comment-marker:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  background: #4f46e5;
+}
+
+.pf .bullet-comment-count {
+  line-height: 1;
+}
+
+.resume-html-content .resume-bullet-element.selected {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Highlight for bullets when scrolled to */
+.resume-html-content .bullet-highlighted {
+  background-color: rgba(99, 102, 241, 0.2) !important;
+  padding: 2px 4px;
+  border-radius: 3px;
+  transition: background-color 0.3s ease;
+  animation: bulletHighlightPulse 0.5s ease-in-out;
+}
+
+@keyframes bulletHighlightPulse {
+  0%, 100% {
+    background-color: rgba(99, 102, 241, 0.2);
+  }
+  50% {
+    background-color: rgba(99, 102, 241, 0.4);
+  }
+}
+
 .resume-html-loading {
   padding: 48px;
   text-align: center;
