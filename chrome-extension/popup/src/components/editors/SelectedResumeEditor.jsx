@@ -5,6 +5,7 @@ import SkillsEditor from './SkillsEditor';
 import Tabs from '../ui/Tabs';
 import { Icon } from '../ui/Icons';
 import BulletSelectionModal from './BulletSelectionModal';
+import EntrySelectionModal from './EntrySelectionModal';
 import './SelectedResumeEditor.css';
 
 const DEFAULT_PERSONAL_INFO = {
@@ -91,6 +92,8 @@ function SelectedResumeEditor({
   }));
   const [bulletModalOpen, setBulletModalOpen] = useState(false);
   const [bulletModalContext, setBulletModalContext] = useState(null); // { sectionKey, entryId }
+  const [entryModalOpen, setEntryModalOpen] = useState(false);
+  const [entryModalContext, setEntryModalContext] = useState(null); // { sectionKey }
   const isLocalUpdateRef = useRef(false);
   const lastResumeRef = useRef(JSON.stringify(resume));
   const updateTimerRef = useRef(null);
@@ -169,12 +172,54 @@ function SelectedResumeEditor({
   }
 
   function handleAddEntry(sectionKey) {
+    // Open modal to select from existing entries or create new
+    setEntryModalContext({ sectionKey });
+    setEntryModalOpen(true);
+  }
+
+  function handleSelectEntry(entry) {
+    if (!entryModalContext) return;
+    const { sectionKey } = entryModalContext;
+    
+    // Create a new entry based on the selected one, with new IDs
+    const newEntry = {
+      ...entry,
+      id: generateId(sectionKey.slice(0, 3) || 'entry'),
+      selectedBullets: (entry.bullets || []).map((bullet) => ({
+        id: generateId('bullet'),
+        text: bullet.text || '',
+        relevanceScore: 0.5,
+        lineCount: null,
+        original: null,
+        rewritten: null,
+        reasoning: null
+      }))
+    };
+    
+    updateResume((draft) => {
+      draft[sectionKey] = [
+        ...(draft[sectionKey] || []),
+        newEntry
+      ];
+    });
+    
+    setEntryModalOpen(false);
+    setEntryModalContext(null);
+  }
+
+  function handleCreateNewEntry() {
+    if (!entryModalContext) return;
+    const { sectionKey } = entryModalContext;
+    
     updateResume((draft) => {
       draft[sectionKey] = [
         ...(draft[sectionKey] || []),
         createEmptyEntry(sectionKey)
       ];
     });
+    
+    setEntryModalOpen(false);
+    setEntryModalContext(null);
   }
 
   function handleDeleteEntry(sectionKey, entryId) {
@@ -276,6 +321,58 @@ function SelectedResumeEditor({
   const isSectionCollapsed = (sectionId) => {
     return collapsedSections[sectionId] === true;
   };
+
+  // Get available entries from master resume for a given section (excluding already added ones)
+  const getAvailableEntries = useCallback((sectionKey) => {
+    if (!masterResume) return [];
+    
+    const sectionMap = {
+      'experiences': masterResume.experiences || [],
+      'education': masterResume.education || [],
+      'projects': masterResume.projects || [],
+      'customSections': masterResume.customSections || []
+    };
+    
+    const masterEntries = sectionMap[sectionKey] || [];
+    const currentEntries = localResume[sectionKey] || [];
+    
+    // Create a set of identifying fields from current entries to avoid duplicates
+    const existingIdentifiers = new Set();
+    
+    currentEntries.forEach(entry => {
+      if (sectionKey === 'experiences') {
+        const key = `${entry.company?.toLowerCase().trim()}|${entry.role?.toLowerCase().trim()}`;
+        if (key !== '|') existingIdentifiers.add(key);
+      } else if (sectionKey === 'education') {
+        const key = `${entry.school?.toLowerCase().trim()}|${entry.degree?.toLowerCase().trim()}|${entry.field?.toLowerCase().trim()}`;
+        if (key !== '||') existingIdentifiers.add(key);
+      } else if (sectionKey === 'projects') {
+        const key = entry.name?.toLowerCase().trim();
+        if (key) existingIdentifiers.add(key);
+      } else if (sectionKey === 'customSections') {
+        const key = entry.title?.toLowerCase().trim();
+        if (key) existingIdentifiers.add(key);
+      }
+    });
+    
+    // Filter out entries that are already in the current resume
+    return masterEntries.filter(entry => {
+      if (sectionKey === 'experiences') {
+        const key = `${entry.company?.toLowerCase().trim()}|${entry.role?.toLowerCase().trim()}`;
+        return key !== '|' && !existingIdentifiers.has(key);
+      } else if (sectionKey === 'education') {
+        const key = `${entry.school?.toLowerCase().trim()}|${entry.degree?.toLowerCase().trim()}|${entry.field?.toLowerCase().trim()}`;
+        return key !== '||' && !existingIdentifiers.has(key);
+      } else if (sectionKey === 'projects') {
+        const key = entry.name?.toLowerCase().trim();
+        return key && !existingIdentifiers.has(key);
+      } else if (sectionKey === 'customSections') {
+        const key = entry.title?.toLowerCase().trim();
+        return key && !existingIdentifiers.has(key);
+      }
+      return true;
+    });
+  }, [masterResume, localResume]);
 
   // Get available bullets from master resume for a given section and entry
   const getAvailableBullets = useCallback((sectionKey, currentEntry) => {
@@ -672,6 +769,20 @@ function SelectedResumeEditor({
           onClose={() => {
             setBulletModalOpen(false);
             setBulletModalContext(null);
+          }}
+        />
+      )}
+
+      {/* Entry Selection Modal */}
+      {entryModalOpen && entryModalContext && (
+        <EntrySelectionModal
+          sectionKey={entryModalContext.sectionKey}
+          availableEntries={getAvailableEntries(entryModalContext.sectionKey)}
+          onSelectEntry={handleSelectEntry}
+          onCreateNew={handleCreateNewEntry}
+          onClose={() => {
+            setEntryModalOpen(false);
+            setEntryModalContext(null);
           }}
         />
       )}
