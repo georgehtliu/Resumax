@@ -1,0 +1,45 @@
+# Dockerfile for pdf2htmlEX
+# Based on Ubuntu with pdf2htmlEX dependencies
+
+FROM ubuntu:22.04
+
+# Avoid interactive prompts during package installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install basic build dependencies (including sudo for build scripts)
+RUN apt-get update && apt-get install -y \
+    cmake \
+    git \
+    build-essential \
+    pkg-config \
+    wget \
+    ninja-build \
+    python3 \
+    sudo \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create a user for the build (build scripts expect non-root, but we'll use root with sudo)
+# Actually, let's just ensure sudo works for root
+RUN echo 'root ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
+
+# Set environment variables for build
+ENV PDF2HTMLEX_PREFIX=/usr/local
+ENV DEBIAN_FRONTEND=noninteractive
+ENV UNATTENDED="--assume-yes"
+ENV MAKE_PARALLEL="-j $(nproc)"
+
+# Clone pdf2htmlEX repository
+WORKDIR /tmp
+RUN git clone --recursive https://github.com/pdf2htmlEX/pdf2htmlEX.git
+
+# Build using the official build script (builds Poppler, Fontforge, and pdf2htmlEX)
+WORKDIR /tmp/pdf2htmlEX
+RUN chmod +x buildScripts/buildInstallLocallyApt && \
+    ./buildScripts/buildInstallLocallyApt
+
+# Set working directory
+WORKDIR /workspace
+
+# Default command
+CMD ["pdf2htmlEX", "--help"]
+

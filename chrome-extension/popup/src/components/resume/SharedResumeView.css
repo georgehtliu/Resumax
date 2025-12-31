@@ -51,6 +51,71 @@
   caret-color: transparent; /* Hide cursor */
 }
 
+/* PDF2HTML rendered content - pdf2htmlEX generates HTML with fixed dimensions */
+.resume-page.resume-html-content {
+  padding: 0; /* pdf2htmlEX handles its own spacing */
+  overflow: visible; /* Allow content to display at full size without clipping */
+  height: auto; /* Don't constrain height - let pdf2htmlEX content determine it */
+  min-height: 0; /* Don't force minimum height */
+  position: relative; /* Establish positioning context for absolutely positioned children */
+}
+
+/* Override pdf2htmlEX styles to allow full height display */
+.resume-html-content #page-container {
+  position: relative !important; /* Change from absolute to relative */
+  bottom: auto !important; /* Remove bottom constraint */
+  right: auto !important; /* Remove right constraint */
+  height: auto !important; /* Allow natural height */
+  overflow: visible !important; /* Don't clip content */
+}
+
+.resume-html-content .pf {
+  position: relative !important; /* Already relative, but ensure it */
+  margin: 0 auto; /* Center the page */
+}
+
+.resume-html-loading {
+  padding: 48px;
+  text-align: center;
+  color: #6b7280;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.resume-html-error {
+  padding: 24px;
+  margin: 24px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #dc2626;
+  font-size: 14px;
+  text-align: center;
+}
+
+.resume-html-error h3 {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #dc2626;
+}
+
+.resume-html-error p {
+  margin: 0 0 12px 0;
+  line-height: 1.5;
+}
+
+.resume-html-error-note {
+  font-size: 13px;
+  color: #991b1b;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #fecaca;
+  font-style: italic;
+}
+
 .shared-resume-view.loading,
 .shared-resume-view.error {
   text-align: center;

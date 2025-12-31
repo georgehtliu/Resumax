@@ -229,6 +229,37 @@ export async function renderLatex(resume) {
   return response.json();
 }
 
+export async function renderLatexHtml(resume) {
+  const baseUrl = getApiBaseUrl();
+  const response = await fetch(`${baseUrl.replace(/\/$/, '')}/latex/render-html`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ resume }),
+  });
+
+  if (!response.ok) {
+    let errorMessage = `HTML render failed with status ${response.status}`;
+    try {
+      const payload = await response.json();
+      if (payload?.detail) {
+        errorMessage = Array.isArray(payload.detail)
+          ? payload.detail.map((item) => (item.msg ? item.msg : JSON.stringify(item))).join('\n')
+          : payload.detail;
+      }
+    } catch {
+      const fallback = await response.text();
+      if (fallback) {
+        errorMessage = fallback;
+      }
+    }
+    throw new Error(errorMessage);
+  }
+
+  return response.json();
+}
+
 export async function scanKeywords({ jobDescription, resume }) {
   const baseUrl = getApiBaseUrl();
   const requestBody = {

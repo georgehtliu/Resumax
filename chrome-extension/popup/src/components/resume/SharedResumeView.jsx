@@ -3,9 +3,9 @@ import { supabase } from '../../config/supabase';
 import HighlightOverlay, { createOverlayHighlight } from '../pdf/HighlightOverlay';
 import CommentsSidePanel from '../comments/CommentsSidePanel';
 import CommentItem from '../comments/CommentItem';
-import ResumeRenderer from './ResumeRenderer';
 import { findBulletText as findBulletTextUtil, findBulletContext as findBulletContextUtil } from '../../utils/resumeUtils';
 import { generateAnonymousUsername } from '../../utils/anonymousUsernames';
+import { renderLatexHtml } from '../../services/api';
 import './SharedResumeView.css';
 
 function SharedResumeView({ shareToken }) {
@@ -31,6 +31,9 @@ function SharedResumeView({ shareToken }) {
   const highlightHandlerRef = useRef(null);
   const isResumeLoadedRef = useRef(false);
   const [highlights, setHighlights] = useState([]); // Store overlay highlight data
+  const [resumeHtml, setResumeHtml] = useState(null); // HTML content from pdf2htmlEX
+  const [loadingHtml, setLoadingHtml] = useState(false);
+  const [htmlError, setHtmlError] = useState(null);
   
   // Keep ref in sync with state
   useEffect(() => {
@@ -201,9 +204,103 @@ function SharedResumeView({ shareToken }) {
   };
 
 
-  // PDF rendering removed - using HTML rendering for shared resumes
+  // Convert resume_data to API format for HTML rendering
+  const convertResumeDataToApiFormat = (resumeData) => {
+    if (!resumeData) return null;
 
-  // PDF rendering removed - using HTML rendering for shared resumes
+    // Helper to normalize bullets
+    const normalizeBullets = (bullets) => {
+      if (!Array.isArray(bullets)) return [];
+      return bullets.map((bullet, idx) => {
+        const text = typeof bullet === 'string' ? bullet : (bullet.text || bullet.rewritten || '');
+        const id = bullet.id || `bullet-${idx}`;
+        return {
+          id,
+          text,
+          relevanceScore: bullet.relevanceScore || 0.0,
+          lineCount: bullet.lineCount,
+          original: bullet.original,
+          rewritten: bullet.rewritten
+        };
+      });
+    };
+
+    return {
+      personalInfo: resumeData.personalInfo || null,
+      skills: (resumeData.skills || []).map((group, idx) => ({
+        id: group.id || `skill-${idx}`,
+        title: group.title || '',
+        skills: Array.isArray(group.skills) ? group.skills : []
+      })),
+      experiences: (resumeData.experiences || []).map((entry, idx) => ({
+        id: entry.id || `experience-${idx}`,
+        company: entry.company || '',
+        role: entry.role || '',
+        location: entry.location || null,
+        startDate: entry.startDate || null,
+        endDate: entry.endDate || null,
+        selectedBullets: normalizeBullets(entry.selectedBullets || entry.bullets || [])
+      })),
+      education: (resumeData.education || []).map((entry, idx) => ({
+        id: entry.id || `education-${idx}`,
+        school: entry.school || '',
+        degree: entry.degree || '',
+        field: entry.field || null,
+        startDate: entry.startDate || null,
+        endDate: entry.endDate || null,
+        selectedBullets: normalizeBullets(entry.selectedBullets || entry.bullets || [])
+      })),
+      projects: (resumeData.projects || []).map((entry, idx) => ({
+        id: entry.id || `project-${idx}`,
+        name: entry.name || '',
+        url: entry.url || null,
+        technologies: entry.technologies || entry.tech || null,
+        selectedBullets: normalizeBullets(entry.selectedBullets || entry.bullets || [])
+      })),
+      customSections: (resumeData.customSections || []).map((section, idx) => ({
+        id: section.id || `custom-${idx}`,
+        title: section.title || '',
+        selectedBullets: normalizeBullets(section.selectedBullets || section.bullets || [])
+      }))
+    };
+  };
+
+  // Load HTML resume from pdf2htmlEX (required - no fallback)
+  const loadResumeHtml = async () => {
+    if (!resume || !resume.resume_data) {
+      return;
+    }
+
+    setLoadingHtml(true);
+    setHtmlError(null);
+    
+    try {
+      const apiFormat = convertResumeDataToApiFormat(resume.resume_data);
+      if (!apiFormat) {
+        throw new Error('Failed to convert resume data');
+      }
+
+      const response = await renderLatexHtml(apiFormat);
+      if (response?.html_content) {
+        setResumeHtml(response.html_content);
+      } else {
+        throw new Error('No HTML content in response - pdf2htmlEX may not be configured');
+      }
+    } catch (err) {
+      console.error('Error loading HTML resume:', err);
+      setHtmlError(err.message || 'Failed to load HTML resume. pdf2htmlEX is required.');
+    } finally {
+      setLoadingHtml(false);
+    }
+  };
+
+  // Load HTML when resume is loaded
+  useEffect(() => {
+    if (resume && resume.resume_data && !loading) {
+      loadResumeHtml();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resume?.id, loading]);
 
   const loadComments = async () => {
     try {
@@ -447,23 +544,28 @@ function SharedResumeView({ shareToken }) {
       <div className="resume-layout">
         <div className="resume-main-content">
           <div className="resume-html-wrapper" style={{ position: 'relative' }}>
-            <div 
-              className="resume-page" 
-              ref={resumePageRef}
-              contentEditable="false"
-              suppressContentEditableWarning={true}
-            >
-              <ResumeRenderer
-                resume={resume}
-                bulletComments={bulletComments}
-                selectedBulletId={selectedBulletId}
-                hoveredBulletId={hoveredBulletId}
-                setSelectedBulletId={setSelectedBulletId}
-                setHoveredBulletId={setHoveredBulletId}
-                bulletRefs={bulletRefs}
-                setBulletRefs={setBulletRefs}
+            {loadingHtml ? (
+              <div className="resume-html-loading">Loading high-fidelity resume...</div>
+            ) : htmlError ? (
+              <div className="resume-html-error">
+                <h3>Failed to load high-fidelity resume</h3>
+                <p>{htmlError}</p>
+                <p className="resume-html-error-note">
+                  pdf2htmlEX is required for high-fidelity HTML rendering. 
+                  Please ensure pdf2htmlEX is installed and configured correctly.
+                </p>
+              </div>
+            ) : resumeHtml ? (
+              <div 
+                className="resume-page resume-html-content" 
+                ref={resumePageRef}
+                dangerouslySetInnerHTML={{ __html: resumeHtml }}
+                contentEditable="false"
+                suppressContentEditableWarning={true}
               />
-            </div>
+            ) : (
+              <div className="resume-html-loading">Preparing resume...</div>
+            )}
             {/* Highlight overlay container - positioned to match resume-page */}
             <HighlightOverlay 
               containerRef={resumePageRef}
