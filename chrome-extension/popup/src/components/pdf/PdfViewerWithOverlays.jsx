@@ -107,7 +107,8 @@ const PdfViewerWithOverlays = forwardRef(({
   onCommentAdd, // Callback when a comment is added: (comment, bulletId, anchor) => void
   bullets = [], // Array of { id, text, ... } - bullet points to match against
   highlightedBulletId = null,
-  scale: initialScale = 1.0
+  scale: initialScale = 1.0,
+  hideHighlighting = false // Hide highlighting controls
 }, ref) => {
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
@@ -217,15 +218,15 @@ const PdfViewerWithOverlays = forwardRef(({
       if (!baseViewport) return;
       const selection = window.getSelection();
       if (selection.rangeCount === 0) {
-        if (isHighlightMode) {
+        if (isHighlightMode && !hideHighlighting) {
           selectedTextRef.current = null;
           // Don't update state here - only update ref to avoid re-renders during selection
         }
         return;
       }
 
-      // Only process selection if in highlight mode
-      if (!isHighlightMode) {
+      // Only process selection if in highlight mode and highlighting is not hidden
+      if (!isHighlightMode || hideHighlighting) {
         return;
       }
 
@@ -1151,6 +1152,7 @@ const PdfViewerWithOverlays = forwardRef(({
         </button>
         
         {/* Highlight Tool */}
+        {!hideHighlighting && (
         <div className="highlight-tool" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '16px', paddingLeft: '16px', borderLeft: '1px solid #d1d5db' }}>
           <button
             className={`pdf-control-btn ${isHighlightMode ? 'active' : ''}`}
@@ -1216,6 +1218,7 @@ const PdfViewerWithOverlays = forwardRef(({
             </>
           )}
         </div>
+        )}
       </div>
 
       {/* PDF Canvas Container */}

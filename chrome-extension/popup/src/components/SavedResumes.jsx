@@ -10,6 +10,7 @@ import SelectedResumeEditor from './editors/SelectedResumeEditor';
 import LatexPreviewModal from './modals/LatexPreviewModal';
 import ShareResumeButton from './ShareResumeButton';
 import ToastContainer from './ui/ToastContainer';
+import PdfViewerWithOverlays from './pdf/PdfViewerWithOverlays';
 import { renderLatex } from '../services/api';
 import { buildLatexDocument } from '../utils/latexTemplate';
 import './SavedResumes.css';
@@ -285,6 +286,7 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
   const [latexSource, setLatexSource] = useState('');
   const [latexPdfBase64, setLatexPdfBase64] = useState(null);
   const [renderingPdf, setRenderingPdf] = useState(false);
+  const [jobDescriptionExpanded, setJobDescriptionExpanded] = useState(false);
 
   useEffect(() => {
     loadSavedResumes();
@@ -444,7 +446,33 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
     setShowLatexPreview(false);
     setLatexSource('');
     setLatexPdfBase64(null);
+    setJobDescriptionExpanded(false);
   }, [selectedResume?.id]);
+
+  // Auto-generate LaTeX when editedResume changes
+  useEffect(() => {
+    if (editedResume) {
+      try {
+        const selectedPayload = buildSelectedResumePayload(editedResume, masterResume);
+        const latex = buildLatexDocument(selectedPayload);
+        setLatexSource(latex);
+      } catch (error) {
+        console.error('Error building LaTeX preview:', error);
+      }
+    }
+  }, [editedResume, masterResume]);
+
+  // Auto-render PDF when resume is first selected (but not on every update to avoid excessive API calls)
+  useEffect(() => {
+    if (editedResume && !latexPdfBase64 && !renderingPdf) {
+      // Small delay to let LaTeX generate first
+      const timer = setTimeout(() => {
+        renderPdfPreview();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editedResume]);
 
   // Collect all available bullets from master resume
 
@@ -464,6 +492,43 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
     } catch (error) {
       console.error('Error building LaTeX for saved resume:', error);
       showError('Unable to generate LaTeX for this resume. Please check that all sections are filled out correctly.');
+    }
+  }
+
+  function downloadPdf() {
+    if (!latexPdfBase64) {
+      showError('No PDF available to download. Please regenerate the PDF first.');
+      return;
+    }
+
+    try {
+      // Convert base64 to blob
+      const byteCharacters = atob(latexPdfBase64);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: 'application/pdf' });
+
+      // Create download link
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Generate filename with timestamp
+      const timestamp = new Date().toISOString().slice(0, 10);
+      const resumeName = selectedResume?.name || 'resume';
+      const filename = `${resumeName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${timestamp}.pdf`;
+      
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download PDF failed:', error);
+      showError('Failed to download PDF. Please try again.');
     }
   }
 
@@ -697,66 +762,274 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
 
           {selectedResume && (
             <>
-              <div className="section">
-                <div className="section-header-modern-with-action">
-                  <div>
-                    <h2>{selectedResume.name}</h2>
-                    <p className="section-description">
-                      Created: {formatDate(selectedResume.createdAt)} • 
-                      Updated: {formatDate(selectedResume.updatedAt)} • 
-                      {getStructuredBulletCount(selectedResume.data)} bullets
-                      {selectedResume.data?.jobDescription && (
-                        <>
-                          <br />
-                          <strong>Job:</strong> {selectedResume.data.jobDescription.substring(0, 100)}
-                          {selectedResume.data.jobDescription.length > 100 ? '...' : ''}
-                        </>
-                      )}
-                    </p>
+              {/* Two Column Layout - Same as GenerateResume */}
+              {editedResume ? (
+                <div className="saved-resumes-results-container">
+                  {/* Left Column: Resume Sections */}
+                  <div className="saved-resumes-left-column">
+                    <div className="section section-modern">
+                      <div className="section-header-modern-with-action">
+                        <div>
+                          <h2>{selectedResume.name}</h2>
+                          <p className="section-description">
+                            Created: {formatDate(selectedResume.createdAt)} • 
+                            Updated: {formatDate(selectedResume.updatedAt)} • 
+                            {getStructuredBulletCount(selectedResume.data)} bullets
+                            {selectedResume.data?.jobDescription && (
+                              <>
+                                <br />
+                                <div style={{ marginTop: '8px', maxWidth: '100%' }}>
+                                  <strong>Job:</strong>{' '}
+                                  {jobDescriptionExpanded || selectedResume.data.jobDescription.length <= 100
+                                    ? (
+                                        <span style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                                          {selectedResume.data.jobDescription}
+                                        </span>
+                                      )
+                                    : (
+                                        <>
+                                          <span>{selectedResume.data.jobDescription.substring(0, 100)}</span>
+                                          <button
+                                            onClick={(e) => {
+                                              e.preventDefault();
+                                              setJobDescriptionExpanded(true);
+                                            }}
+                                            style={{
+                                              background: 'none',
+                                              border: 'none',
+                                              color: 'var(--color-primary-600)',
+                                              cursor: 'pointer',
+                                              textDecoration: 'underline',
+                                              marginLeft: '4px',
+                                              padding: 0,
+                                              fontSize: 'inherit',
+                                              fontWeight: 'var(--font-weight-medium)'
+                                            }}
+                                          >
+                                            Show more
+                                          </button>
+                                        </>
+                                      )}
+                                  {jobDescriptionExpanded && selectedResume.data.jobDescription.length > 100 && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        setJobDescriptionExpanded(false);
+                                      }}
+                                      style={{
+                                        background: 'none',
+                                        border: 'none',
+                                        color: 'var(--color-primary-600)',
+                                        cursor: 'pointer',
+                                        textDecoration: 'underline',
+                                        marginLeft: '4px',
+                                        padding: 0,
+                                        fontSize: 'inherit',
+                                        fontWeight: 'var(--font-weight-medium)'
+                                      }}
+                                    >
+                                      Show less
+                                    </button>
+                                  )}
+                                </div>
+                              </>
+                            )}
+                          </p>
+                        </div>
+                        <div className="section-header-actions">
+                          <button
+                            className="btn btn-secondary btn-modern"
+                            onClick={() => {
+                              setSelectedResume(null);
+                              setEditedResume(null);
+                              setShowLatexPreview(false);
+                              setLatexPdfBase64(null);
+                            }}
+                            title="Close this resume"
+                          >
+                            <Icon name="x" size={16} />
+                            Close
+                          </button>
+                          <button
+                            className="btn btn-primary btn-modern"
+                            onClick={() => setShowSaveDialog(true)}
+                            disabled={saving}
+                          >
+                            <Icon name="save" size={16} />
+                            Save As New
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <SelectedResumeEditor
+                        resume={editedResume}
+                        masterResume={masterResume}
+                        onUpdate={setEditedResume}
+                        showPersonalInfo={false}
+                        showSkills={true}
+                        showEducation={true}
+                        verticalLayout={true}
+                      />
+                    </div>
                   </div>
-                  <div className="section-header-actions">
-                    <button
-                      className="btn btn-secondary btn-modern"
-                      onClick={openLatexPreview}
-                      disabled={!editedResume}
-                    >
-                      <Icon name="eye" size={16} />
-                      LaTeX Preview
-                    </button>
-                    <button
-                      className="btn btn-primary btn-modern"
-                      onClick={() => setShowSaveDialog(true)}
-                      disabled={!editedResume || saving}
-                    >
-                      <Icon name="save" size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-                      Save As New
-                    </button>
-                    <button
-                      className="btn btn-secondary"
-                      onClick={() => {
-                        setSelectedResume(null);
-                        setEditedResume(null);
-                        setShowLatexPreview(false);
-                        setLatexPdfBase64(null);
-                      }}
-                    >
-                      <Icon name="x" size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-                      Close
-                    </button>
+
+                  {/* Right Column: LaTeX Preview */}
+                  <div className="saved-resumes-right-column">
+                    <div className="latex-preview-panel">
+                      <div className="latex-preview-panel-header">
+                        <h3>LaTeX Preview</h3>
+                        <div className="latex-preview-actions">
+                          <button
+                            className="btn btn-primary btn-small"
+                            onClick={async () => {
+                              if (!editedResume) return;
+                              
+                              // Generate LaTeX source
+                              try {
+                                const selectedPayload = buildSelectedResumePayload(editedResume, masterResume);
+                                const latex = buildLatexDocument(selectedPayload);
+                                setLatexSource(latex);
+                                
+                                // Render PDF
+                                await renderPdfPreview();
+                              } catch (error) {
+                                console.error('Error building LaTeX preview:', error);
+                                showError('Could not generate LaTeX preview. Please try again.');
+                              }
+                            }}
+                            disabled={renderingPdf}
+                          >
+                            {renderingPdf ? (
+                              <>
+                                <Icon name="loader" size={14} />
+                                Rendering...
+                              </>
+                            ) : (
+                              <>
+                                <Icon name="refresh" size={14} />
+                                Regenerate PDF
+                              </>
+                            )}
+                          </button>
+                          <button
+                            className="btn btn-secondary btn-small"
+                            onClick={downloadPdf}
+                            disabled={!latexPdfBase64 || renderingPdf}
+                            title="Download PDF"
+                          >
+                            <Icon name="download" size={14} />
+                            Download PDF
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div className="latex-preview-panel-content">
+                        {renderingPdf && <div className="pdf-loading">Rendering PDF…</div>}
+                        {!renderingPdf && latexPdfBase64 && (
+                          <PdfViewerWithOverlays
+                            pdfBase64={latexPdfBase64}
+                            comments={[]}
+                            onTextSelect={(anchor) => {
+                              console.log('Text selected:', anchor);
+                            }}
+                            scale={1.0}
+                            hideHighlighting={true}
+                          />
+                        )}
+                        {!renderingPdf && !latexPdfBase64 && (
+                          <div className="pdf-empty">
+                            <p>Click "Regenerate PDF" to generate a preview.</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-
-              {/* Resume Editor with Tabs */}
-              {editedResume && (
+              ) : (
                 <div className="section">
-                  <SelectedResumeEditor
-                    resume={editedResume}
-                    onUpdate={setEditedResume}
-                    showPersonalInfo={false}
-                    showSkills={true}
-                    showEducation={true}
-                  />
+                  <div className="section-header-modern-with-action">
+                    <div>
+                      <h2>{selectedResume.name}</h2>
+                      <p className="section-description">
+                        Created: {formatDate(selectedResume.createdAt)} • 
+                        Updated: {formatDate(selectedResume.updatedAt)} • 
+                        {getStructuredBulletCount(selectedResume.data)} bullets
+                        {selectedResume.data?.jobDescription && (
+                          <>
+                            <br />
+                            <div style={{ marginTop: '8px', maxWidth: '100%' }}>
+                              <strong>Job:</strong>{' '}
+                              {jobDescriptionExpanded || selectedResume.data.jobDescription.length <= 100
+                                ? (
+                                    <span style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                                      {selectedResume.data.jobDescription}
+                                    </span>
+                                  )
+                                : (
+                                    <>
+                                      <span>{selectedResume.data.jobDescription.substring(0, 100)}</span>
+                                      <button
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          setJobDescriptionExpanded(true);
+                                        }}
+                                        style={{
+                                          background: 'none',
+                                          border: 'none',
+                                          color: 'var(--color-primary-600)',
+                                          cursor: 'pointer',
+                                          textDecoration: 'underline',
+                                          marginLeft: '4px',
+                                          padding: 0,
+                                          fontSize: 'inherit',
+                                          fontWeight: 'var(--font-weight-medium)'
+                                        }}
+                                      >
+                                        Show more
+                                      </button>
+                                    </>
+                                  )}
+                              {jobDescriptionExpanded && selectedResume.data.jobDescription.length > 100 && (
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    setJobDescriptionExpanded(false);
+                                  }}
+                                  style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    color: 'var(--color-primary-600)',
+                                    cursor: 'pointer',
+                                    textDecoration: 'underline',
+                                    marginLeft: '4px',
+                                    padding: 0,
+                                    fontSize: 'inherit',
+                                    fontWeight: 'var(--font-weight-medium)'
+                                  }}
+                                >
+                                  Show less
+                                </button>
+                              )}
+                            </div>
+                          </>
+                        )}
+                      </p>
+                    </div>
+                    <div className="section-header-actions">
+                      <button
+                        className="btn btn-secondary"
+                        onClick={() => {
+                          setSelectedResume(null);
+                          setEditedResume(null);
+                          setShowLatexPreview(false);
+                          setLatexPdfBase64(null);
+                        }}
+                      >
+                        <Icon name="x" size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+                        Close
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
             </>

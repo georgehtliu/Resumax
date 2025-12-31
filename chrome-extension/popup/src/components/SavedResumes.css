@@ -344,7 +344,7 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: var(--space-6);
+  margin: 0 0 var(--space-6) 0;
   padding-bottom: var(--space-4);
   border-bottom: 1px solid var(--color-slate-200);
   gap: var(--space-4);
@@ -371,7 +371,180 @@
   line-height: var(--line-height-normal);
 }
 
+/* Modern Section Styling */
+.section-modern {
+  background: var(--bg-primary);
+  border: 1px solid var(--color-slate-200);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  transition: all var(--transition-base);
+  height: auto;
+  min-height: fit-content;
+  overflow: visible;
+}
+
+.section-modern:hover {
+  border-color: var(--color-slate-300);
+}
+
+/* Two Column Layout for Saved Resume Results */
+.saved-resumes-results-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+  width: 100%;
+  align-items: start;
+  min-height: 600px;
+  margin: 0;
+  padding: 0;
+}
+
+.saved-resumes-left-column {
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  height: auto;
+  min-height: fit-content;
+  margin: 0;
+  padding: 0;
+}
+
+.saved-resumes-left-column .section {
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0;
+}
+
+.saved-resumes-left-column .section-modern {
+  flex: 0 0 auto;
+  height: auto;
+  min-height: fit-content;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-primary);
+  border: 1px solid var(--color-slate-200);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  transition: all var(--transition-base);
+  margin: 0;
+}
+
+.saved-resumes-left-column .section-modern:hover {
+  border-color: var(--color-slate-300);
+}
+
+.saved-resumes-right-column {
+  display: flex;
+  flex-direction: column;
+  height: fit-content;
+  align-self: start;
+  margin: 0;
+  padding: 0;
+}
+
+/* LaTeX Preview Panel */
+.latex-preview-panel {
+  background: var(--bg-primary);
+  border: 1px solid var(--color-slate-200);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  height: auto;
+  min-height: fit-content;
+  margin: 0;
+}
+
+.latex-preview-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0 0 var(--space-4) 0;
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-slate-200);
+}
+
+.latex-preview-panel-header h3 {
+  margin: 0;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.latex-preview-actions {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.latex-preview-panel-content {
+  flex: 0 1 auto;
+  overflow-x: hidden;
+  height: auto;
+  min-height: fit-content;
+  background: #ffffff;
+  border: 1px solid #dbe4ff;
+  border-radius: var(--radius-md);
+  position: relative;
+}
+
+.latex-preview-panel-content .pdf-loading,
+.latex-preview-panel-content .pdf-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  text-align: center;
+  padding: var(--space-4);
+}
+
+.latex-preview-panel-content .pdf-viewer-with-overlays {
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  border: none;
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+}
+
+.latex-preview-panel-content .pdf-viewer-with-overlays .pdf-viewer-controls {
+  flex-shrink: 0;
+}
+
+.latex-preview-panel-content .pdf-viewer-with-overlays .pdf-canvas-container {
+  flex: 0 1 auto;
+  max-height: none;
+  min-height: auto;
+  overflow: visible;
+  position: relative;
+  height: auto;
+  width: 100%;
+}
+
 /* Responsive */
+@media (max-width: 1200px) {
+  .saved-resumes-results-container {
+    grid-template-columns: 1fr;
+  }
+
+  .saved-resumes-right-column {
+    position: relative;
+    top: 0;
+  }
+
+  .latex-preview-panel {
+    min-height: fit-content;
+  }
+}
+
 @media (max-width: 768px) {
   .resume-list {
     grid-template-columns: 1fr;
