@@ -133,6 +133,32 @@
   background: #fee2e2;
   color: #991b1b;
   border: 1px solid #fecaca;
+  position: relative;
+}
+
+.keyword-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  margin-left: 8px;
+  background: var(--color-primary-500, #3b82f6);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm, 4px);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-base, 0.2s);
+}
+
+.keyword-add-btn:hover {
+  background: var(--color-primary-600, #2563eb);
+  transform: translateY(-1px);
+}
+
+.keyword-add-btn:active {
+  transform: translateY(0);
 }
 
 .keyword-name {

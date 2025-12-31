@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Icon } from './ui/Icons';
+import SkillGroupSelectionModal from './SkillGroupSelectionModal';
 import './KeywordScanner.css';
 
 /**
@@ -10,7 +11,9 @@ import './KeywordScanner.css';
  * - Found keywords
  * - Missing keywords
  */
-function KeywordScanner({ keywordData, loading = false }) {
+function KeywordScanner({ keywordData, loading = false, masterResume, currentResume, onAddToSkills }) {
+  const [skillModalOpen, setSkillModalOpen] = useState(false);
+  const [selectedKeyword, setSelectedKeyword] = useState(null);
   if (loading) {
     return (
       <div className="keyword-scanner">
@@ -107,6 +110,19 @@ function KeywordScanner({ keywordData, loading = false }) {
                 {keyword.category !== 'other' && (
                   <span className="keyword-badge category">{keyword.category.replace('_', ' ')}</span>
                 )}
+                {onAddToSkills && (
+                  <button
+                    className="keyword-add-btn"
+                    onClick={() => {
+                      setSelectedKeyword(keyword.keyword);
+                      setSkillModalOpen(true);
+                    }}
+                    title="Add to Skills"
+                  >
+                    <Icon name="plus" size={14} />
+                    Add to Skills
+                  </button>
+                )}
               </div>
             ))}
           </div>
@@ -117,6 +133,42 @@ function KeywordScanner({ keywordData, loading = false }) {
         <div className="keyword-empty">
           <p>No keywords found in job description.</p>
         </div>
+      )}
+
+      {/* Skill Group Selection Modal */}
+      {skillModalOpen && selectedKeyword && (
+        <SkillGroupSelectionModal
+          keyword={selectedKeyword}
+          skillGroups={(currentResume?.skills || masterResume?.skills || [])}
+          onSelect={(skillGroupId) => {
+            if (onAddToSkills) {
+              onAddToSkills(selectedKeyword, skillGroupId);
+            }
+            setSkillModalOpen(false);
+            setSelectedKeyword(null);
+          }}
+          onCreateNew={async (newGroupTitle) => {
+            // Create new skill group and add keyword
+            if (onAddToSkills) {
+              const newGroupId = `skill-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+              
+              // Call onAddToSkills with the new group ID
+              // The callback will create the group and add the keyword
+              try {
+                await onAddToSkills(selectedKeyword, newGroupId, newGroupTitle);
+                setSkillModalOpen(false);
+                setSelectedKeyword(null);
+              } catch (error) {
+                // Error already handled in callback
+                console.error('Error creating skill group:', error);
+              }
+            }
+          }}
+          onClose={() => {
+            setSkillModalOpen(false);
+            setSelectedKeyword(null);
+          }}
+        />
       )}
     </div>
   );

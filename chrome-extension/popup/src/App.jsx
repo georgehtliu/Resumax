@@ -1214,6 +1214,7 @@ function App() {
                 <GenerateResume
                   masterResume={resume}
                   onSave={handleResumeSaved}
+                  onResumeUpdate={saveResumeData}
                   onSelectionComplete={handleSelectionComplete}
                   hideExtract={true}
                 />

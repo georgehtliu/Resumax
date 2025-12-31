@@ -1,4 +1,4 @@
-import React, { useState, startTransition, useEffect } from 'react';
+import React, { useState, startTransition, useEffect, useRef } from 'react';
 import JobMatcher from './JobMatcher';
 import SelectedResumeEditor from './editors/SelectedResumeEditor';
 import LatexPreviewModal from './modals/LatexPreviewModal';
@@ -28,7 +28,7 @@ import './GenerateResume.css';
  * 
  * Tab 2: Generate optimized resume from job description
  */
-function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract = false }) {
+function GenerateResume({ masterResume, onSave, onResumeUpdate, onSelectionComplete, hideExtract = false }) {
   const [currentJob, setCurrentJob] = useState(null);
   const [optimizationResult, setOptimizationResult] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -37,6 +37,7 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [customizedBullets, setCustomizedBullets] = useState(null);
   const [customizedResume, setCustomizedResume] = useState(null);
+  const renderTimerRef = useRef(null);
   const [showLatexPreview, setShowLatexPreview] = useState(false);
   const [latexSource, setLatexSource] = useState('');
   const [latexPdfBase64, setLatexPdfBase64] = useState(null);
@@ -212,6 +213,18 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
 
   function handleResumeUpdate(updatedResume) {
     setCustomizedResume(updatedResume);
+    // Auto-trigger PDF re-render after resume update (debounced)
+    if (optimizationResult && latexPdfBase64) {
+      // Only auto-render if we already have a PDF (to avoid rendering on initial load)
+      // Clear any existing timer
+      if (renderTimerRef.current) {
+        clearTimeout(renderTimerRef.current);
+      }
+      // Set new timer
+      renderTimerRef.current = setTimeout(() => {
+        renderPdfPreview();
+      }, 500); // Debounce by 500ms to avoid excessive API calls
+    }
   }
 
   // Auto-generate LaTeX when resume is generated or updated
@@ -673,6 +686,7 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
                       console.log('Text selected:', anchor);
                     }}
                     scale={1.0}
+                    hideControls={true}
                   />
                 )}
                 {!renderingPdf && !latexPdfBase64 && (
@@ -695,7 +709,113 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
               See which keywords from the job description match your resume
             </p>
           </div>
-          <KeywordScanner keywordData={keywordData} loading={scanningKeywords} />
+          <KeywordScanner 
+            keywordData={keywordData} 
+            loading={scanningKeywords}
+            masterResume={masterResume}
+            currentResume={customizedResume || optimizationResult?.selectedResume}
+            onAddToSkills={async (keyword, skillGroupId, newGroupTitle = null) => {
+              // Update the generated resume (not master resume) with new skill
+              const currentResume = customizedResume || optimizationResult?.selectedResume;
+              if (!currentResume) return;
+              
+              // Capitalize keyword properly (preserve original case formatting)
+              const capitalizeKeyword = (kw) => {
+                const trimmed = kw.trim();
+                const lower = trimmed.toLowerCase();
+                
+                // Common all-caps abbreviations
+                const allCapsTerms = ['aws', 'api', 'ci/cd', 'rest', 'graphql', 'grpc', 'sql', 'nosql', 
+                  'ui', 'ux', 'ml', 'ai', 'nlp', 'rag', 'etl', 'iot', 'saas', 'paas', 'iaas', 
+                  'devops', 'qa', 'tdd', 'bdd', 'oop', 'fp', 'crud', 'jwt', 'oauth', 'ssl', 'tls', 
+                  'http', 'https', 'tcp', 'udp', 'dns', 'cdn', 'sso', 'ldap', 'saml', 'oauth2'];
+                
+                if (allCapsTerms.includes(lower)) {
+                  return trimmed.toUpperCase();
+                }
+                
+                // Handle camelCase/PascalCase (preserve as-is if detected)
+                if (trimmed.match(/^[A-Z][a-z]+[A-Z]/)) {
+                  return trimmed;
+                }
+                
+                // Handle dot notation (e.g., "node.js", "next.js")
+                if (trimmed.includes('.')) {
+                  return trimmed.split('.').map(part => 
+                    part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
+                  ).join('.');
+                }
+                
+                // Handle hyphenated (e.g., "react-native", "machine-learning")
+                if (trimmed.includes('-')) {
+                  return trimmed.split('-').map(part => 
+                    part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
+                  ).join('-');
+                }
+                
+                // Handle slash-separated (e.g., "ci/cd")
+                if (trimmed.includes('/')) {
+                  return trimmed.split('/').map(part => 
+                    part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
+                  ).join('/');
+                }
+                
+                // Default: Title case (first letter uppercase, rest lowercase)
+                return trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
+              };
+              
+              const capitalizedKeyword = capitalizeKeyword(keyword);
+              
+              const currentSkills = currentResume.skills || [];
+              let updatedSkills;
+              
+              // Check if this is a new group (newGroupTitle is provided)
+              if (newGroupTitle) {
+                // Create new skill group
+                updatedSkills = [
+                  ...currentSkills,
+                  {
+                    id: skillGroupId,
+                    title: newGroupTitle,
+                    skills: [capitalizedKeyword]
+                  }
+                ];
+              } else {
+                // Update existing group
+                updatedSkills = currentSkills.map(group => {
+                  if (group.id === skillGroupId) {
+                    // Add keyword if not already present
+                    const skills = group.skills || [];
+                    const keywordLower = keyword.toLowerCase().trim();
+                    if (!skills.some(s => s.toLowerCase().trim() === keywordLower)) {
+                      return {
+                        ...group,
+                        skills: [...skills, capitalizedKeyword]
+                      };
+                    }
+                  }
+                  return group;
+                });
+              }
+              
+              const updatedResume = {
+                ...currentResume,
+                skills: updatedSkills
+              };
+              
+              // Update the generated resume (not master resume)
+              handleResumeUpdate(updatedResume);
+              
+              // Auto-trigger PDF re-render after adding skill
+              if (optimizationResult && latexPdfBase64) {
+                setTimeout(() => {
+                  renderPdfPreview();
+                }, 300);
+              }
+              
+              alert(`Added "${capitalizedKeyword}" to this resume's skills!`);
+            }}
+          />
         </div>
       )}
 
