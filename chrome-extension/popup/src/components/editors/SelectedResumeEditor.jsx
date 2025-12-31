@@ -78,6 +78,15 @@ function SelectedResumeEditor({
 }) {
   const [localResume, setLocalResume] = useState(() => normalizeResume(resume));
   const [activeTab, setActiveTab] = useState('personalInfo');
+  // Initialize all sections as collapsed by default
+  const [collapsedSections, setCollapsedSections] = useState(() => ({
+    personalInfo: true,
+    skills: true,
+    education: true,
+    experiences: true,
+    projects: true,
+    customSections: true
+  }));
   const isLocalUpdateRef = useRef(false);
   const lastResumeRef = useRef(JSON.stringify(resume));
   const updateTimerRef = useRef(null);
@@ -198,6 +207,17 @@ function SelectedResumeEditor({
     });
   }
 
+  const toggleSection = (sectionId) => {
+    setCollapsedSections(prev => ({
+      ...prev,
+      [sectionId]: !prev[sectionId]
+    }));
+  };
+
+  const isSectionCollapsed = (sectionId) => {
+    return collapsedSections[sectionId] === true;
+  };
+
   const visibleSections = useMemo(() => {
     return SECTION_CONFIG.filter((section) => {
       if (section.key === 'education' && !showEducation) {
@@ -274,11 +294,15 @@ function SelectedResumeEditor({
       )}
 
       {verticalLayout ? (
-        /* Vertical Layout: Show all sections */
+        /* Vertical Layout: Show all sections in resume order */
         <div className="selected-resume-vertical-content">
           {showPersonalInfo && (
-            <div className="selected-section">
-              <h3>Personal Information</h3>
+            <CollapsibleSection
+              sectionId="personalInfo"
+              title="Personal Information"
+              isCollapsed={isSectionCollapsed('personalInfo')}
+              onToggle={() => toggleSection('personalInfo')}
+            >
               <PersonalInfoEditor
                 value={localResume.personalInfo}
                 onChange={(info) => updateResume((draft) => {
@@ -286,12 +310,83 @@ function SelectedResumeEditor({
                 })}
                 variant="compact"
               />
-            </div>
+            </CollapsibleSection>
           )}
 
+          {/* Education - matches LaTeX order */}
+          {visibleSections.find(s => s.key === 'education') && (
+            <CollapsibleSection
+              sectionId="education"
+              title={visibleSections.find(s => s.key === 'education')?.title || 'Education'}
+              isCollapsed={isSectionCollapsed('education')}
+              onToggle={() => toggleSection('education')}
+            >
+              <SectionEditor
+                key="education"
+                config={visibleSections.find(s => s.key === 'education')}
+                entries={localResume.education || []}
+                onFieldChange={handleEntryFieldChange}
+                onAddEntry={handleAddEntry}
+                onDeleteEntry={handleDeleteEntry}
+                onAddBullet={handleAddBullet}
+                onBulletChange={handleBulletChange}
+                onDeleteBullet={handleDeleteBullet}
+              />
+            </CollapsibleSection>
+          )}
+
+          {/* Experience - matches LaTeX order */}
+          {visibleSections.find(s => s.key === 'experiences') && (
+            <CollapsibleSection
+              sectionId="experiences"
+              title={visibleSections.find(s => s.key === 'experiences')?.title || 'Work Experience'}
+              isCollapsed={isSectionCollapsed('experiences')}
+              onToggle={() => toggleSection('experiences')}
+            >
+              <SectionEditor
+                key="experiences"
+                config={visibleSections.find(s => s.key === 'experiences')}
+                entries={localResume.experiences || []}
+                onFieldChange={handleEntryFieldChange}
+                onAddEntry={handleAddEntry}
+                onDeleteEntry={handleDeleteEntry}
+                onAddBullet={handleAddBullet}
+                onBulletChange={handleBulletChange}
+                onDeleteBullet={handleDeleteBullet}
+              />
+            </CollapsibleSection>
+          )}
+
+          {/* Projects - matches LaTeX order */}
+          {visibleSections.find(s => s.key === 'projects') && (
+            <CollapsibleSection
+              sectionId="projects"
+              title={visibleSections.find(s => s.key === 'projects')?.title || 'Projects'}
+              isCollapsed={isSectionCollapsed('projects')}
+              onToggle={() => toggleSection('projects')}
+            >
+              <SectionEditor
+                key="projects"
+                config={visibleSections.find(s => s.key === 'projects')}
+                entries={localResume.projects || []}
+                onFieldChange={handleEntryFieldChange}
+                onAddEntry={handleAddEntry}
+                onDeleteEntry={handleDeleteEntry}
+                onAddBullet={handleAddBullet}
+                onBulletChange={handleBulletChange}
+                onDeleteBullet={handleDeleteBullet}
+              />
+            </CollapsibleSection>
+          )}
+
+          {/* Skills - matches LaTeX order */}
           {showSkills && (
-            <div className="selected-section">
-              <h3>Skills</h3>
+            <CollapsibleSection
+              sectionId="skills"
+              title="Skills"
+              isCollapsed={isSectionCollapsed('skills')}
+              onToggle={() => toggleSection('skills')}
+            >
               <SkillsEditor
                 skills={localResume.skills || []}
                 onChange={(updatedSkills) => {
@@ -301,22 +396,30 @@ function SelectedResumeEditor({
                   });
                 }}
               />
-            </div>
+            </CollapsibleSection>
           )}
 
-          {visibleSections.map((section) => (
-            <SectionEditor
-              key={section.key}
-              config={section}
-              entries={localResume[section.key] || []}
-              onFieldChange={handleEntryFieldChange}
-              onAddEntry={handleAddEntry}
-              onDeleteEntry={handleDeleteEntry}
-              onAddBullet={handleAddBullet}
-              onBulletChange={handleBulletChange}
-              onDeleteBullet={handleDeleteBullet}
-            />
-          ))}
+          {/* Custom Sections - matches LaTeX order */}
+          {visibleSections.find(s => s.key === 'customSections') && (
+            <CollapsibleSection
+              sectionId="customSections"
+              title={visibleSections.find(s => s.key === 'customSections')?.title || 'Additional Sections'}
+              isCollapsed={isSectionCollapsed('customSections')}
+              onToggle={() => toggleSection('customSections')}
+            >
+              <SectionEditor
+                key="customSections"
+                config={visibleSections.find(s => s.key === 'customSections')}
+                entries={localResume.customSections || []}
+                onFieldChange={handleEntryFieldChange}
+                onAddEntry={handleAddEntry}
+                onDeleteEntry={handleDeleteEntry}
+                onAddBullet={handleAddBullet}
+                onBulletChange={handleBulletChange}
+                onDeleteBullet={handleDeleteBullet}
+              />
+            </CollapsibleSection>
+          )}
         </div>
       ) : (
         /* Tab Layout: Original tab-based view */
@@ -382,6 +485,34 @@ function SelectedResumeEditor({
   );
 }
 
+function CollapsibleSection({ sectionId, title, isCollapsed, onToggle, children }) {
+  return (
+    <div className={`selected-section ${isCollapsed ? 'collapsed' : ''}`}>
+      <div className="selected-section-header" onClick={onToggle}>
+        <button
+          className="section-toggle-button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggle();
+          }}
+          aria-label={isCollapsed ? `Expand ${title}` : `Collapse ${title}`}
+        >
+          <Icon 
+            name={isCollapsed ? 'chevronRight' : 'chevronDown'} 
+            size={16} 
+          />
+        </button>
+        <h3>{title}</h3>
+      </div>
+      {!isCollapsed && (
+        <div className="selected-section-content">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SectionEditor({
   config,
   entries,
@@ -400,6 +531,7 @@ function SectionEditor({
           + Add {config.title.replace(/s$/, '')}
         </button>
       </div>
+      <div className="selected-section-content">
 
       {entries.length === 0 ? (
         <div className="selected-section-empty">{config.emptyMessage}</div>
@@ -490,6 +622,7 @@ function SectionEditor({
           </div>
         ))
       )}
+      </div>
     </div>
   );
 }

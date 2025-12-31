@@ -161,7 +161,7 @@
   background: var(--bg-primary);
   border: 1px solid var(--color-slate-200);
   border-radius: var(--radius-lg);
-  padding: var(--space-6);
+  padding: var(--space-4);
   transition: all var(--transition-base);
   height: auto;
   min-height: fit-content;
@@ -173,8 +173,8 @@
 }
 
 .section-header-modern {
-  margin-bottom: var(--space-6);
-  padding-bottom: var(--space-4);
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-3);
   border-bottom: 1px solid var(--color-slate-200);
 }
 
@@ -189,10 +189,10 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: var(--space-6);
-  padding-bottom: var(--space-4);
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-3);
   border-bottom: 1px solid var(--color-slate-200);
-  gap: var(--space-4);
+  gap: var(--space-3);
   flex-wrap: wrap;
 }
 
@@ -518,7 +518,6 @@
   position: sticky;
   top: var(--space-4);
   height: fit-content;
-  max-height: calc(100vh - 200px);
   align-self: start;
 }
 
@@ -530,8 +529,8 @@
   padding: var(--space-4);
   display: flex;
   flex-direction: column;
-  height: 100%;
-  min-height: 600px;
+  height: auto;
+  min-height: fit-content;
 }
 
 .latex-preview-panel-header {
@@ -551,10 +550,10 @@
 }
 
 .latex-preview-panel-content {
-  flex: 1;
-  overflow-y: auto;
+  flex: 0 1 auto;
   overflow-x: hidden;
-  min-height: 0;
+  height: auto;
+  min-height: fit-content;
   background: #ffffff;
   border: 1px solid #dbe4ff;
   border-radius: var(--radius-md);
@@ -566,7 +565,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100%;
   min-height: 400px;
   font-size: var(--font-size-sm);
   color: var(--text-secondary);
@@ -607,11 +605,10 @@
   .generate-resume-right-column {
     position: relative;
     top: 0;
-    max-height: none;
   }
 
   .latex-preview-panel {
-    min-height: 500px;
+    min-height: fit-content;
   }
 }
 

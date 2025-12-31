@@ -574,7 +574,7 @@ function GenerateResume({ masterResume, onSave, onSelectionComplete, hideExtract
                 onUpdate={handleResumeUpdate}
                 showPersonalInfo={false}
                 showSkills={true}
-                showEducation={false}
+                showEducation={true}
                 summary={{
                   fitsOnePage: optimizationResult.fitsOnePage,
                   totalLineCount: optimizationResult.totalLineCount,
