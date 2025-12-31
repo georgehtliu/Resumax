@@ -350,10 +350,25 @@ function SelectedResumeEditor({
     
     // Only return bullets from the matching entry
     if (matchingEntry) {
+      // Get text of bullets already in the current entry (to avoid duplicates)
+      const existingBulletTexts = new Set(
+        (currentEntry.selectedBullets || [])
+          .map(b => (b.text || '').trim().toLowerCase())
+          .filter(text => text.length > 0)
+      );
+      
       (matchingEntry.bullets || []).forEach((bullet) => {
+        const bulletText = (bullet.text || '').trim();
+        const bulletTextLower = bulletText.toLowerCase();
+        
+        // Skip if this bullet is already in the current entry
+        if (existingBulletTexts.has(bulletTextLower)) {
+          return;
+        }
+        
         bullets.push({
           id: bullet.id,
-          text: bullet.text || '',
+          text: bulletText,
           parentEntry: {
             company: matchingEntry.company,
             school: matchingEntry.school,
