@@ -135,6 +135,16 @@
   }
 }
 
+/* Make bullet text elements clickable with hover feedback */
+.resume-html-content .t {
+  transition: background-color 0.2s ease;
+}
+
+.resume-html-content .t:hover {
+  background-color: rgba(99, 102, 241, 0.1);
+  border-radius: 2px;
+}
+
 .resume-html-loading {
   padding: 48px;
   text-align: center;
