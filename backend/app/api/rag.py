@@ -19,7 +19,7 @@ from app.services.optimization_service import OptimizationService
 from app.services.keyword_scanner import KeywordScanner
 from app.services.roast_service import RoastService
 from app.services.interview_question_service import InterviewQuestionService
-from app.utils.latex import build_resume_latex, render_pdf_from_latex, pdf_bytes_to_base64
+from app.utils.latex import build_resume_latex, render_pdf_from_latex, pdf_bytes_to_base64, render_html_from_pdf
 import json
 import os
 import time
@@ -375,6 +375,29 @@ async def render_latex_resume(request: LatexRenderRequest):
         raise HTTPException(status_code=503, detail=str(exc))
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Failed to render LaTeX: {exc}")
+
+
+@router.post("/latex/render-html")
+async def render_latex_resume_html(request: LatexRenderRequest):
+    """
+    Compile resume to PDF and convert to HTML using pdf2htmlEX for high-fidelity rendering.
+    
+    Uses Docker if PDF2HTMLEX_USE_DOCKER environment variable is set to "true",
+    otherwise tries to use local pdf2htmlEX installation.
+    """
+    try:
+        latex_source = build_resume_latex(request.resume)
+        pdf_bytes = render_pdf_from_latex(latex_source)
+        html_content = render_html_from_pdf(pdf_bytes)
+        
+        return {
+            "html_content": html_content,
+            "rendered_at": datetime.now().isoformat()
+        }
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Failed to render HTML: {exc}")
 
 @router.post("/keywords/scan", response_model=KeywordScanResponse)
 async def scan_keywords(request: KeywordScanRequest):

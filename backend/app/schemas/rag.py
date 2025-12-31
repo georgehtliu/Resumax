@@ -266,6 +266,7 @@ class LatexRenderRequest(BaseModel):
 class LatexRenderResponse(BaseModel):
     """Response containing the rendered PDF in base64."""
     pdf_base64: str = Field(..., description="Base64-encoded PDF bytes")
+    html_content: Optional[str] = Field(None, description="HTML content from pdf2htmlEX")
     rendered_at: datetime = Field(default_factory=datetime.now, description="Timestamp for rendering")
 
 

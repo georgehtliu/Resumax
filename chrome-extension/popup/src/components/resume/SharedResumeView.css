@@ -25,11 +25,12 @@
 .resume-html-wrapper {
   display: flex;
   justify-content: center;
-  padding: 24px;
-  background: #f8fafc;
-  border-radius: 8px;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
   margin-bottom: 32px;
   position: relative;
+  width: 100%;
 }
 
 .resume-page {
@@ -49,6 +50,146 @@
   -moz-user-select: text;
   -ms-user-select: text;
   caret-color: transparent; /* Hide cursor */
+}
+
+/* PDF2HTML rendered content - pdf2htmlEX generates HTML with fixed dimensions */
+.resume-page.resume-html-content {
+  padding: 0; /* pdf2htmlEX handles its own spacing */
+  overflow: visible; /* Allow content to display at full size without clipping */
+  height: auto; /* Don't constrain height - let pdf2htmlEX content determine it */
+  min-height: 0; /* Don't force minimum height */
+  width: 100%;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  position: relative; /* Establish positioning context for absolutely positioned children */
+}
+
+/* Override pdf2htmlEX styles to allow full height display */
+.resume-html-content #page-container {
+  position: relative !important; /* Change from absolute to relative */
+  bottom: auto !important; /* Remove bottom constraint */
+  right: auto !important; /* Remove right constraint */
+  height: auto !important; /* Allow natural height */
+  overflow: visible !important; /* Don't clip content */
+}
+
+.resume-html-content .pf {
+  position: relative !important; /* Already relative, but ensure it */
+  margin: 0 auto; /* Center the page */
+}
+
+/* Bullet elements in HTML resume */
+.resume-html-content .resume-bullet-element {
+  position: relative;
+}
+
+/* Comment markers for bullets in HTML resume */
+.pf .bullet-comment-marker {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+  background: #6366f1;
+  color: white;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  transition: transform 0.2s, box-shadow 0.2s;
+  pointer-events: auto;
+  line-height: 24px;
+}
+
+.pf .bullet-comment-marker:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  background: #4f46e5;
+}
+
+.pf .bullet-comment-count {
+  line-height: 1;
+}
+
+.resume-html-content .resume-bullet-element.selected {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Highlight for bullets when scrolled to */
+.resume-html-content .bullet-highlighted {
+  background-color: rgba(99, 102, 241, 0.2) !important;
+  padding: 2px 4px;
+  border-radius: 3px;
+  transition: background-color 0.3s ease;
+  animation: bulletHighlightPulse 0.5s ease-in-out;
+}
+
+@keyframes bulletHighlightPulse {
+  0%, 100% {
+    background-color: rgba(99, 102, 241, 0.2);
+  }
+  50% {
+    background-color: rgba(99, 102, 241, 0.4);
+  }
+}
+
+/* Make bullet text elements clickable with hover feedback */
+.resume-html-content .t {
+  transition: background-color 0.2s ease;
+}
+
+.resume-html-content .t:hover {
+  background-color: rgba(99, 102, 241, 0.1);
+  border-radius: 2px;
+}
+
+.resume-html-loading {
+  padding: 48px;
+  text-align: center;
+  color: #6b7280;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.resume-html-error {
+  padding: 24px;
+  margin: 24px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #dc2626;
+  font-size: 14px;
+  text-align: center;
+}
+
+.resume-html-error h3 {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #dc2626;
+}
+
+.resume-html-error p {
+  margin: 0 0 12px 0;
+  line-height: 1.5;
+}
+
+.resume-html-error-note {
+  font-size: 13px;
+  color: #991b1b;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #fecaca;
+  font-style: italic;
 }
 
 .shared-resume-view.loading,
@@ -630,6 +771,13 @@
   top: 80px;
   overflow-y: auto;
   box-shadow: -2px 0 8px rgba(0, 0, 0, 0.05);
+  transition: width 0.3s ease, min-width 0.3s ease;
+}
+
+.comments-side-panel.collapsed {
+  width: 48px;
+  min-width: 48px;
+  overflow: hidden;
 }
 
 .side-panel-header {
@@ -639,6 +787,55 @@
   position: sticky;
   top: 0;
   z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.comments-side-panel.collapsed .side-panel-header {
+  padding: 16px 8px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.side-panel-header-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.comments-side-panel.collapsed .side-panel-header-content {
+  display: none;
+}
+
+.sidebar-toggle-btn {
+  background: transparent;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #6b7280;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.sidebar-toggle-btn:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  color: #374151;
+}
+
+.comments-side-panel.collapsed .sidebar-toggle-btn {
+  width: 32px;
+  height: 32px;
+  font-size: 14px;
 }
 
 .side-panel-header h3 {
@@ -646,6 +843,9 @@
   font-size: 16px;
   font-weight: 600;
   color: #111;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .comment-count {

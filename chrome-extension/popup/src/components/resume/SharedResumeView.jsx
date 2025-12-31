@@ -3,9 +3,9 @@ import { supabase } from '../../config/supabase';
 import HighlightOverlay, { createOverlayHighlight } from '../pdf/HighlightOverlay';
 import CommentsSidePanel from '../comments/CommentsSidePanel';
 import CommentItem from '../comments/CommentItem';
-import ResumeRenderer from './ResumeRenderer';
 import { findBulletText as findBulletTextUtil, findBulletContext as findBulletContextUtil } from '../../utils/resumeUtils';
 import { generateAnonymousUsername } from '../../utils/anonymousUsernames';
+import { renderLatexHtml } from '../../services/api';
 import './SharedResumeView.css';
 
 function SharedResumeView({ shareToken }) {
@@ -14,7 +14,6 @@ function SharedResumeView({ shareToken }) {
   const [bulletComments, setBulletComments] = useState({}); // { bulletId: [comments] }
   const [selectedBulletId, setSelectedBulletId] = useState(null);
   const [hoveredBulletId, setHoveredBulletId] = useState(null);
-  const [bulletRefs, setBulletRefs] = useState({}); // Refs for scrolling to bullets
   const [loading, setLoading] = useState(true);
   const [generalCommentText, setGeneralCommentText] = useState('');
   const [bulletCommentText, setBulletCommentText] = useState('');
@@ -31,6 +30,10 @@ function SharedResumeView({ shareToken }) {
   const highlightHandlerRef = useRef(null);
   const isResumeLoadedRef = useRef(false);
   const [highlights, setHighlights] = useState([]); // Store overlay highlight data
+  const [resumeHtml, setResumeHtml] = useState(null); // HTML content from pdf2htmlEX
+  const [loadingHtml, setLoadingHtml] = useState(false);
+  const [htmlError, setHtmlError] = useState(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   
   // Keep ref in sync with state
   useEffect(() => {
@@ -201,9 +204,269 @@ function SharedResumeView({ shareToken }) {
   };
 
 
-  // PDF rendering removed - using HTML rendering for shared resumes
+  // Convert resume_data to API format for HTML rendering
+  const convertResumeDataToApiFormat = (resumeData) => {
+    if (!resumeData) return null;
 
-  // PDF rendering removed - using HTML rendering for shared resumes
+    // Helper to normalize bullets
+    const normalizeBullets = (bullets) => {
+      if (!Array.isArray(bullets)) return [];
+      return bullets.map((bullet, idx) => {
+        const text = typeof bullet === 'string' ? bullet : (bullet.text || bullet.rewritten || '');
+        const id = bullet.id || `bullet-${idx}`;
+        return {
+          id,
+          text,
+          relevanceScore: bullet.relevanceScore || 0.0,
+          lineCount: bullet.lineCount,
+          original: bullet.original,
+          rewritten: bullet.rewritten
+        };
+      });
+    };
+
+    return {
+      personalInfo: resumeData.personalInfo || null,
+      skills: (resumeData.skills || []).map((group, idx) => ({
+        id: group.id || `skill-${idx}`,
+        title: group.title || '',
+        skills: Array.isArray(group.skills) ? group.skills : []
+      })),
+      experiences: (resumeData.experiences || []).map((entry, idx) => ({
+        id: entry.id || `experience-${idx}`,
+        company: entry.company || '',
+        role: entry.role || '',
+        location: entry.location || null,
+        startDate: entry.startDate || null,
+        endDate: entry.endDate || null,
+        selectedBullets: normalizeBullets(entry.selectedBullets || entry.bullets || [])
+      })),
+      education: (resumeData.education || []).map((entry, idx) => ({
+        id: entry.id || `education-${idx}`,
+        school: entry.school || '',
+        degree: entry.degree || '',
+        field: entry.field || null,
+        startDate: entry.startDate || null,
+        endDate: entry.endDate || null,
+        selectedBullets: normalizeBullets(entry.selectedBullets || entry.bullets || [])
+      })),
+      projects: (resumeData.projects || []).map((entry, idx) => ({
+        id: entry.id || `project-${idx}`,
+        name: entry.name || '',
+        url: entry.url || null,
+        technologies: entry.technologies || entry.tech || null,
+        selectedBullets: normalizeBullets(entry.selectedBullets || entry.bullets || [])
+      })),
+      customSections: (resumeData.customSections || []).map((section, idx) => ({
+        id: section.id || `custom-${idx}`,
+        title: section.title || '',
+        selectedBullets: normalizeBullets(section.selectedBullets || section.bullets || [])
+      }))
+    };
+  };
+
+  // Load HTML resume from pdf2htmlEX (required - no fallback)
+  const loadResumeHtml = async () => {
+    if (!resume || !resume.resume_data) {
+      return;
+    }
+
+    setLoadingHtml(true);
+    setHtmlError(null);
+    
+    try {
+      const apiFormat = convertResumeDataToApiFormat(resume.resume_data);
+      if (!apiFormat) {
+        throw new Error('Failed to convert resume data');
+      }
+
+      const response = await renderLatexHtml(apiFormat);
+      if (response?.html_content) {
+        setResumeHtml(response.html_content);
+      } else {
+        throw new Error('No HTML content in response - pdf2htmlEX may not be configured');
+      }
+    } catch (err) {
+      console.error('Error loading HTML resume:', err);
+      setHtmlError(err.message || 'Failed to load HTML resume. pdf2htmlEX is required.');
+    } finally {
+      setLoadingHtml(false);
+    }
+  };
+
+  // Load HTML when resume is loaded
+  useEffect(() => {
+    if (resume && resume.resume_data && !loading) {
+      loadResumeHtml();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resume?.id, loading]);
+
+  // Remove markers when HTML changes (markers will be added on-demand if needed)
+  useEffect(() => {
+    if (resumePageRef.current) {
+      resumePageRef.current.querySelectorAll('.bullet-comment-marker').forEach(marker => marker.remove());
+    }
+  }, [resumeHtml]);
+
+  // Add click handlers to bullet text elements for commenting
+  useEffect(() => {
+    if (!resumeHtml || !resume || !resumePageRef.current || !resume.resume_data) return;
+
+    const resumePage = resumePageRef.current;
+    
+    // Helper to normalize text for comparison
+    const normalizeText = (text) => {
+      return text
+        .replace(/\s+/g, ' ')
+        .replace(/[•\u2022\u2023\u25E6\u2043\u2219]/g, '') // Remove bullet characters
+        .trim()
+        .toLowerCase();
+    };
+
+    // Build a map of bullet text to bullet IDs from resume data
+    const bulletTextMap = new Map();
+    const data = resume.resume_data;
+    const sections = [
+      ...(data.experiences || []),
+      ...(data.education || []),
+      ...(data.projects || []),
+      ...(data.customSections || [])
+    ];
+
+    sections.forEach((entry) => {
+      const bullets = entry.selectedBullets || entry.bullets || [];
+      bullets.forEach((bullet, idx) => {
+        const bulletId = bullet.id || `${entry.id}-bullet-${idx}`;
+        const bulletText = typeof bullet === 'string' ? bullet : (bullet.text || bullet.rewritten || '');
+        
+        if (!bulletText.trim()) return;
+        
+        // Remove leading bullet character if present
+        const cleanText = bulletText.replace(/^[•\u2022\u2023\u25E6\u2043\u2219\s]+/, '').trim();
+        if (!cleanText) return;
+        
+        const normalizedText = normalizeText(cleanText);
+        bulletTextMap.set(normalizedText, bulletId);
+      });
+    });
+
+    // Function to find bullet ID from an element - handles bullets that span multiple elements
+    const findBulletIdForElement = (element) => {
+      const elementText = element.textContent || '';
+      const normalizedElement = normalizeText(elementText);
+      
+      // Try exact match
+      if (bulletTextMap.has(normalizedElement)) {
+        return bulletTextMap.get(normalizedElement);
+      }
+      
+      // Try substring match - check if element text contains bullet text
+      for (const [normalizedBulletText, bulletId] of bulletTextMap.entries()) {
+        if (normalizedElement.includes(normalizedBulletText) || normalizedBulletText.includes(normalizedElement)) {
+          return bulletId;
+        }
+      }
+      
+      // If no direct match, try finding text that starts with the first few words of a bullet
+      // This handles cases where bullets are split across multiple .t elements
+      const elementWords = normalizedElement.split(/\s+/).filter(w => w.length > 3);
+      if (elementWords.length > 0) {
+        // Try matching first 3-5 words
+        for (let wordCount = Math.min(5, elementWords.length); wordCount >= 3; wordCount--) {
+          const prefix = elementWords.slice(0, wordCount).join(' ');
+          for (const [normalizedBulletText, bulletId] of bulletTextMap.entries()) {
+            if (normalizedBulletText.startsWith(prefix)) {
+              return bulletId;
+            }
+          }
+        }
+      }
+      
+      // Also try checking surrounding elements (bullets might be split)
+      // Get parent container and check all text within it
+      const parent = element.closest('.pc') || element.closest('.pf');
+      if (parent) {
+        // Get all text elements in the same container
+        const siblings = parent.querySelectorAll('.t');
+        let combinedText = '';
+        let foundIndex = -1;
+        
+        // Find where our element is in the sequence
+        siblings.forEach((sibling, idx) => {
+          if (sibling === element || sibling.contains(element)) {
+            foundIndex = idx;
+          }
+        });
+        
+        // Build combined text from nearby elements (check 5 elements before and after)
+        if (foundIndex >= 0) {
+          const startIdx = Math.max(0, foundIndex - 2);
+          const endIdx = Math.min(siblings.length, foundIndex + 8);
+          
+          for (let i = startIdx; i < endIdx; i++) {
+            combinedText += (siblings[i].textContent || '') + ' ';
+          }
+          
+          const normalizedCombined = normalizeText(combinedText);
+          
+          // Check if combined text matches any bullet
+          for (const [normalizedBulletText, bulletId] of bulletTextMap.entries()) {
+            if (normalizedCombined.includes(normalizedBulletText)) {
+              return bulletId;
+            }
+          }
+        }
+      }
+      
+      return null;
+    };
+
+    // Add click handler to text elements
+    const handleTextClick = (e) => {
+      const element = e.target;
+      // Make sure we're clicking on a .t element (pdf2htmlEX text elements)
+      const textElement = element.closest('.t') || (element.classList.contains('t') ? element : null);
+      if (!textElement) return;
+
+      const bulletId = findBulletIdForElement(textElement);
+      if (bulletId) {
+        e.preventDefault();
+        e.stopPropagation();
+        setSelectedBulletId(bulletId);
+        // Scroll to the element
+        textElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    };
+
+    // Add hover handler for visual feedback
+    const handleTextHover = (e) => {
+      const element = e.target;
+      const textElement = element.closest('.t') || (element.classList.contains('t') ? element : null);
+      if (!textElement) return;
+
+      const bulletId = findBulletIdForElement(textElement);
+      if (bulletId) {
+        textElement.style.cursor = 'pointer';
+        textElement.title = 'Click to comment on this bullet';
+      }
+    };
+
+    // Add event listeners to all text elements
+    const textElements = resumePage.querySelectorAll('.t');
+    textElements.forEach((element) => {
+      element.addEventListener('click', handleTextClick);
+      element.addEventListener('mouseenter', handleTextHover);
+    });
+
+    // Cleanup
+    return () => {
+      textElements.forEach((element) => {
+        element.removeEventListener('click', handleTextClick);
+        element.removeEventListener('mouseenter', handleTextHover);
+      });
+    };
+  }, [resumeHtml, resume]);
 
   const loadComments = async () => {
     try {
@@ -369,16 +632,129 @@ function SharedResumeView({ shareToken }) {
     }
   };
 
-  // Scroll to bullet in HTML view
-  const scrollToBulletInHtml = (bulletId) => {
-    const bulletElement = bulletRefs[bulletId];
-    if (bulletElement) {
-      bulletElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  // Scroll to bullet in HTML view and highlight it - fuzzy matching (90% similarity)
+  const scrollToBulletInHtml = useCallback((bulletId) => {
+    if (!resumePageRef.current || !resume) return;
+    
+    // Get the bullet text we're looking for
+    const bulletText = findBulletTextUtil(resume, bulletId);
+    if (!bulletText) return;
+    
+    // Normalize text for comparison
+    const normalizeText = (text) => {
+      return text
+        .replace(/\s+/g, ' ')
+        .replace(/[•\u2022\u2023\u25E6\u2043\u2219]/g, '') // Remove bullet characters
+        .trim()
+        .toLowerCase();
+    };
+    
+    // Calculate similarity between two strings (0-1)
+    const calculateSimilarity = (str1, str2) => {
+      const longer = str1.length > str2.length ? str1 : str2;
+      const shorter = str1.length > str2.length ? str2 : str1;
+      
+      if (longer.length === 0) return 1.0;
+      
+      // Simple character-by-character comparison
+      let matches = 0;
+      const minLength = Math.min(longer.length, shorter.length);
+      const maxLength = Math.max(longer.length, shorter.length);
+      
+      for (let i = 0; i < minLength; i++) {
+        if (longer[i] === shorter[i]) {
+          matches++;
+        }
+      }
+      
+      // Also check for substring matches
+      if (longer.includes(shorter) || shorter.includes(longer)) {
+        matches += Math.abs(maxLength - minLength) * 0.5; // Partial credit for length difference
+      }
+      
+      // Calculate similarity score
+      const baseScore = matches / maxLength;
+      
+      // Bonus for length similarity
+      const lengthRatio = minLength / maxLength;
+      
+      return (baseScore * 0.7 + lengthRatio * 0.3);
+    };
+    
+    // Remove leading bullet character if present
+    const cleanText = bulletText.replace(/^[•\u2022\u2023\u25E6\u2043\u2219\s]+/, '').trim();
+    if (!cleanText) return;
+    
+    const normalizedSearch = normalizeText(cleanText);
+    
+    // Remove previous highlights
+    if (resumePageRef.current) {
+      resumePageRef.current.querySelectorAll('.bullet-highlighted').forEach(el => {
+        el.classList.remove('bullet-highlighted');
+      });
+    }
+    
+    // Linear search through all text elements with fuzzy matching
+    const textElements = resumePageRef.current.querySelectorAll('.t');
+    let foundElement = null;
+    let bestSimilarity = 0;
+    const SIMILARITY_THRESHOLD = 0.9; // 90% similarity
+    
+    for (const element of textElements) {
+      const elementText = element.textContent || '';
+      const normalizedElement = normalizeText(elementText);
+      
+      // Calculate similarity
+      const similarity = calculateSimilarity(normalizedSearch, normalizedElement);
+      
+      if (similarity >= SIMILARITY_THRESHOLD && similarity > bestSimilarity) {
+        bestSimilarity = similarity;
+        foundElement = element;
+      }
+    }
+    
+    // If no single element matches well enough, try combining nearby elements
+    if (!foundElement) {
+      // Try to find a sequence of elements that together match the bullet
+      const elementsArray = Array.from(textElements);
+      
+      for (let i = 0; i < elementsArray.length; i++) {
+        let combinedText = '';
+        // Try combining up to 5 consecutive elements
+        for (let j = i; j < Math.min(i + 5, elementsArray.length); j++) {
+          combinedText += (elementsArray[j].textContent || '') + ' ';
+          const normalizedCombined = normalizeText(combinedText);
+          const similarity = calculateSimilarity(normalizedSearch, normalizedCombined);
+          
+          if (similarity >= SIMILARITY_THRESHOLD && similarity > bestSimilarity) {
+            bestSimilarity = similarity;
+            foundElement = elementsArray[i]; // Use first element of the sequence
+            break;
+          }
+        }
+      }
+    }
+    
+    if (foundElement) {
+      // Highlight the found element
+      foundElement.classList.add('bullet-highlighted');
+      
+      // Scroll to it
+      foundElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      
       setSelectedBulletId(bulletId);
       setHighlightedBulletInPdf(bulletId);
-      setTimeout(() => setHighlightedBulletInPdf(null), 3000);
+      
+      // Remove highlight after 3 seconds
+      setTimeout(() => {
+        if (foundElement) {
+          foundElement.classList.remove('bullet-highlighted');
+        }
+        setHighlightedBulletInPdf(null);
+      }, 3000);
     }
-  };
+  }, [resume]);
+
 
   const findBulletText = useCallback((bulletId) => {
     return findBulletTextUtil(resume, bulletId);
@@ -447,23 +823,28 @@ function SharedResumeView({ shareToken }) {
       <div className="resume-layout">
         <div className="resume-main-content">
           <div className="resume-html-wrapper" style={{ position: 'relative' }}>
-            <div 
-              className="resume-page" 
-              ref={resumePageRef}
-              contentEditable="false"
-              suppressContentEditableWarning={true}
-            >
-              <ResumeRenderer
-                resume={resume}
-                bulletComments={bulletComments}
-                selectedBulletId={selectedBulletId}
-                hoveredBulletId={hoveredBulletId}
-                setSelectedBulletId={setSelectedBulletId}
-                setHoveredBulletId={setHoveredBulletId}
-                bulletRefs={bulletRefs}
-                setBulletRefs={setBulletRefs}
+            {loadingHtml ? (
+              <div className="resume-html-loading">Loading high-fidelity resume...</div>
+            ) : htmlError ? (
+              <div className="resume-html-error">
+                <h3>Failed to load high-fidelity resume</h3>
+                <p>{htmlError}</p>
+                <p className="resume-html-error-note">
+                  pdf2htmlEX is required for high-fidelity HTML rendering. 
+                  Please ensure pdf2htmlEX is installed and configured correctly.
+                </p>
+              </div>
+            ) : resumeHtml ? (
+              <div 
+                className="resume-page resume-html-content" 
+                ref={resumePageRef}
+                dangerouslySetInnerHTML={{ __html: resumeHtml }}
+                contentEditable="false"
+                suppressContentEditableWarning={true}
               />
-            </div>
+            ) : (
+              <div className="resume-html-loading">Preparing resume...</div>
+            )}
             {/* Highlight overlay container - positioned to match resume-page */}
             <HighlightOverlay 
               containerRef={resumePageRef}
@@ -554,6 +935,8 @@ function SharedResumeView({ shareToken }) {
             hoveredCommentId={hoveredCommentId}
             setHoveredCommentId={setHoveredCommentId}
             scrollToBulletInHtml={scrollToBulletInHtml}
+            collapsed={sidebarCollapsed}
+            onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
           />
         )}
       </div>

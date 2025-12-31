@@ -1,4 +1,5 @@
 import base64
+import os
 import shutil
 import subprocess
 from datetime import datetime
@@ -283,3 +284,114 @@ def render_pdf_from_latex(latex_source: str) -> bytes:
 
 def pdf_bytes_to_base64(pdf_bytes: bytes) -> str:
     return base64.b64encode(pdf_bytes).decode("utf-8")
+
+
+def render_html_from_pdf(pdf_bytes: bytes, use_docker: bool = None) -> str:
+    """
+    Convert PDF to HTML using pdf2htmlEX.
+    Returns the HTML content as a string.
+    
+    Args:
+        pdf_bytes: PDF file bytes
+        use_docker: If True, use Docker to run pdf2htmlEX instead of local installation.
+                   If None, checks PDF2HTMLEX_USE_DOCKER environment variable.
+    
+    pdf2htmlEX options:
+    - --zoom 1.0: 100% zoom factor
+    - --process-outline 0: Don't generate outline
+    - --embed-css 1: Embed CSS in HTML (single file output)
+    - --embed-font 1: Embed fonts (self-contained)
+    - --embed-image 1: Embed images (self-contained)
+    - --split-pages 0: Single page output
+    - --page-filename: Output filename
+    """
+    # Check environment variable if use_docker not explicitly set
+    if use_docker is None:
+        use_docker = os.getenv("PDF2HTMLEX_USE_DOCKER", "false").lower() in ("true", "1", "yes")
+    
+    if use_docker:
+        # Use Docker to run pdf2htmlEX
+        docker_path = shutil.which("docker")
+        if docker_path is None:
+            raise RuntimeError(
+                "docker executable not found on PATH. "
+                "Install Docker or build pdf2htmlEX from source (see INSTALL_PDF2HTMLEX.md)"
+            )
+        
+        with TemporaryDirectory(prefix="pdf2html_") as tmpdir:
+            pdf_path = Path(tmpdir) / "resume.pdf"
+            pdf_path.write_bytes(pdf_bytes)
+            
+            # Run pdf2htmlEX in Docker container
+            # Using locally built image (pdf2htmlex:local)
+            # Build it with: docker build -f Dockerfile.pdf2htmlex -t pdf2htmlex:local .
+            result = subprocess.run(
+                [
+                    docker_path, "run", "--rm",
+                    "-v", f"{tmpdir}:/workspace",
+                    "-w", "/workspace",
+                    "pdf2htmlex:local",
+                    "pdf2htmlEX",
+                    "--zoom", "1.0",
+                    "--process-outline", "0",
+                    "--embed-css", "1",
+                    "--embed-font", "1",
+                    "--embed-image", "1",
+                    "--split-pages", "0",
+                    "--page-filename", "resume.html",
+                    "resume.pdf"
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            
+            if result.returncode != 0:
+                raise RuntimeError(f"pdf2htmlEX (Docker) failed: {result.stderr.strip()}")
+            
+            html_path = Path(tmpdir) / "resume.html"
+            if not html_path.exists():
+                raise RuntimeError("HTML output not produced by pdf2htmlEX")
+            
+            return html_path.read_text(encoding="utf-8")
+    else:
+        # Use local pdf2htmlEX installation
+        pdf2htmlex_path = shutil.which("pdf2htmlEX")
+        if pdf2htmlex_path is None:
+            raise RuntimeError(
+                "pdf2htmlEX executable not found on PATH. "
+                "Install pdf2htmlEX from source (see INSTALL_PDF2HTMLEX.md) or "
+                "set PDF2HTMLEX_USE_DOCKER=true to use Docker instead."
+            )
+        
+        with TemporaryDirectory(prefix="pdf2html_") as tmpdir:
+            pdf_path = Path(tmpdir) / "resume.pdf"
+            pdf_path.write_bytes(pdf_bytes)
+            
+            result = subprocess.run(
+                [
+                    pdf2htmlex_path,
+                    "--dest-dir", tmpdir,
+                    "--zoom", "1.0",
+                    "--process-outline", "0",
+                    "--embed-css", "1",
+                    "--embed-font", "1",
+                    "--embed-image", "1",
+                    "--split-pages", "0",
+                    "--page-filename", "resume.html",
+                    pdf_path.name
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+                cwd=tmpdir,
+            )
+            
+            if result.returncode != 0:
+                raise RuntimeError(f"pdf2htmlEX failed: {result.stderr.strip()}")
+            
+            html_path = Path(tmpdir) / "resume.html"
+            if not html_path.exists():
+                raise RuntimeError("HTML output not produced by pdf2htmlEX")
+            
+            return html_path.read_text(encoding="utf-8")
