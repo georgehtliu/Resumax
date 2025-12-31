@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Info, Lightbulb, User, Sparkles, FileText, Users, GraduationCap, 
-  Bot, MessageSquare, Rocket 
+  Bot, MessageSquare, Rocket, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import './SideNav.css';
 
@@ -11,6 +11,7 @@ import './SideNav.css';
  */
 function SideNav({ activeView, onViewChange, userEmail, onSignOut }) {
   const [expandedItems, setExpandedItems] = useState({});
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   // Auto-expand coaching if on a coaching sub-item
   useEffect(() => {
@@ -55,13 +56,33 @@ function SideNav({ activeView, onViewChange, userEmail, onSignOut }) {
     return activeView === subItemId;
   };
 
+  // Update CSS variable for sidebar width
+  useEffect(() => {
+    document.documentElement.style.setProperty('--sidebar-width', isCollapsed ? '72px' : '260px');
+  }, [isCollapsed]);
+
   return (
-    <nav className="side-nav">
+    <nav className={`side-nav ${isCollapsed ? 'collapsed' : ''}`}>
       <div className="side-nav-header">
         <div className="side-nav-logo">
           <Rocket className="logo-icon" size={24} />
-          <span className="logo-text">Resume Master</span>
+          {!isCollapsed && <span className="logo-text">Resume Master</span>}
         </div>
+        <button
+          className="side-nav-toggle"
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsCollapsed(!isCollapsed);
+          }}
+          title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          {isCollapsed ? (
+            <ChevronRight size={18} />
+          ) : (
+            <ChevronLeft size={18} />
+          )}
+        </button>
       </div>
       
       <div className="side-nav-menu">
@@ -71,6 +92,11 @@ function SideNav({ activeView, onViewChange, userEmail, onSignOut }) {
               className={`side-nav-item ${isItemActive(item) ? 'active' : ''} ${item.subItems ? 'has-submenu' : ''}`}
               onClick={() => {
                 if (item.subItems) {
+                  if (isCollapsed) {
+                    // If collapsed, just change view to first sub-item
+                    onViewChange(item.subItems[0].id);
+                    return;
+                  }
                   const isExpanded = expandedItems[item.id];
                   toggleExpanded(item.id);
                   // If clicking parent, go to first sub-item if not already on a sub-item
@@ -85,17 +111,18 @@ function SideNav({ activeView, onViewChange, userEmail, onSignOut }) {
                   onViewChange(item.id);
                 }
               }}
+              title={isCollapsed ? item.label : undefined}
             >
               {React.createElement(item.icon, { className: 'nav-icon', size: 18 })}
-              <span className="nav-label">{item.label}</span>
-              {item.subItems && (
+              {!isCollapsed && <span className="nav-label">{item.label}</span>}
+              {!isCollapsed && item.subItems && (
                 <span className={`nav-chevron ${expandedItems[item.id] ? 'expanded' : ''}`}>
                   ▼
                 </span>
               )}
             </button>
             
-            {item.subItems && expandedItems[item.id] && (
+            {!isCollapsed && item.subItems && expandedItems[item.id] && (
               <div className="nav-submenu">
                 {item.subItems.map((subItem) => (
                   <button
@@ -113,14 +140,27 @@ function SideNav({ activeView, onViewChange, userEmail, onSignOut }) {
         ))}
       </div>
 
-      <div className="side-nav-footer">
-        <div className="user-info">
-          <div className="user-email">{userEmail || 'User'}</div>
+      {!isCollapsed && (
+        <div className="side-nav-footer">
+          <div className="user-info">
+            <div className="user-email">{userEmail || 'User'}</div>
+          </div>
+          <button className="sign-out-btn" onClick={onSignOut}>
+            Sign Out
+          </button>
         </div>
-        <button className="sign-out-btn" onClick={onSignOut}>
-          Sign Out
-        </button>
-      </div>
+      )}
+      {isCollapsed && (
+        <div className="side-nav-footer">
+          <button 
+            className="sign-out-btn-icon" 
+            onClick={onSignOut}
+            title="Sign Out"
+          >
+            <User size={18} />
+          </button>
+        </div>
+      )}
     </nav>
   );
 }

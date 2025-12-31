@@ -34,7 +34,8 @@ body {
 }
 
 .app-content.with-sidebar {
-  margin-left: 260px;
+  margin-left: var(--sidebar-width, 260px);
+  transition: margin-left var(--transition-base);
 }
 
 .app-main {
