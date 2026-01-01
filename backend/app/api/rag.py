@@ -4,14 +4,15 @@ RAG API endpoints for resume optimization.
 This module exposes the RAG pipeline through REST API endpoints.
 """
 
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import APIRouter, HTTPException, BackgroundTasks, UploadFile, File, Form
 from app.schemas.rag import (
     RAGRequest, RAGResponse, SelectionRequest, SelectionResponse,
     OptimizationRequest, OptimizationResponse,
     LatexRenderRequest, LatexRenderResponse,
     KeywordScanRequest, KeywordScanResponse,
     RoastRequest, RoastResponse,
-    InterviewQuestionRequest, InterviewQuestionResponse
+    InterviewQuestionRequest, InterviewQuestionResponse,
+    ParseResumeResponse
 )
 from app.services.rag_service import RAGService
 from app.services.selection_service import SelectionService, calculate_total_lines, identify_gaps
@@ -19,6 +20,7 @@ from app.services.optimization_service import OptimizationService
 from app.services.keyword_scanner import KeywordScanner
 from app.services.roast_service import RoastService
 from app.services.interview_question_service import InterviewQuestionService
+from app.services.resume_parser_service import ResumeParserService
 from app.utils.latex import build_resume_latex, render_pdf_from_latex, pdf_bytes_to_base64, render_html_from_pdf
 import json
 import os
@@ -398,6 +400,65 @@ async def render_latex_resume_html(request: LatexRenderRequest):
         raise HTTPException(status_code=503, detail=str(exc))
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Failed to render HTML: {exc}")
+
+@router.post("/parse-resume", response_model=ParseResumeResponse)
+async def parse_resume(file: UploadFile = File(...)):
+    """
+    Parse a resume file (PDF, DOCX, or TXT) and extract structured data.
+    
+    This endpoint accepts a file upload and uses LLM to extract structured
+    resume information matching the StructuredResume schema.
+    
+    Args:
+        file: Uploaded resume file (PDF, DOCX, or TXT)
+        
+    Returns:
+        ParseResumeResponse with parsed resume data or error information
+    """
+    try:
+        # Validate file type
+        allowed_types = [
+            "application/pdf",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/msword",
+            "text/plain"
+        ]
+        
+        if file.content_type not in allowed_types:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unsupported file type: {file.content_type}. Supported types: PDF, DOCX, DOC, TXT"
+            )
+        
+        # Read file data
+        file_data = await file.read()
+        
+        if len(file_data) == 0:
+            raise HTTPException(status_code=400, detail="File is empty")
+        
+        # Check file size (10MB limit)
+        max_size = 10 * 1024 * 1024  # 10MB
+        if len(file_data) > max_size:
+            raise HTTPException(status_code=400, detail="File size exceeds 10MB limit")
+        
+        # Parse resume
+        parser_service = ResumeParserService()
+        result = await parser_service.parse_resume(
+            file_data=file_data,
+            file_type=file.content_type or "application/pdf",
+            filename=file.filename or "resume"
+        )
+        
+        return ParseResumeResponse(**result)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error parsing resume: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to parse resume: {str(e)}"
+        )
 
 @router.post("/keywords/scan", response_model=KeywordScanResponse)
 async def scan_keywords(request: KeywordScanRequest):

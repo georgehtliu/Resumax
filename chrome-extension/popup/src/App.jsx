@@ -23,6 +23,7 @@ import { useToast } from './hooks/useToast';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { supabase } from './config/supabase';
 import { storageService } from './services/storage';
+import { apiService } from './services/api';
 import Skeleton, { SkeletonCard } from './components/ui/Skeleton';
 import { Icon } from './components/ui/Icons';
 import HumanCritiqueSelection from './components/coaching/HumanCritiqueSelection';
@@ -1228,6 +1229,102 @@ function App() {
               onResumeUpdate={(updatedResume) => setResume(updatedResume)}
               onSave={saveResumeData}
               calculateTotalBullets={calculateTotalBullets}
+              onClearAllData={async () => {
+                setLoading(true);
+                try {
+                  // Clear master resume
+                  await storageService.clearResume();
+                  
+                  // Clear all saved resumes
+                  const savedResumes = await storageService.getSavedResumes();
+                  for (const savedResume of savedResumes) {
+                    await storageService.deleteSavedResume(savedResume.id);
+                  }
+                  
+                  // Reload to show empty state
+                  await loadResumeData();
+                  success('All data cleared successfully.');
+                } catch (error) {
+                  console.error('Error clearing data:', error);
+                  error(`Failed to clear data: ${error.message}`);
+                } finally {
+                  setLoading(false);
+                }
+              }}
+              onImportResume={async (file) => {
+                setLoading(true);
+                try {
+                  // Read file data
+                  const fileData = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.onerror = reject;
+                    if (file.type === 'text/plain') {
+                      reader.readAsText(file);
+                    } else {
+                      reader.readAsDataURL(file);
+                    }
+                  });
+                  
+                  // Prepare file data for API
+                  const fileDataForApi = {
+                    file: file,
+                    name: file.name,
+                    type: file.type,
+                    size: file.size,
+                    data: fileData
+                  };
+                  
+                  // Parse resume
+                  const parseResult = await apiService.parseResume(fileDataForApi);
+                  
+                  // Show parse result in a modal/dialog
+                  if (parseResult.success && parseResult.resume) {
+                    const confirmed = window.confirm(
+                      `Resume parsed successfully! This will replace your current resume. Continue?`
+                    );
+                    if (confirmed) {
+                      // Convert parsed resume to master resume format
+                      const masterResume = {
+                        personalInfo: parseResult.resume.personalInfo || {},
+                        skills: parseResult.resume.skills || [],
+                        experiences: parseResult.resume.experiences || [],
+                        education: parseResult.resume.education || [],
+                        projects: parseResult.resume.projects || [],
+                        customSections: parseResult.resume.customSections || [],
+                        totalBullets: calculateTotalBullets(parseResult.resume)
+                      };
+                      
+                      await storageService.saveResume(masterResume);
+                      await loadResumeData();
+                      success('Resume imported successfully!');
+                    }
+                  } else {
+                    // Show error or partial result
+                    const errorMsg = parseResult.errors?.join(', ') || 'Failed to parse resume';
+                    const warningMsg = parseResult.warnings?.join(', ') || '';
+                    const fullMsg = warningMsg ? `${errorMsg}\n\n${warningMsg}` : errorMsg;
+                    
+                    if (parseResult.raw_text) {
+                      const useText = window.confirm(
+                        `${fullMsg}\n\nWould you like to view the extracted text?`
+                      );
+                      if (useText) {
+                        // Could open a modal with the raw text for manual entry
+                        console.log('Extracted text:', parseResult.raw_text);
+                        error('Parsing failed. Please try a different file or enter manually.');
+                      }
+                    } else {
+                      error(fullMsg);
+                    }
+                  }
+                } catch (error) {
+                  console.error('Error importing resume:', error);
+                  error(`Failed to import resume: ${error.message}`);
+                } finally {
+                  setLoading(false);
+                }
+              }}
               onLoadMockData={async () => {
                 setLoading(true);
                 try {

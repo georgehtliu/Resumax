@@ -384,3 +384,20 @@ class InterviewQuestionResponse(BaseModel):
     questions: List[InterviewQuestion] = Field(default_factory=list, description="Generated interview questions")
     processing_time: float = Field(..., description="Processing time in seconds")
     created_at: datetime = Field(default_factory=datetime.now, description="Timestamp")
+
+
+# ============================================================================
+# RESUME PARSING SCHEMAS
+# ============================================================================
+
+class ParseResumeResponse(BaseModel):
+    """Response for resume parsing endpoint."""
+    success: bool = Field(..., description="Whether parsing was successful")
+    resume: Optional[StructuredResume] = Field(None, description="Parsed structured resume (if successful)")
+    raw_text: Optional[str] = Field(None, description="Extracted raw text from resume file")
+    warnings: List[str] = Field(default_factory=list, description="Warnings during parsing")
+    errors: List[str] = Field(default_factory=list, description="Errors encountered during parsing")
+    extraction_quality: Literal["complete", "partial", "minimal", "failed"] = Field(..., description="Quality of extraction")
+    extracted_sections: Dict[str, bool] = Field(default_factory=dict, description="Which sections were successfully extracted")
+    processing_time: float = Field(..., description="Processing time in seconds")
+    created_at: datetime = Field(default_factory=datetime.now, description="Timestamp")

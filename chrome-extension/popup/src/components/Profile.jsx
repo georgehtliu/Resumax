@@ -57,7 +57,7 @@ const SECTION_CONFIG = [
   }
 ];
 
-function Profile({ resume, onResumeUpdate, onSave, calculateTotalBullets, onLoadMockData }) {
+function Profile({ resume, onResumeUpdate, onSave, calculateTotalBullets, onLoadMockData, onImportResume, onClearAllData }) {
   const [localResume, setLocalResume] = useState(() => normalizeResume(resume));
   
   // Smart expansion: expand sections with content, especially Personal Info and Skills
@@ -368,7 +368,33 @@ function Profile({ resume, onResumeUpdate, onSave, calculateTotalBullets, onLoad
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', alignItems: 'flex-end' }}>
-            <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center', flexWrap: 'wrap' }}>
+              {onImportResume && (
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = '.pdf,.doc,.docx,.txt';
+                    input.onchange = async (e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        await onImportResume(file);
+                      }
+                    };
+                    input.click();
+                  }}
+                  style={{ 
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 'var(--space-2)'
+                  }}
+                  title="Import resume from file (PDF, DOCX, TXT)"
+                >
+                  <Icon name="file" size={16} />
+                  <span>Import from Resume</span>
+                </button>
+              )}
               {onLoadMockData && (
                 <button
                   className="btn btn-secondary"
@@ -386,6 +412,50 @@ function Profile({ resume, onResumeUpdate, onSave, calculateTotalBullets, onLoad
                 >
                   <Icon name="upload" size={16} />
                   <span>Load Mock Data</span>
+                </button>
+              )}
+              {onClearAllData && (
+                <button
+                  className="btn btn-secondary"
+                  onClick={async () => {
+                    const confirmed = window.confirm(
+                      '⚠️ WARNING: This will permanently delete ALL your resume data!\n\n' +
+                      'This includes:\n' +
+                      '• All experiences and bullet points\n' +
+                      '• All education entries\n' +
+                      '• All projects\n' +
+                      '• All custom sections\n' +
+                      '• All saved resumes\n' +
+                      '• Personal information\n\n' +
+                      'This action CANNOT be undone.\n\n' +
+                      'Are you absolutely sure you want to continue?'
+                    );
+                    if (confirmed) {
+                      // Double confirmation for destructive action
+                      const userInput = window.prompt(
+                        '⚠️ FINAL WARNING ⚠️\n\n' +
+                        'You are about to PERMANENTLY DELETE all your data.\n\n' +
+                        'Type "DELETE" (all caps) to confirm, or click Cancel to abort:'
+                      );
+                      if (userInput === 'DELETE') {
+                        await onClearAllData();
+                      } else if (userInput !== null) {
+                        // User typed something but not "DELETE"
+                        window.alert('Confirmation text did not match. Operation cancelled.');
+                      }
+                    }
+                  }}
+                  style={{ 
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 'var(--space-2)',
+                    color: 'var(--color-error, #ef4444)',
+                    borderColor: 'var(--color-error, #ef4444)'
+                  }}
+                  title="Clear all resume data (destructive action)"
+                >
+                  <Icon name="trash" size={16} />
+                  <span>Clear All Data</span>
                 </button>
               )}
               <button

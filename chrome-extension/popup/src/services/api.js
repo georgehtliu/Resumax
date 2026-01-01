@@ -369,30 +369,44 @@ export async function generateInterviewQuestions({ item, itemType }) {
 
 /**
  * Parse resume from uploaded file
- * TODO: Implement backend API endpoint for resume parsing
+ * @param {Object} fileData - File data object with { file, name, type, size, data }
+ * @returns {Promise<Object>} ParseResumeResponse with parsed resume data
  */
 export async function parseResume(fileData) {
   const baseUrl = getApiBaseUrl();
   
-  // For now, return null to indicate parsing is not yet implemented
-  // When backend is ready, uncomment and implement:
-  /*
-  const formData = new FormData();
-  formData.append('file', fileData.file);
-  
-  const response = await fetch(`${baseUrl.replace(/\/$/, '')}/parse-resume`, {
-    method: 'POST',
-    body: formData,
-  });
-  
-  if (!response.ok) {
-    throw new Error('Failed to parse resume');
+  try {
+    const formData = new FormData();
+    formData.append('file', fileData.file);
+    
+    const response = await fetch(`${baseUrl.replace(/\/$/, '')}/parse-resume`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    if (!response.ok) {
+      let errorMessage = `Resume parsing failed with status ${response.status}`;
+      try {
+        const errorPayload = await response.json();
+        if (errorPayload?.detail) {
+          errorMessage = Array.isArray(errorPayload.detail)
+            ? errorPayload.detail.map((item) => (item.msg ? `${item.msg}` : JSON.stringify(item))).join('\n')
+            : (errorPayload.detail.message || errorPayload.detail);
+        }
+      } catch (parseError) {
+        const fallbackText = await response.text();
+        if (fallbackText) {
+          errorMessage = fallbackText;
+        }
+      }
+      throw new Error(errorMessage);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error parsing resume:', error);
+    throw error;
   }
-  
-  return response.json();
-  */
-  
-  return null;
 }
 
 export const apiService = {
