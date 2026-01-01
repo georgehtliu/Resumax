@@ -114,6 +114,13 @@ function App() {
     }
   }, [activeView]);
 
+  // Load resume data when profile view is shown
+  useEffect(() => {
+    if (activeView === 'profile' && isSignedIn && !loading) {
+      loadResumeData();
+    }
+  }, [activeView, isSignedIn]);
+
   // Keyboard shortcuts
   useKeyboardShortcuts([
     {
@@ -290,41 +297,11 @@ function App() {
   }, [isSignedIn, isManagerView]);
 
   /**
-   * Initialize mock data if no data exists
+   * Load George Liu mock data (always loads, regardless of existing data)
    */
-  async function initializeMockData() {
-    try {
-      const existingResume = await storageService.getResume();
-      const savedResumes = await storageService.getSavedResumes();
-      
-      // Check if there's actual data (not just totalBullets, but actual bullets)
-      const hasMasterData = 
-        (existingResume.experiences && existingResume.experiences.length > 0) ||
-        (existingResume.education && existingResume.education.length > 0) ||
-        (existingResume.projects && existingResume.projects.length > 0) ||
-        (existingResume.customSections && existingResume.customSections.length > 0);
-      
-      
-      // FOR TESTING: Force initialization if localStorage has a flag OR if test user
-      const forceInit = localStorage.getItem('forceInitMockData') === 'true' || isTestUser();
-      if (forceInit && localStorage.getItem('forceInitMockData') === 'true') {
-        localStorage.removeItem('forceInitMockData');
-      }
-      
-      // For test user, always initialize mock data
-      // For other users, only initialize if no data exists OR force init is enabled
-      if ((!hasMasterData && savedResumes.length === 0) || forceInit) {
-        if (forceInit) {
-          // Clear existing data first
-          await storageService.clearResume();
-          // Clear saved resumes too
-          const existingSaved = await storageService.getSavedResumes();
-          for (const resume of existingSaved) {
-            await storageService.deleteSavedResume(resume.id);
-          }
-        }
-        // Initialize master resume with comprehensive realistic mock data
-        const mockMasterResume = {
+  async function loadGeorgeLiuMockData() {
+    // Initialize master resume with comprehensive realistic mock data
+    const mockMasterResume = {
           personalInfo: {
             firstName: 'George',
             lastName: 'Liu',
@@ -471,6 +448,52 @@ function App() {
         
         mockMasterResume.totalBullets = calculateTotalBullets(mockMasterResume);
         await storageService.saveResume(mockMasterResume);
+        
+        console.log('✅ Loaded George Liu mock data:', {
+          skills: mockMasterResume.skills.length,
+          experiences: mockMasterResume.experiences.length,
+          education: mockMasterResume.education.length,
+          projects: mockMasterResume.projects.length,
+          customSections: mockMasterResume.customSections.length
+        });
+  }
+
+  /**
+   * Initialize mock data if no data exists
+   */
+  async function initializeMockData() {
+    try {
+      const existingResume = await storageService.getResume();
+      const savedResumes = await storageService.getSavedResumes();
+      
+      // Check if there's actual data (not just totalBullets, but actual bullets)
+      const hasMasterData = 
+        (existingResume.experiences && existingResume.experiences.length > 0) ||
+        (existingResume.education && existingResume.education.length > 0) ||
+        (existingResume.projects && existingResume.projects.length > 0) ||
+        (existingResume.customSections && existingResume.customSections.length > 0);
+      
+      
+      // FOR TESTING: Force initialization if localStorage has a flag OR if test user
+      const forceInit = localStorage.getItem('forceInitMockData') === 'true' || isTestUser();
+      if (forceInit && localStorage.getItem('forceInitMockData') === 'true') {
+        localStorage.removeItem('forceInitMockData');
+      }
+      
+      // For test user, always initialize mock data
+      // For other users, only initialize if no data exists OR force init is enabled
+      if ((!hasMasterData && savedResumes.length === 0) || forceInit) {
+        if (forceInit) {
+          // Clear existing data first
+          await storageService.clearResume();
+          // Clear saved resumes too
+          const existingSaved = await storageService.getSavedResumes();
+          for (const resume of existingSaved) {
+            await storageService.deleteSavedResume(resume.id);
+          }
+        }
+        // Use the dedicated function to load George Liu mock data
+        await loadGeorgeLiuMockData();
         
         // Initialize saved resumes with realistic structured data
         const mockSavedResumes = [
@@ -1205,6 +1228,23 @@ function App() {
               onResumeUpdate={(updatedResume) => setResume(updatedResume)}
               onSave={saveResumeData}
               calculateTotalBullets={calculateTotalBullets}
+              onLoadMockData={async () => {
+                setLoading(true);
+                try {
+                  // Force load George Liu mock data by clearing existing data first
+                  await storageService.clearResume();
+                  // Clear saved resumes too
+                  const existingSaved = await storageService.getSavedResumes();
+                  for (const resume of existingSaved) {
+                    await storageService.deleteSavedResume(resume.id);
+                  }
+                  // Directly load George Liu mock data (bypasses checks)
+                  await loadGeorgeLiuMockData();
+                  await loadResumeData();
+                } finally {
+                  setLoading(false);
+                }
+              }}
             />
           )}
 

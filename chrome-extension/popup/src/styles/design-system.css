@@ -244,6 +244,12 @@ body {
   color: var(--text-primary);
 }
 
+.btn-small {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-xs);
+  gap: var(--space-1);
+}
+
 /* Modern Card - Minimal borders instead of shadows */
 .card {
   background: var(--bg-primary);
