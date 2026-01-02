@@ -436,9 +436,11 @@ function GenerateResume({ masterResume, onSave, onResumeUpdate, onSelectionCompl
 
       {/* Header Section - Hide after resume is generated */}
       {!optimizationResult && (
-        <div className="generate-resume-header">
-          <h1>Generate Resume</h1>
-          <p className="generate-resume-subtitle">Create a tailored resume for any job description</p>
+        <div className="generate-resume-hero">
+          <div className="generate-resume-hero-content">
+            <h1 className="generate-resume-hero-title">Generate Resume</h1>
+            <p className="generate-resume-hero-subtitle">Create a tailored resume for any job description</p>
+          </div>
         </div>
       )}
 

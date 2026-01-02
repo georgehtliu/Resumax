@@ -26,12 +26,12 @@
 }
 
 .coach-hero-title {
-  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-size: clamp(1.5rem, 2.5vw, 2rem);
   font-weight: var(--font-weight-bold);
   color: var(--text-primary);
   margin: 0 0 var(--space-4) 0;
   letter-spacing: -0.02em;
-  line-height: 1.1;
+  line-height: 1.2;
   background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-primary-800) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;

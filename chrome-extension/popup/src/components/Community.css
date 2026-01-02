@@ -1,64 +1,142 @@
-.community-page {
+/* Modern Community Page - Matching About Page Theme */
+
+.community-page-modern {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 32px;
+  padding: var(--space-8) var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
 }
 
-.community-header {
-  margin-bottom: 32px;
-}
-
-.community-header h1 {
-  font-size: 32px;
-  font-weight: 700;
-  color: #111827;
-  margin: 0 0 8px 0;
-  letter-spacing: -0.5px;
-}
-
-.community-subtitle {
-  font-size: 16px;
-  color: #6b7280;
-  margin: 0;
-}
-
-.community-content {
-  background: #ffffff;
-  border-radius: 12px;
-  border: 1px solid #e5e7eb;
-  padding: 64px 32px;
+/* Hero Section */
+.community-hero {
   text-align: center;
+  padding: var(--space-12) 0;
+  background: linear-gradient(135deg, var(--color-primary-50) 0%, var(--color-primary-100) 100%);
+  border-radius: var(--radius-xl);
+  margin-bottom: var(--space-4);
 }
 
-.community-placeholder {
-  max-width: 500px;
+.community-hero-content {
+  max-width: 800px;
   margin: 0 auto;
+  padding: 0 var(--space-6);
 }
 
-.placeholder-icon {
-  font-size: 64px;
-  margin-bottom: 24px;
+.community-hero-title {
+  font-size: clamp(1.5rem, 2.5vw, 2rem);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  margin: 0 0 var(--space-4) 0;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-primary-800) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-.community-placeholder h2 {
-  font-size: 24px;
-  font-weight: 600;
-  color: #111827;
-  margin: 0 0 12px 0;
+.community-hero-subtitle {
+  font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.01em;
 }
 
-.community-placeholder p {
-  font-size: 16px;
-  color: #6b7280;
-  margin: 0 0 16px 0;
-  line-height: 1.6;
+/* Content Section */
+.community-content-modern {
+  background: var(--bg-primary);
+  border: 2px solid var(--color-slate-200);
+  border-radius: var(--radius-xl);
+  padding: var(--space-16) var(--space-8);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
 }
 
-.placeholder-subtext {
-  font-size: 14px !important;
-  color: #9ca3af !important;
+.community-content-modern::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--color-primary-600) 0%, var(--color-primary-400) 100%);
 }
 
+.community-placeholder-modern {
+  max-width: 600px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+}
 
+.placeholder-icon-modern {
+  width: 120px;
+  height: 120px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, var(--color-primary-100) 0%, var(--color-primary-200) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary-600);
+  margin-bottom: var(--space-2);
+  box-shadow: 0 8px 16px rgba(37, 99, 235, 0.1);
+}
 
+.placeholder-title-modern {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.placeholder-description-modern {
+  font-size: var(--font-size-lg);
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: var(--line-height-relaxed);
+}
+
+.placeholder-subtext-modern {
+  font-size: var(--font-size-base);
+  color: var(--text-tertiary);
+  margin: 0;
+  line-height: var(--line-height-relaxed);
+  max-width: 500px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .community-page-modern {
+    padding: var(--space-6) var(--space-4);
+    gap: var(--space-8);
+  }
+
+  .community-hero {
+    padding: var(--space-8) 0;
+  }
+
+  .community-hero-content {
+    padding: 0 var(--space-4);
+  }
+
+  .community-content-modern {
+    padding: var(--space-12) var(--space-6);
+  }
+
+  .placeholder-icon-modern {
+    width: 96px;
+    height: 96px;
+  }
+
+  .placeholder-title-modern {
+    font-size: var(--font-size-2xl);
+  }
+}

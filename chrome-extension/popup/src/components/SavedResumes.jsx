@@ -725,20 +725,15 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
   return (
     <div className="saved-resumes">
       {/* Header Section */}
-      <div className="saved-resumes-header-section">
-        <div className="view-header">
-          <h1>Saved Resumes</h1>
-          <p className="view-subtitle">View, edit, and manage your saved resumes</p>
+      <div className="saved-resumes-hero">
+        <div className="saved-resumes-hero-content">
+          <h1 className="saved-resumes-hero-title">Saved Resumes</h1>
+          <p className="saved-resumes-hero-subtitle">View, edit, and manage your saved resumes</p>
         </div>
 
         {/* Summary Stats */}
         {savedResumes.length > 0 && (
-          <div className="resume-stats" style={{ 
-            display: 'flex', 
-            gap: 'var(--space-3)', 
-            marginTop: 'var(--space-4)',
-            flexWrap: 'wrap'
-          }}>
+          <div className="saved-resumes-stats-modern">
             <div className="stat-badge" style={{
               display: 'flex',
               alignItems: 'center',

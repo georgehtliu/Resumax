@@ -4,6 +4,7 @@ import PersonalInfoEditor from './editors/PersonalInfoEditor';
 import SkillsEditor from './editors/SkillsEditor';
 import { Icon } from './ui/Icons';
 import './editors/SelectedResumeEditor.css';
+import './Profile.css';
 
 const SECTION_CONFIG = [
   {
@@ -285,26 +286,21 @@ function Profile({ resume, onResumeUpdate, onSave, calculateTotalBullets, onLoad
   };
 
   return (
-    <div className="view-container">
+    <div className="view-container profile-page-modern">
       {/* Save Status Indicator */}
       {saveStatus && <SaveStatusIndicator status={saveStatus} />}
       
-      <div className="view-header">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--space-4)' }}>
-          <div style={{ flex: 1 }}>
-            <h1>Master Resume</h1>
-            <p className="view-subtitle">
-              Build your comprehensive resume with unlimited bullet points. 
-              Generate tailored resumes for each job application.
-            </p>
-            
-            {/* Summary Stats */}
-            <div className="resume-stats" style={{ 
-              display: 'flex', 
-              gap: 'var(--space-3)', 
-              marginTop: 'var(--space-4)',
-              flexWrap: 'wrap'
-            }}>
+      {/* Modern Hero Section */}
+      <div className="profile-hero">
+        <div className="profile-hero-content">
+          <h1 className="profile-hero-title">Master Resume</h1>
+          <p className="profile-hero-subtitle">
+            Build your comprehensive resume with unlimited bullet points. 
+            Generate tailored resumes for each job application.
+          </p>
+          
+          {/* Summary Stats */}
+          <div className="profile-stats-modern">
               <div className="stat-badge" style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -365,9 +361,12 @@ function Profile({ resume, onResumeUpdate, onSave, calculateTotalBullets, onLoad
                 <Icon name="zap" size={16} />
                 <span>{localResume.totalBullets || calculateTotalBullets(localResume)} Total Bullets</span>
               </div>
-            </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', alignItems: 'flex-end' }}>
+        </div>
+        
+        {/* Action Buttons */}
+        <div className="profile-actions-modern">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', alignItems: 'center', width: '100%' }}>
             <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center', flexWrap: 'wrap' }}>
               {onImportResume && (
                 <button

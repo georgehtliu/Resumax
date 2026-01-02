@@ -282,13 +282,63 @@
   flex: 1;
 }
 
-/* Header Section */
-.saved-resumes-header-section {
+/* Modern Hero Section */
+.saved-resumes-hero {
+  text-align: center;
+  padding: var(--space-12) var(--space-6);
+  background: linear-gradient(135deg, var(--color-primary-50) 0%, var(--color-primary-100) 100%);
+  border-radius: var(--radius-xl);
   margin-bottom: var(--space-8);
 }
 
-.saved-resumes .view-header {
-  margin-bottom: var(--space-6);
+.saved-resumes-hero-content {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.saved-resumes-hero-title {
+  font-size: clamp(1.5rem, 2.5vw, 2rem);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  margin: 0 0 var(--space-4) 0;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-primary-800) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.saved-resumes-hero-subtitle {
+  font-size: var(--font-size-lg);
+  color: var(--text-secondary);
+  margin: 0 0 var(--space-6) 0;
+  line-height: var(--line-height-relaxed);
+}
+
+.saved-resumes-stats-modern {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.saved-resumes-stats-modern .stat-badge {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.saved-resumes-stats-modern .stat-badge:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .saved-resumes-hero {
+    padding: var(--space-8) var(--space-4);
+    margin-bottom: var(--space-6);
+  }
 }
 
 .saved-resumes .view-header h1 {
