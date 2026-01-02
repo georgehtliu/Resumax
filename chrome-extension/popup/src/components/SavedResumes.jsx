@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { storageService } from '../services/storage';
 import { supabase } from '../config/supabase';
 import { useToast } from '../hooks/useToast';
@@ -290,6 +290,7 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
   const [jobDescriptionExpanded, setJobDescriptionExpanded] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('newest');
+  const previewRef = useRef(null);
 
   useEffect(() => {
     loadSavedResumes();
@@ -476,6 +477,20 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editedResume]);
+
+  // Auto-scroll to preview when a resume is selected
+  useEffect(() => {
+    if (selectedResume && editedResume && previewRef.current) {
+      // Small delay to ensure the preview section is rendered
+      const timer = setTimeout(() => {
+        previewRef.current?.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        });
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedResume, editedResume]);
 
   // Collect all available bullets from master resume
 
@@ -1044,7 +1059,7 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
                   </div>
 
                   {/* Right Column: LaTeX Preview */}
-                  <div className="saved-resumes-right-column">
+                  <div className="saved-resumes-right-column" ref={previewRef}>
                     <div className="latex-preview-panel">
                       <div className="latex-preview-panel-header">
                         <h3>LaTeX Preview</h3>

@@ -4,13 +4,14 @@ import './ResumeTips.css';
 
 /**
  * Resume Tips Component
- * Important tips for SWE resumes following Jake's Resume LaTeX template
+ * Modern design matching the About page theme
  */
 function ResumeTips() {
   const tips = [
     {
       category: 'Format & Structure',
       icon: 'file',
+      color: 'blue',
       items: [
         {
           title: 'Use Jake\'s Resume LaTeX Template',
@@ -34,6 +35,7 @@ function ResumeTips() {
     {
       category: 'Bullet Points',
       icon: 'edit',
+      color: 'purple',
       items: [
         {
           title: 'Use Action Verbs',
@@ -63,6 +65,7 @@ function ResumeTips() {
     {
       category: 'Content Strategy',
       icon: 'target',
+      color: 'green',
       items: [
         {
           title: 'Tailor for Each Application',
@@ -86,6 +89,7 @@ function ResumeTips() {
     {
       category: 'Technical Details',
       icon: 'laptop',
+      color: 'orange',
       items: [
         {
           title: 'List Relevant Technologies',
@@ -104,6 +108,7 @@ function ResumeTips() {
     {
       category: 'Common Mistakes to Avoid',
       icon: 'warning',
+      color: 'red',
       items: [
         {
           title: 'Don\'t Use Pronouns',
@@ -130,6 +135,7 @@ function ResumeTips() {
     {
       category: 'ATS Optimization',
       icon: 'bot',
+      color: 'indigo',
       items: [
         {
           title: 'Use Standard Section Headers',
@@ -152,34 +158,45 @@ function ResumeTips() {
   ];
 
   return (
-    <div className="resume-tips-page">
-      <div className="tips-header">
-        <h1>Resume Tips for Software Engineers</h1>
-        <p className="tips-subtitle">
-          Best practices for creating effective SWE resumes using Jake's Resume LaTeX template
-        </p>
+    <div className="resume-tips-page-modern">
+      {/* Hero Section */}
+      <div className="tips-hero">
+        <div className="tips-hero-content">
+          <h1 className="tips-hero-title">
+            Resume Tips for Software Engineers
+          </h1>
+          <p className="tips-hero-subtitle">
+            Best practices for creating effective SWE resumes using Jake's Resume LaTeX template
+          </p>
+        </div>
       </div>
 
-      <div className="tips-content">
+      {/* Tips Content */}
+      <div className="tips-content-modern">
         {tips.map((category, categoryIndex) => (
-          <section key={categoryIndex} className="tips-category">
-            <div className="category-header">
-              <span className="category-icon">
+          <section key={categoryIndex} className={`tips-category-modern category-${category.color}`}>
+            <div className="category-header-modern">
+              <div className={`category-icon-modern category-icon-${category.color}`}>
                 <Icon name={category.icon} size={24} />
-              </span>
-              <h2>{category.category}</h2>
+              </div>
+              <h2 className="category-title-modern">{category.category}</h2>
             </div>
-            <div className="tips-list">
+            <div className="tips-list-modern">
               {category.items.map((tip, tipIndex) => (
                 <div 
                   key={tipIndex} 
-                  className={`tip-item ${tip.important ? 'important' : ''}`}
+                  className={`tip-item-modern ${tip.important ? 'tip-important' : ''}`}
                 >
-                  <div className="tip-header">
-                    <h3>{tip.title}</h3>
-                    {tip.important && <span className="important-badge">Important</span>}
+                  <div className="tip-header-modern">
+                    <h3 className="tip-title-modern">{tip.title}</h3>
+                    {tip.important && (
+                      <span className="important-badge-modern">
+                        <Icon name="star" size={12} />
+                        Important
+                      </span>
+                    )}
                   </div>
-                  <p className="tip-description">{tip.description}</p>
+                  <p className="tip-description-modern">{tip.description}</p>
                 </div>
               ))}
             </div>
@@ -187,12 +204,18 @@ function ResumeTips() {
         ))}
       </div>
 
-      <div className="tips-footer">
-        <div className="footer-note">
-          <Icon name="lightbulb" size={18} style={{ marginRight: '6px', verticalAlign: 'middle', display: 'inline-block' }} />
-          <strong>Pro Tip:</strong> Use Resume Master to maintain a comprehensive master resume with all your achievements, 
-          then automatically select the most relevant points for each job application. This ensures you never miss 
-          highlighting the right experience for the right role.
+      {/* Footer */}
+      <div className="tips-footer-modern">
+        <div className="footer-icon">
+          <Icon name="lightbulb" size={24} />
+        </div>
+        <div className="footer-content">
+          <h3 className="footer-title">Pro Tip</h3>
+          <p className="footer-description">
+            Use Resume Master to maintain a comprehensive master resume with all your achievements, 
+            then automatically select the most relevant points for each job application. This ensures you never miss 
+            highlighting the right experience for the right role.
+          </p>
         </div>
       </div>
     </div>
@@ -200,4 +223,3 @@ function ResumeTips() {
 }
 
 export default ResumeTips;
-
