@@ -4,7 +4,7 @@ import { supabase } from '../config/supabase';
 import { useToast } from '../hooks/useToast';
 import { SkeletonList, SkeletonCard } from './ui/Skeleton';
 import Tooltip from './ui/Tooltip';
-import { Trash2, FileText, Calendar } from 'lucide-react';
+import { Trash2, Calendar } from 'lucide-react';
 import { Icon } from './ui/Icons';
 import SelectedResumeEditor from './editors/SelectedResumeEditor';
 import LatexPreviewModal from './modals/LatexPreviewModal';
@@ -670,35 +670,58 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
           <p className="view-subtitle">View, edit, and manage your saved resumes</p>
         </div>
 
-        {/* Stats Cards */}
+        {/* Summary Stats */}
         {savedResumes.length > 0 && (
-          <div className="saved-resumes-stats">
-            <div className="stat-card">
-              <div className="stat-icon stat-icon-primary">
-                <FileText size={20} />
-              </div>
-              <div className="stat-content">
-                <div className="stat-value">{savedResumes.length}</div>
-                <div className="stat-label">Saved Resumes</div>
-              </div>
+          <div className="resume-stats" style={{ 
+            display: 'flex', 
+            gap: 'var(--space-3)', 
+            marginTop: 'var(--space-4)',
+            flexWrap: 'wrap'
+          }}>
+            <div className="stat-badge" style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--space-2)',
+              padding: 'var(--space-2) var(--space-3)',
+              background: 'var(--color-primary-50)',
+              border: '1px solid var(--color-primary-200)',
+              borderRadius: 'var(--radius-md)',
+              fontSize: 'var(--font-size-sm)',
+              fontWeight: 'var(--font-weight-medium)',
+              color: 'var(--color-primary-700)'
+            }}>
+              <Icon name="file" size={16} />
+              <span>{savedResumes.length} Saved Resumes</span>
             </div>
-            <div className="stat-card">
-              <div className="stat-icon stat-icon-secondary">
-                <Icon name="fileText" size={20} />
-              </div>
-              <div className="stat-content">
-                <div className="stat-value">{totalBullets}</div>
-                <div className="stat-label">Total Bullets</div>
-              </div>
+            <div className="stat-badge" style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--space-2)',
+              padding: 'var(--space-2) var(--space-3)',
+              background: 'var(--color-primary-50)',
+              border: '1px solid var(--color-primary-200)',
+              borderRadius: 'var(--radius-md)',
+              fontSize: 'var(--font-size-sm)',
+              fontWeight: 'var(--font-weight-medium)',
+              color: 'var(--color-primary-700)'
+            }}>
+              <Icon name="zap" size={16} />
+              <span>{totalBullets} Total Bullets</span>
             </div>
-            <div className="stat-card">
-              <div className="stat-icon stat-icon-tertiary">
-                <Icon name="chart" size={20} />
-              </div>
-              <div className="stat-content">
-                <div className="stat-value">{avgBulletsPerResume}</div>
-                <div className="stat-label">Avg per Resume</div>
-              </div>
+            <div className="stat-badge" style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--space-2)',
+              padding: 'var(--space-2) var(--space-3)',
+              background: 'var(--color-primary-50)',
+              border: '1px solid var(--color-primary-200)',
+              borderRadius: 'var(--radius-md)',
+              fontSize: 'var(--font-size-sm)',
+              fontWeight: 'var(--font-weight-medium)',
+              color: 'var(--color-primary-700)'
+            }}>
+              <Icon name="chart" size={16} />
+              <span>{avgBulletsPerResume} Avg per Resume</span>
             </div>
           </div>
         )}
@@ -707,7 +730,7 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
       {savedResumes.length === 0 ? (
         <div className="saved-resumes-empty-modern">
           <div className="empty-state-icon">
-            <FileText size={64} />
+            <Icon name="file" size={64} />
           </div>
           <h3>No saved resumes yet</h3>
           <p>Generate and save your first resume to get started. Create tailored resumes for different job applications.</p>
