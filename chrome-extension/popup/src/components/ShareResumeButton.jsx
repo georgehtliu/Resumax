@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { supabase } from '../config/supabase';
 import { storageService } from '../services/storage';
 import { Icon } from './ui/Icons';
+import { useToast } from '../hooks/useToast';
 import './ShareResumeButton.css';
 
 function ShareResumeButton({ resumeId, resumeName }) {
@@ -11,7 +13,29 @@ function ShareResumeButton({ resumeId, resumeName }) {
   const [checking, setChecking] = useState(true);
   const [error, setError] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, right: 0 });
+  const dropdownRef = useRef(null);
+  const buttonRef = useRef(null);
+  const { success, error: showError } = useToast();
+
+  // Check if user has accepted the disclaimer
+  const hasAcceptedDisclaimer = () => {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      return localStorage.getItem('resumax_share_disclaimer_accepted') === 'true';
+    }
+    return false;
+  };
+
+  // Accept disclaimer and store in localStorage
+  const acceptDisclaimer = () => {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.setItem('resumax_share_disclaimer_accepted', 'true');
+    }
+    setShowDisclaimer(false);
+  };
 
   // Check if a string is a valid UUID
   const isValidUUID = (str) => {
@@ -23,6 +47,38 @@ function ShareResumeButton({ resumeId, resumeName }) {
   useEffect(() => {
     checkExistingShareLink();
   }, [resumeId]);
+
+  // Calculate dropdown position and close when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target) &&
+          buttonRef.current && !buttonRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    }
+
+    function updateDropdownPosition() {
+      if (buttonRef.current && showDropdown) {
+        const rect = buttonRef.current.getBoundingClientRect();
+        setDropdownPosition({
+          top: rect.bottom + 8,
+          right: window.innerWidth - rect.right
+        });
+      }
+    }
+
+    if (showDropdown) {
+      updateDropdownPosition();
+      document.addEventListener('mousedown', handleClickOutside);
+      window.addEventListener('resize', updateDropdownPosition);
+      window.addEventListener('scroll', updateDropdownPosition, true);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+        window.removeEventListener('resize', updateDropdownPosition);
+        window.removeEventListener('scroll', updateDropdownPosition, true);
+      };
+    }
+  }, [showDropdown]);
 
   const checkExistingShareLink = async () => {
     setChecking(true);
@@ -101,7 +157,58 @@ function ShareResumeButton({ resumeId, resumeName }) {
       } else {
         window.open(existingShareLink.share_url, '_blank', 'noopener');
       }
+      setShowDropdown(false);
     }
+  };
+
+  const handleCopyLink = () => {
+    const linkToCopy = (shareLink || existingShareLink)?.share_url;
+    if (linkToCopy) {
+      navigator.clipboard.writeText(linkToCopy);
+      setCopied(true);
+      success('Link copied to clipboard!');
+      setTimeout(() => setCopied(false), 2000);
+      setShowDropdown(false);
+    }
+  };
+
+  const handleRevokeShare = async () => {
+    if (!window.confirm('Are you sure you want to revoke access to this shared resume? The link will no longer work.')) {
+      return;
+    }
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        showError('Please sign in to manage share links');
+        return;
+      }
+
+      const { error } = await supabase
+        .from('shared_resume_links')
+        .update({ is_active: false })
+        .eq('id', existingShareLink.id)
+        .eq('user_id', session.user.id);
+
+      if (error) throw error;
+
+      setExistingShareLink(null);
+      setShareLink(null);
+      setShowDropdown(false);
+      success('Share link revoked successfully');
+    } catch (err) {
+      showError(err.message || 'Failed to revoke share link');
+    }
+  };
+
+  const handleShareClick = () => {
+    // Check if user has accepted disclaimer
+    if (!hasAcceptedDisclaimer()) {
+      setShowDisclaimer(true);
+      return;
+    }
+    // If already accepted, proceed to generate
+    generateShareLink();
   };
 
   const generateShareLink = async () => {
@@ -206,8 +313,11 @@ function ShareResumeButton({ resumeId, resumeName }) {
       setShareLink(newShareLink);
       setExistingShareLink(newShareLink); // Update existing link state
       setShowModal(true);
+      success('Share link created successfully!');
     } catch (err) {
-      setError(err.message || 'Failed to create share link');
+      const errorMsg = err.message || 'Failed to create share link';
+      setError(errorMsg);
+      showError(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -218,112 +328,263 @@ function ShareResumeButton({ resumeId, resumeName }) {
   if (checking) {
     return (
       <button 
-        className="btn-share-resume"
+        className="btn-share-resume btn-share-resume-loading"
         disabled
-        title="Checking..."
+        title="Checking for existing share link..."
       >
-        ⏳ Checking...
+        <Icon name="loader" size={16} className="spinner" />
+        <span>Checking...</span>
       </button>
     );
   }
 
-  // If share link exists, show "Go to Shared" button
-  if (existingShareLink) {
-    return (
-      <>
-        <button 
-          className="btn-share-resume btn-go-to-shared"
-          onClick={goToShared}
-          title="Open shared resume link"
-        >
-          <Icon name="link" size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-          Go to Shared
-        </button>
-        <button 
-          className="btn-share-resume btn-share-again"
-          onClick={() => setShowModal(true)}
-          title="View share link"
-        >
-          <Icon name="clipboard" size={16} />
-        </button>
-      </>
-    );
-  }
+  const currentShareLink = shareLink || existingShareLink;
 
   return (
     <>
-      <button 
-        className="btn-share-resume"
-        onClick={generateShareLink}
-        disabled={loading}
-        title="Generate shareable link"
-      >
-        {loading ? (
-          <>
-            <Icon name="loader" size={16} className="animate-spin" style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-            Generating...
-          </>
+      <div className="share-button-container">
+        {existingShareLink ? (
+          <div className="share-button-group" ref={buttonRef}>
+            <button 
+              className="btn-share-resume btn-share-resume-success"
+              onClick={goToShared}
+              title="Open shared resume link"
+            >
+              <Icon name="checkCircle" size={16} />
+              <span>Shared</span>
+            </button>
+            <button 
+              className="btn-share-resume-dropdown"
+              onClick={() => setShowDropdown(!showDropdown)}
+              title="Share options"
+              aria-label="Share options"
+            >
+              <Icon name="chevronDown" size={14} />
+            </button>
+          </div>
         ) : (
-          <>
-            <Icon name="link" size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-            Share Resume
-          </>
+          <button 
+            ref={buttonRef}
+            className="btn-share-resume btn-share-resume-primary"
+            onClick={handleShareClick}
+            disabled={loading}
+            title="Generate shareable link"
+          >
+            {loading ? (
+              <>
+                <Icon name="loader" size={16} className="spinner" />
+                <span>Generating...</span>
+              </>
+            ) : (
+              <>
+                <Icon name="share" size={16} />
+                <span>Share Resume</span>
+              </>
+            )}
+          </button>
         )}
-      </button>
+        
+        {showDropdown && createPortal(
+          <div 
+            className="share-dropdown-menu share-dropdown-menu-fixed"
+            ref={dropdownRef}
+            style={{
+              top: `${dropdownPosition.top}px`,
+              right: `${dropdownPosition.right}px`
+            }}
+          >
+            <button 
+              className="share-dropdown-item"
+              onClick={() => {
+                setShowModal(true);
+                setShowDropdown(false);
+              }}
+            >
+              <Icon name="clipboard" size={16} />
+              <span>Copy Link</span>
+            </button>
+            <button 
+              className="share-dropdown-item"
+              onClick={goToShared}
+            >
+              <Icon name="link" size={16} />
+              <span>View Shared</span>
+            </button>
+            <div className="share-dropdown-divider" />
+            <button 
+              className="share-dropdown-item share-dropdown-item-danger"
+              onClick={handleRevokeShare}
+            >
+              <Icon name="x" size={16} />
+              <span>Revoke Access</span>
+            </button>
+          </div>,
+          document.body
+        )}
+      </div>
 
-      {error && (
-        <div className="share-error">{error}</div>
-      )}
-
-      {showModal && (shareLink || existingShareLink) && (
-        <div className="share-modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="share-modal" onClick={(e) => e.stopPropagation()}>
+      {/* Disclaimer Modal */}
+      {showDisclaimer && createPortal(
+        <div 
+          className="share-modal-overlay" 
+          onClick={(e) => {
+            // Don't close on overlay click - user must accept or decline
+            e.stopPropagation();
+          }}
+        >
+          <div 
+            className="share-modal share-disclaimer-modal" 
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="share-modal-header">
-              <h3>Share Resume: {resumeName}</h3>
-              <button 
-                className="close-btn"
-                onClick={() => setShowModal(false)}
-              >
-                ×
-              </button>
+              <div className="share-modal-header-content">
+                <div className="share-modal-icon" style={{ background: 'var(--color-warning-light)', color: 'var(--color-warning)' }}>
+                  <Icon name="warning" size={24} />
+                </div>
+                <div>
+                  <h3>Before You Share</h3>
+                  <p className="share-modal-subtitle">Important information about sharing your resume</p>
+                </div>
+              </div>
             </div>
             
-            <div className="share-link-container">
-              <input 
-                type="text" 
-                value={(shareLink || existingShareLink)?.share_url} 
-                readOnly 
-                className="share-link-input"
-              />
+            <div className="share-disclaimer-content">
+              <div className="share-disclaimer-section">
+                <Icon name="globe" size={20} />
+                <div>
+                  <h4>Public Access</h4>
+                  <p>Anyone with the share link can view your resume, even without signing in. The link is permanent until you revoke it.</p>
+                </div>
+              </div>
+
+              <div className="share-disclaimer-section">
+                <Icon name="messageSquare" size={20} />
+                <div>
+                  <h4>Comments & Feedback</h4>
+                  <p>People with the link can leave comments and feedback on your resume. You'll be able to see and manage these comments.</p>
+                </div>
+              </div>
+
+              <div className="share-disclaimer-section">
+                <Icon name="lock" size={20} />
+                <div>
+                  <h4>Privacy & Security</h4>
+                  <p>Only share the link with people you trust. You can revoke access at any time from your saved resumes page.</p>
+                </div>
+              </div>
+
+              <div className="share-disclaimer-warning-box">
+                <Icon name="alert" size={18} />
+                <p>
+                  <strong>Important:</strong> Once you share the link, anyone who has it can access your resume. 
+                  Make sure you're comfortable sharing this information before proceeding.
+                </p>
+              </div>
+            </div>
+
+            <div className="share-disclaimer-actions">
               <button 
+                className="btn-disclaimer-cancel"
+                onClick={() => setShowDisclaimer(false)}
+              >
+                Cancel
+              </button>
+              <button 
+                className="btn-disclaimer-accept"
                 onClick={() => {
-                  const linkToCopy = (shareLink || existingShareLink)?.share_url;
-                  if (linkToCopy) {
-                    navigator.clipboard.writeText(linkToCopy);
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 2000);
-                  }
+                  acceptDisclaimer();
+                  generateShareLink();
                 }}
-                className="btn-copy"
               >
-                {copied ? (
-                  <>
-                    <Icon name="checkCircle" size={14} style={{ marginRight: '4px', verticalAlign: 'middle' }} />
-                    Copied!
-                  </>
-                ) : 'Copy'}
+                <Icon name="check" size={16} />
+                I Understand, Continue
               </button>
-            </div>
-            
-            <div className="share-info">
-              <p>Anyone with this link can view and comment on your resume.</p>
-              <p className="share-warning">
-                <Icon name="warning" size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-                This link is permanent. You can deactivate it from your saved resumes.
-              </p>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Share Link Modal */}
+      {showModal && currentShareLink && createPortal(
+        <div 
+          className="share-modal-overlay" 
+          onClick={() => setShowModal(false)}
+          onMouseDown={(e) => {
+            // Only close if clicking directly on overlay, not during drag
+            if (e.target === e.currentTarget) {
+              setShowModal(false);
+            }
+          }}
+        >
+          <div 
+            className="share-modal" 
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <div className="share-modal-header">
+              <div className="share-modal-header-content">
+                <div className="share-modal-icon">
+                  <Icon name="share" size={24} />
+                </div>
+                <div>
+                  <h3>Share Resume</h3>
+                  <p className="share-modal-subtitle">{resumeName}</p>
+                </div>
+              </div>
+              <button 
+                className="share-modal-close"
+                onClick={() => setShowModal(false)}
+                aria-label="Close modal"
+              >
+                <Icon name="x" size={20} />
+              </button>
+            </div>
+            
+            <div className="share-link-section">
+              <label className="share-link-label">Share Link</label>
+              <div className="share-link-input-group">
+                <input 
+                  type="text" 
+                  value={currentShareLink.share_url} 
+                  readOnly 
+                  className="share-link-input"
+                  onClick={(e) => e.target.select()}
+                />
+                <button 
+                  onClick={handleCopyLink}
+                  className="btn-copy-link"
+                >
+                  {copied ? (
+                    <>
+                      <Icon name="check" size={16} />
+                      <span>Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Icon name="clipboard" size={16} />
+                      <span>Copy</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div className="share-info-box">
+              <Icon name="info" size={16} />
+              <div>
+                <p className="share-info-text">
+                  Anyone with this link can view and comment on your resume.
+                </p>
+                <p className="share-info-warning">
+                  <Icon name="warning" size={14} />
+                  This link is permanent until you revoke access.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
     </>
   );

@@ -7,7 +7,9 @@
   flex-direction: column;
   gap: var(--space-4);
   box-sizing: border-box;
-  overflow: hidden;
+  /* Changed to visible to allow modals and dropdowns to render properly */
+  overflow: visible;
+  position: relative;
 }
 
 .saved-resumes .section {
@@ -38,6 +40,9 @@
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: var(--space-4);
   margin-top: var(--space-6);
+  /* Ensure dropdowns and modals aren't clipped */
+  overflow: visible;
+  position: relative;
 }
 
 .resume-item {
@@ -48,10 +53,22 @@
   border: 1px solid var(--color-slate-200);
   border-radius: var(--radius-lg);
   cursor: pointer;
-  transition: all var(--transition-base);
+  /* Specific transitions instead of 'all' to prevent flickering */
+  transition: border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   background: var(--bg-primary);
   position: relative;
-  overflow: hidden;
+  /* Changed to visible to allow dropdown and modals to appear above */
+  overflow: visible;
+  /* Prevent flickering on state changes */
+  will-change: transform, border-color, background-color, box-shadow;
+  backface-visibility: hidden;
+  /* Use transform3d for GPU acceleration but ensure it doesn't block modals */
+  transform: translate3d(0, 0, 0);
+  /* Ensure resume items don't create stacking context that blocks modals */
+  z-index: 1;
 }
 
 .resume-item::before {
@@ -63,12 +80,18 @@
   height: 2px;
   background: var(--color-primary-600);
   transform: scaleX(0);
-  transition: transform var(--transition-base);
+  transform-origin: left;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Prevent flickering */
+  will-change: transform;
+  backface-visibility: hidden;
 }
 
 .resume-item:hover {
   border-color: var(--color-slate-300);
   background: var(--color-slate-50);
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .resume-item:hover::before {
@@ -78,31 +101,90 @@
 .resume-item.selected {
   border-color: var(--color-primary-500);
   background: var(--color-primary-50);
+  /* Ensure selected state is stable */
+  transform: translateZ(0);
 }
 
 .resume-item.selected::before {
   transform: scaleX(1);
 }
 
+/* Smooth hover state for selected items */
+.resume-item.selected:hover {
+  border-color: var(--color-primary-600);
+  background: var(--color-primary-100);
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+}
+
 .resume-item-content {
   flex: 1;
+}
+
+.resume-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
 }
 
 .resume-name {
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
-  margin: 0 0 var(--space-2) 0;
+  margin: 0;
   line-height: var(--line-height-tight);
+  flex: 1;
+}
+
+.resume-badge-new {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  background: var(--color-primary-600);
+  color: white;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.resume-job-preview {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  margin: 0 0 var(--space-2) 0;
+  line-height: var(--line-height-normal);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .resume-meta {
   font-size: var(--font-size-xs);
   color: var(--text-secondary);
-  margin: 0 0 var(--space-2) 0;
+  margin: 0;
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.meta-divider {
+  color: var(--text-tertiary);
+  margin: 0 2px;
 }
 
 .resume-job-description {
@@ -123,6 +205,10 @@
   margin-top: var(--space-2);
   padding-top: var(--space-3);
   border-top: 1px solid var(--color-slate-200);
+  /* Ensure actions container doesn't clip dropdowns */
+  overflow: visible;
+  position: relative;
+  z-index: 10;
 }
 
 .btn-icon-small {
@@ -143,7 +229,27 @@
 .btn-icon-small:hover {
   background: var(--color-error-light);
   color: var(--color-error);
-  transform: scale(1.1);
+  transform: scale(1.05);
+}
+
+.btn-icon-tiny {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-base);
+  color: var(--text-secondary);
+  padding: 0;
+}
+
+.btn-icon-tiny:hover {
+  background: var(--color-slate-100);
+  color: var(--color-primary-600);
 }
 
 .resume-details {
@@ -285,6 +391,125 @@
   letter-spacing: 0.05em;
 }
 
+/* Search and Filter Controls */
+.resume-list-controls {
+  display: flex;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.search-input-wrapper {
+  flex: 1;
+  min-width: 200px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-primary);
+  border: 1px solid var(--color-slate-200);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-base);
+}
+
+.search-input-wrapper:focus-within {
+  border-color: var(--color-primary-500);
+  box-shadow: 0 0 0 3px var(--color-primary-100);
+}
+
+.search-input-wrapper svg {
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+}
+
+.search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  outline: none;
+  padding: 0;
+}
+
+.search-input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.search-clear {
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: var(--color-slate-200);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-base);
+  color: var(--text-secondary);
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.search-clear:hover {
+  background: var(--color-slate-300);
+  color: var(--text-primary);
+}
+
+.sort-select {
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-primary);
+  border: 1px solid var(--color-slate-200);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  outline: none;
+  min-width: 160px;
+}
+
+.sort-select:hover {
+  border-color: var(--color-slate-300);
+}
+
+.sort-select:focus {
+  border-color: var(--color-primary-500);
+  box-shadow: 0 0 0 3px var(--color-primary-100);
+}
+
+/* Job Description Section */
+.job-description-section {
+  margin-top: var(--space-4);
+  border: 1px solid var(--color-slate-200);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--bg-secondary);
+}
+
+.job-description-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  background: var(--bg-primary);
+}
+
+.job-description-header:hover {
+  background: var(--color-slate-50);
+}
+
+.job-description-content {
+  padding: var(--space-4);
+  border-top: 1px solid var(--color-slate-200);
+  background: var(--bg-secondary);
+}
+
 /* Empty State */
 .saved-resumes-empty-modern {
   display: flex;
@@ -297,6 +522,19 @@
   border: 1px dashed var(--color-slate-300);
   border-radius: var(--radius-lg);
   margin: var(--space-4) 0;
+}
+
+.empty-state-actions {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.empty-state-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 .saved-resumes-empty-modern .empty-state-icon {
@@ -551,6 +789,18 @@
     gap: var(--space-3);
   }
   
+  .resume-list-controls {
+    flex-direction: column;
+  }
+  
+  .search-input-wrapper {
+    width: 100%;
+  }
+  
+  .sort-select {
+    width: 100%;
+  }
+  
   .saved-resumes .section-header-with-action {
     flex-direction: column;
     align-items: stretch;
@@ -565,5 +815,13 @@
   
   .saved-resumes .section-header-with-action > div:last-child button {
     width: 100%;
+  }
+  
+  .resume-item:hover {
+    transform: translateY(-1px) scale(1.005);
+  }
+  
+  .resume-item.selected:hover {
+    transform: translateY(-1px) scale(1.005);
   }
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { storageService } from '../services/storage';
 import { supabase } from '../config/supabase';
 import { useToast } from '../hooks/useToast';
@@ -13,6 +13,7 @@ import ToastContainer from './ui/ToastContainer';
 import PdfViewerWithOverlays from './pdf/PdfViewerWithOverlays';
 import { renderLatex } from '../services/api';
 import { buildLatexDocument } from '../utils/latexTemplate';
+import { formatRelativeTime, isRecent } from '../utils/dateUtils';
 import './SavedResumes.css';
 
 const DEFAULT_PERSONAL_INFO = {
@@ -287,6 +288,8 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
   const [latexPdfBase64, setLatexPdfBase64] = useState(null);
   const [renderingPdf, setRenderingPdf] = useState(false);
   const [jobDescriptionExpanded, setJobDescriptionExpanded] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState('newest');
 
   useEffect(() => {
     loadSavedResumes();
@@ -645,6 +648,49 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
 
+  // Filter and sort resumes
+  const filteredAndSortedResumes = useMemo(() => {
+    let filtered = savedResumes;
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(resume => {
+        const nameMatch = resume.name.toLowerCase().includes(query);
+        const jobMatch = resume.data?.jobDescription?.toLowerCase().includes(query);
+        return nameMatch || jobMatch;
+      });
+    }
+
+    // Apply sorting
+    const sorted = [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case 'newest':
+          return b.createdAt - a.createdAt;
+        case 'oldest':
+          return a.createdAt - b.createdAt;
+        case 'updated':
+          return b.updatedAt - a.updatedAt;
+        case 'name':
+          return a.name.localeCompare(b.name);
+        default:
+          return 0;
+      }
+    });
+
+    return sorted;
+  }, [savedResumes, searchQuery, sortBy]);
+
+  async function copyJobDescriptionToClipboard() {
+    if (!selectedResume?.data?.jobDescription) return;
+    try {
+      await navigator.clipboard.writeText(selectedResume.data.jobDescription);
+      success('Job description copied to clipboard!');
+    } catch (error) {
+      showError('Could not copy to clipboard.');
+    }
+  }
+
   if (loading) {
     return (
       <div className="saved-resumes">
@@ -734,54 +780,170 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
           </div>
           <h3>No saved resumes yet</h3>
           <p>Generate and save your first resume to get started. Create tailored resumes for different job applications.</p>
+          <div className="empty-state-actions" style={{ marginTop: 'var(--space-6)' }}>
+            <button 
+              className="btn btn-primary"
+              onClick={() => {
+                // Note: Navigation to generate tab would need to be passed as prop
+                // For now, this refreshes the list and user can navigate manually
+                if (onLoadResume) {
+                  onLoadResume();
+                }
+                // Show helpful message
+                success('Navigate to the "Generate Resume" tab to create your first resume!');
+              }}
+            >
+              <Icon name="sparkles" size={16} />
+              Get Started
+            </button>
+          </div>
+          <div className="empty-state-tips" style={{ 
+            marginTop: 'var(--space-6)', 
+            padding: 'var(--space-4)',
+            background: 'var(--color-primary-50)',
+            borderRadius: 'var(--radius-md)',
+            maxWidth: '400px'
+          }}>
+            <p style={{ 
+              margin: '0 0 var(--space-2) 0',
+              fontSize: 'var(--font-size-sm)',
+              fontWeight: 'var(--font-weight-semibold)',
+              color: 'var(--color-primary-700)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--space-2)'
+            }}>
+              <Icon name="lightbulb" size={16} />
+              Pro Tip
+            </p>
+            <p style={{ 
+              margin: 0,
+              fontSize: 'var(--font-size-sm)',
+              color: 'var(--text-secondary)',
+              lineHeight: 'var(--line-height-relaxed)'
+            }}>
+              Create tailored resumes for each job application to maximize your chances of getting noticed.
+            </p>
+          </div>
         </div>
       ) : (
         <>
-          <div className="section">
-            <div className="section-header-modern">
-              <div>
-                <h2>Your Resumes</h2>
-                <p className="section-description">
-                  Click on a resume to view and edit it. Resumes are sorted by newest first.
-                </p>
+          {/* Search and Filter Controls */}
+          <div className="resume-list-controls">
+            <div className="search-input-wrapper">
+              <Icon name="search" size={16} />
+              <input 
+                type="text" 
+                placeholder="Search resumes by name or job description..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="search-input"
+              />
+              {searchQuery && (
+                <button
+                  className="search-clear"
+                  onClick={() => setSearchQuery('')}
+                  aria-label="Clear search"
+                >
+                  <Icon name="x" size={14} />
+                </button>
+              )}
+            </div>
+            <select 
+              value={sortBy} 
+              onChange={(e) => setSortBy(e.target.value)}
+              className="sort-select"
+            >
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="updated">Recently Updated</option>
+              <option value="name">Name (A-Z)</option>
+            </select>
+          </div>
+
+          {filteredAndSortedResumes.length === 0 ? (
+            <div className="saved-resumes-empty-modern" style={{ padding: 'var(--space-12) var(--space-6)' }}>
+              <Icon name="search" size={48} style={{ opacity: 0.5, marginBottom: 'var(--space-4)' }} />
+              <h3>No resumes found</h3>
+              <p>Try adjusting your search or filter criteria.</p>
+              <button 
+                className="btn btn-secondary"
+                onClick={() => {
+                  setSearchQuery('');
+                  setSortBy('newest');
+                }}
+                style={{ marginTop: 'var(--space-4)' }}
+              >
+                Clear Filters
+              </button>
+            </div>
+          ) : (
+            <div className="section">
+              <div className="section-header-modern">
+                <div>
+                  <h2>Your Resumes {searchQuery && `(${filteredAndSortedResumes.length})`}</h2>
+                  <p className="section-description">
+                    Click on a resume to view and edit it.
+                  </p>
+                </div>
+              </div>
+
+              <div className="resume-list">
+                {filteredAndSortedResumes.map(resume => {
+                  const isRecentlyUpdated = isRecent(resume.updatedAt);
+                  const jobDescription = resume.data?.jobDescription || '';
+                  const jobPreview = jobDescription.length > 0 
+                    ? (jobDescription.length > 80 ? jobDescription.substring(0, 80) + '...' : jobDescription)
+                    : null;
+
+                  return (
+                    <div
+                      key={resume.id}
+                      className={`resume-item ${selectedResume?.id === resume.id ? 'selected' : ''}`}
+                      onClick={() => setSelectedResume(resume)}
+                    >
+                      <div className="resume-item-content">
+                        <div className="resume-item-header">
+                          <h3 className="resume-name">{resume.name}</h3>
+                          {isRecentlyUpdated && (
+                            <span className="resume-badge-new">New</span>
+                          )}
+                        </div>
+                        {jobPreview && (
+                          <p className="resume-job-preview">{jobPreview}</p>
+                        )}
+                        <div className="resume-meta">
+                          <Icon name="calendar" size={12} />
+                          <span>Updated {formatRelativeTime(resume.updatedAt)}</span>
+                          <span className="meta-divider">•</span>
+                          <Icon name="zap" size={12} />
+                          <span>{getStructuredBulletCount(resume.data)} bullets</span>
+                        </div>
+                      </div>
+                      <div className="resume-item-actions">
+                        <ShareResumeButton 
+                          resumeId={resume.id}
+                          resumeName={resume.name}
+                        />
+                        <Tooltip content="Delete resume">
+                          <button
+                            className="btn-icon-small"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowDeleteConfirm(resume.id);
+                            }}
+                            aria-label={`Delete resume: ${resume.name}`}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </Tooltip>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
-
-            <div className="resume-list">
-              {savedResumes.map(resume => (
-                <div
-                  key={resume.id}
-                  className={`resume-item ${selectedResume?.id === resume.id ? 'selected' : ''}`}
-                  onClick={() => setSelectedResume(resume)}
-                >
-                  <div className="resume-item-content">
-                    <h3 className="resume-name">{resume.name}</h3>
-                    <p className="resume-meta">
-                      <Calendar size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '4px' }} />
-                      {formatDate(resume.createdAt)} • {getStructuredBulletCount(resume.data)} bullets
-                    </p>
-                  </div>
-                  <div className="resume-item-actions">
-                    <ShareResumeButton 
-                      resumeId={resume.id}
-                      resumeName={resume.name}
-                    />
-                    <Tooltip content="Delete resume">
-                      <button
-                        className="btn-icon-small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setShowDeleteConfirm(resume.id);
-                        }}
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </Tooltip>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          )}
 
           {selectedResume && (
             <>
@@ -796,68 +958,53 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
                           <h2>{selectedResume.name}</h2>
                           <p className="section-description">
                             Created: {formatDate(selectedResume.createdAt)} • 
-                            Updated: {formatDate(selectedResume.updatedAt)} • 
+                            Updated: {formatRelativeTime(selectedResume.updatedAt)} • 
                             {getStructuredBulletCount(selectedResume.data)} bullets
-                            {selectedResume.data?.jobDescription && (
-                              <>
-                                <br />
-                                <div style={{ marginTop: '8px', maxWidth: '100%' }}>
-                                  <strong>Job:</strong>{' '}
-                                  {jobDescriptionExpanded || selectedResume.data.jobDescription.length <= 100
-                                    ? (
-                                        <span style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                                          {selectedResume.data.jobDescription}
-                                        </span>
-                                      )
-                                    : (
-                                        <>
-                                          <span>{selectedResume.data.jobDescription.substring(0, 100)}</span>
-                                          <button
-                                            onClick={(e) => {
-                                              e.preventDefault();
-                                              setJobDescriptionExpanded(true);
-                                            }}
-                                            style={{
-                                              background: 'none',
-                                              border: 'none',
-                                              color: 'var(--color-primary-600)',
-                                              cursor: 'pointer',
-                                              textDecoration: 'underline',
-                                              marginLeft: '4px',
-                                              padding: 0,
-                                              fontSize: 'inherit',
-                                              fontWeight: 'var(--font-weight-medium)'
-                                            }}
-                                          >
-                                            Show more
-                                          </button>
-                                        </>
-                                      )}
-                                  {jobDescriptionExpanded && selectedResume.data.jobDescription.length > 100 && (
-                                    <button
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        setJobDescriptionExpanded(false);
-                                      }}
-                                      style={{
-                                        background: 'none',
-                                        border: 'none',
-                                        color: 'var(--color-primary-600)',
-                                        cursor: 'pointer',
-                                        textDecoration: 'underline',
-                                        marginLeft: '4px',
-                                        padding: 0,
-                                        fontSize: 'inherit',
-                                        fontWeight: 'var(--font-weight-medium)'
-                                      }}
-                                    >
-                                      Show less
-                                    </button>
-                                  )}
-                                </div>
-                              </>
-                            )}
                           </p>
+                          {selectedResume.data?.jobDescription && (
+                            <div className="job-description-section">
+                              <div 
+                                className="job-description-header"
+                                onClick={() => setJobDescriptionExpanded(!jobDescriptionExpanded)}
+                              >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                                  <Icon name="briefcase" size={16} />
+                                  <span style={{ fontWeight: 'var(--font-weight-semibold)' }}>Job Description</span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                                  <button
+                                    className="btn-icon-tiny"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      copyJobDescriptionToClipboard();
+                                    }}
+                                    title="Copy job description"
+                                    aria-label="Copy job description to clipboard"
+                                  >
+                                    <Icon name="clipboard" size={14} />
+                                  </button>
+                                  <Icon 
+                                    name={jobDescriptionExpanded ? "chevronUp" : "chevronDown"} 
+                                    size={16} 
+                                  />
+                                </div>
+                              </div>
+                              {jobDescriptionExpanded && (
+                                <div className="job-description-content">
+                                  <p style={{ 
+                                    whiteSpace: 'pre-wrap', 
+                                    wordBreak: 'break-word',
+                                    margin: 0,
+                                    fontSize: 'var(--font-size-sm)',
+                                    lineHeight: 'var(--line-height-relaxed)',
+                                    color: 'var(--text-primary)'
+                                  }}>
+                                    {selectedResume.data.jobDescription}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                         <div className="section-header-actions">
                           <button
@@ -975,68 +1122,53 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
                       <h2>{selectedResume.name}</h2>
                       <p className="section-description">
                         Created: {formatDate(selectedResume.createdAt)} • 
-                        Updated: {formatDate(selectedResume.updatedAt)} • 
+                        Updated: {formatRelativeTime(selectedResume.updatedAt)} • 
                         {getStructuredBulletCount(selectedResume.data)} bullets
-                        {selectedResume.data?.jobDescription && (
-                          <>
-                            <br />
-                            <div style={{ marginTop: '8px', maxWidth: '100%' }}>
-                              <strong>Job:</strong>{' '}
-                              {jobDescriptionExpanded || selectedResume.data.jobDescription.length <= 100
-                                ? (
-                                    <span style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                                      {selectedResume.data.jobDescription}
-                                    </span>
-                                  )
-                                : (
-                                    <>
-                                      <span>{selectedResume.data.jobDescription.substring(0, 100)}</span>
-                                      <button
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          setJobDescriptionExpanded(true);
-                                        }}
-                                        style={{
-                                          background: 'none',
-                                          border: 'none',
-                                          color: 'var(--color-primary-600)',
-                                          cursor: 'pointer',
-                                          textDecoration: 'underline',
-                                          marginLeft: '4px',
-                                          padding: 0,
-                                          fontSize: 'inherit',
-                                          fontWeight: 'var(--font-weight-medium)'
-                                        }}
-                                      >
-                                        Show more
-                                      </button>
-                                    </>
-                                  )}
-                              {jobDescriptionExpanded && selectedResume.data.jobDescription.length > 100 && (
-                                <button
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    setJobDescriptionExpanded(false);
-                                  }}
-                                  style={{
-                                    background: 'none',
-                                    border: 'none',
-                                    color: 'var(--color-primary-600)',
-                                    cursor: 'pointer',
-                                    textDecoration: 'underline',
-                                    marginLeft: '4px',
-                                    padding: 0,
-                                    fontSize: 'inherit',
-                                    fontWeight: 'var(--font-weight-medium)'
-                                  }}
-                                >
-                                  Show less
-                                </button>
-                              )}
-                            </div>
-                          </>
-                        )}
                       </p>
+                      {selectedResume.data?.jobDescription && (
+                        <div className="job-description-section">
+                          <div 
+                            className="job-description-header"
+                            onClick={() => setJobDescriptionExpanded(!jobDescriptionExpanded)}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                              <Icon name="briefcase" size={16} />
+                              <span style={{ fontWeight: 'var(--font-weight-semibold)' }}>Job Description</span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                              <button
+                                className="btn-icon-tiny"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  copyJobDescriptionToClipboard();
+                                }}
+                                title="Copy job description"
+                                aria-label="Copy job description to clipboard"
+                              >
+                                <Icon name="clipboard" size={14} />
+                              </button>
+                              <Icon 
+                                name={jobDescriptionExpanded ? "chevronUp" : "chevronDown"} 
+                                size={16} 
+                              />
+                            </div>
+                          </div>
+                          {jobDescriptionExpanded && (
+                            <div className="job-description-content">
+                              <p style={{ 
+                                whiteSpace: 'pre-wrap', 
+                                wordBreak: 'break-word',
+                                margin: 0,
+                                fontSize: 'var(--font-size-sm)',
+                                lineHeight: 'var(--line-height-relaxed)',
+                                color: 'var(--text-primary)'
+                              }}>
+                                {selectedResume.data.jobDescription}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                     <div className="section-header-actions">
                       <button
