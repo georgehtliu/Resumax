@@ -919,8 +919,10 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
                             <span className="resume-badge-new">New</span>
                           )}
                         </div>
-                        {jobPreview && (
+                        {jobPreview ? (
                           <p className="resume-job-preview">{jobPreview}</p>
+                        ) : (
+                          <span className="resume-job-preview" style={{ color: 'var(--text-tertiary)' }}>No job description</span>
                         )}
                         <div className="resume-meta">
                           <Icon name="calendar" size={12} />

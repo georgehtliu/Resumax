@@ -61,13 +61,13 @@
 }
 
 .btn-share-resume-success {
-  background: var(--color-success);
+  background: var(--color-primary-600);
   border-radius: var(--radius-md) 0 0 var(--radius-md);
 }
 
 .btn-share-resume-success:hover:not(:disabled) {
-  background: #059669;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  background: var(--color-primary-700);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
 }
 
 .btn-share-resume-loading {
@@ -80,7 +80,7 @@
   align-items: center;
   justify-content: center;
   padding: var(--space-2) var(--space-2);
-  background: var(--color-success);
+  background: var(--color-primary-600);
   color: white;
   border: none;
   border-left: 1px solid rgba(255, 255, 255, 0.2);
@@ -92,11 +92,11 @@
 }
 
 .btn-share-resume-dropdown:hover {
-  background: #059669;
+  background: var(--color-primary-700);
 }
 
 .btn-share-resume-dropdown:active {
-  background: #047857;
+  background: var(--color-primary-800);
 }
 
 /* Dropdown Menu */
