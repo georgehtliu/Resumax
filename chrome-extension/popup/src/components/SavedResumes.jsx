@@ -1062,6 +1062,30 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
                         <h3>LaTeX Preview</h3>
                         <div className="latex-preview-actions">
                           <button
+                            className="btn btn-secondary btn-small"
+                            onClick={async () => {
+                              if (!latexSource) {
+                                // Generate LaTeX source if not available
+                                try {
+                                  const selectedPayload = buildSelectedResumePayload(editedResume, masterResume);
+                                  const latex = buildLatexDocument(selectedPayload);
+                                  setLatexSource(latex);
+                                  await copyLatexToClipboard();
+                                } catch (error) {
+                                  console.error('Error building LaTeX:', error);
+                                  showError('Could not generate LaTeX source.');
+                                }
+                              } else {
+                                await copyLatexToClipboard();
+                              }
+                            }}
+                            disabled={!editedResume}
+                            title="Copy Raw LaTeX to clipboard"
+                          >
+                            <Icon name="clipboard" size={14} />
+                            Copy Raw LaTeX
+                          </button>
+                          <button
                             className="btn btn-primary btn-small"
                             onClick={async () => {
                               if (!editedResume) return;

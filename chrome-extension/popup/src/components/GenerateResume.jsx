@@ -248,6 +248,7 @@ function GenerateResume({ masterResume, onSave, onResumeUpdate, onSelectionCompl
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [optimizationResult]);
 
+
   function openLatexPreview() {
     const resumeSource = customizedResume || optimizationResult?.selectedResume;
     if (!resumeSource) {
@@ -789,6 +790,32 @@ function GenerateResume({ masterResume, onSave, onResumeUpdate, onSelectionCompl
               <div className="latex-preview-panel-header">
                 <h3>LaTeX Preview</h3>
                 <div className="latex-preview-actions">
+                  <button
+                    className="btn btn-secondary btn-small"
+                    onClick={async () => {
+                      const resumeSource = customizedResume || optimizationResult?.selectedResume;
+                      if (!resumeSource) return;
+                      
+                      // Generate LaTeX source if not available
+                      if (!latexSource) {
+                        try {
+                          const latex = buildLatexDocument(resumeSource);
+                          setLatexSource(latex);
+                          await copyLatexToClipboard();
+                        } catch (error) {
+                          console.error('Error building LaTeX:', error);
+                          error('Could not generate LaTeX source.');
+                        }
+                      } else {
+                        await copyLatexToClipboard();
+                      }
+                    }}
+                    disabled={!optimizationResult && !customizedResume}
+                    title="Copy Raw LaTeX to clipboard"
+                  >
+                    <Icon name="clipboard" size={14} />
+                    Copy Raw LaTeX
+                  </button>
                   <button
                     className="btn btn-primary btn-small"
                     onClick={async () => {

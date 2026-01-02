@@ -649,6 +649,7 @@
   align-items: center;
 }
 
+
 .latex-preview-panel-content {
   flex: 0 1 auto;
   overflow-x: hidden;
@@ -671,6 +672,7 @@
   text-align: center;
   padding: var(--space-4);
 }
+
 
 .latex-preview-panel-content .pdf-viewer-with-overlays {
   width: 100%;
