@@ -167,6 +167,7 @@ function mapProjectsForSelectedResume(entries = []) {
         name: entry.name || '',
         description: entry.description || '',
         technologies: entry.technologies || null,
+        url: entry.url || null,
         startDate: entry.startDate || null,
         endDate: entry.endDate || null,
         selectedBullets

@@ -121,6 +121,7 @@ class OptimizationService:
                 name=proj.name,
                 description=proj.description,
                 technologies=proj.technologies,
+                url=getattr(proj, 'url', None),
                 startDate=proj.startDate,
                 endDate=proj.endDate,
                 selectedBullets=rewritten_bullets

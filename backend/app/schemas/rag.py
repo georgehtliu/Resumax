@@ -125,6 +125,7 @@ class Project(BaseModel):
     name: str = Field(..., description="Project name")
     description: Optional[str] = Field(None, description="Project description")
     technologies: Optional[str] = Field(None, description="Technologies used")
+    url: Optional[str] = Field(None, description="Project URL/link")
     startDate: Optional[str] = Field(None, description="Start date")
     endDate: Optional[str] = Field(None, description="End date")
     bullets: List[Bullet] = Field(default_factory=list, description="List of bullet points")
@@ -196,6 +197,7 @@ class SelectedProject(BaseModel):
     name: str
     description: Optional[str] = None
     technologies: Optional[str] = None
+    url: Optional[str] = None
     startDate: Optional[str] = None
     endDate: Optional[str] = None
     selectedBullets: List[SelectedBullet] = Field(default_factory=list)

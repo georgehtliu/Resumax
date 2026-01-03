@@ -287,9 +287,9 @@ export async function saveResume(resumeData) {
           name: proj.name || '',
           description: proj.description || null,
           technologies: proj.technologies || null,
+          url: proj.url || null,
           start_date: proj.startDate || null,
           end_date: proj.endDate || null
-          // Note: url and display_order exist in DB but not in code data structure
         })
         .select()
         .single();
@@ -713,6 +713,7 @@ export async function getResume() {
         name: proj.name || '',
         description: proj.description || '',
         technologies: proj.technologies || '',
+        url: proj.url || '',
         startDate: proj.start_date || '',
         endDate: proj.end_date || '',
         bullets: (Array.isArray(proj.resume_points) ? proj.resume_points : []).map(point => ({

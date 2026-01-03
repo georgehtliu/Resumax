@@ -41,6 +41,7 @@ const SECTION_CONFIG = [
       { name: 'name', label: 'Project Name', placeholder: 'e.g., Distributed Task Scheduler' },
       { name: 'description', label: 'Summary', placeholder: 'Short project summary', multiline: true },
       { name: 'technologies', label: 'Technologies', placeholder: 'e.g., Go, Kubernetes' },
+      { name: 'url', label: 'Project URL', placeholder: 'e.g., https://github.com/username/project' },
       { name: 'startDate', label: 'Start Date', placeholder: 'e.g., Jan 2022' },
       { name: 'endDate', label: 'End Date', placeholder: 'e.g., May 2022' }
     ],
@@ -1091,6 +1092,28 @@ function SectionEditor({
                       />
                     </div>
                   </div>
+                  <div className="entry-row-role">
+                    <div className="entry-field-compact entry-field-role" style={{ flex: 1 }}>
+                      <label>Project URL</label>
+                      <input
+                        type="url"
+                        value={entry.url || ''}
+                        onChange={(e) => onFieldChange(config.key, entry.id, 'url', e.target.value)}
+                        placeholder="e.g., https://github.com/username/project"
+                      />
+                    </div>
+                  </div>
+                  <div className="entry-row-role">
+                    <div className="entry-field-compact entry-field-role" style={{ flex: 1 }}>
+                      <label>Description</label>
+                      <textarea
+                        value={entry.description || ''}
+                        onChange={(e) => onFieldChange(config.key, entry.id, 'description', e.target.value)}
+                        placeholder="Short project summary"
+                        rows={2}
+                      />
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div className="entry-fields">
@@ -1316,6 +1339,7 @@ function createEmptyEntry(sectionKey) {
         name: '',
         description: '',
         technologies: '',
+        url: '',
         startDate: '',
         endDate: '',
         bullets: []

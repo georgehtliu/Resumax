@@ -1241,6 +1241,7 @@ class SelectionService:
                     name=data['project'].name,
                     description=data['project'].description,
                     technologies=data['project'].technologies,
+                    url=getattr(data['project'], 'url', None),
                     startDate=data['project'].startDate,
                     endDate=data['project'].endDate,
                     selectedBullets=data['bullets']
@@ -1258,6 +1259,7 @@ class SelectionService:
                             name=data['project'].name,
                             description=data['project'].description,
                             technologies=data['project'].technologies,
+                            url=getattr(data['project'], 'url', None),
                             startDate=data['project'].startDate,
                             endDate=data['project'].endDate,
                             selectedBullets=single_bullet

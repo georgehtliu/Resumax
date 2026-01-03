@@ -17,6 +17,7 @@ function ProjectEditor({ project, onUpdate, onDelete, onAddBulletFromMaster }) {
     name: project.name || '',
     description: project.description || '',
     technologies: project.technologies || '',
+    url: project.url || '',
     startDate: project.startDate || '',
     endDate: project.endDate || '',
     bullets: project.bullets || []
@@ -95,6 +96,16 @@ function ProjectEditor({ project, onUpdate, onDelete, onAddBulletFromMaster }) {
               value={formData.technologies}
               onChange={(e) => handleFieldChange('technologies', e.target.value)}
               placeholder="e.g., React, Node.js, PostgreSQL"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Project URL</label>
+            <input
+              type="url"
+              value={formData.url}
+              onChange={(e) => handleFieldChange('url', e.target.value)}
+              placeholder="e.g., https://github.com/username/project"
             />
           </div>
 
@@ -215,6 +226,22 @@ function ProjectEditor({ project, onUpdate, onDelete, onAddBulletFromMaster }) {
               )}
               {formData.technologies && (
                 <p className="section-tech">{formData.technologies}</p>
+              )}
+              {formData.url && (
+                <p className="section-url">
+                  <a 
+                    href={formData.url} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    style={{ 
+                      color: 'var(--color-primary-600)', 
+                      textDecoration: 'none',
+                      wordBreak: 'break-all'
+                    }}
+                  >
+                    {formData.url}
+                  </a>
+                </p>
               )}
               <p className="section-dates">
                 {formData.startDate && formData.endDate

@@ -72,6 +72,7 @@ function normalizeProjects(projects = []) {
       name: project.name || '',
       description: project.description || '',
       technologies: project.technologies || null,
+      url: project.url || null,
       startDate: project.startDate || null,
       endDate: project.endDate || null,
       bullets: normalizeBullets(project.bullets),

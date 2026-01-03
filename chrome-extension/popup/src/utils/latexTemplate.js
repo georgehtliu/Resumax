@@ -109,8 +109,8 @@ function buildHeading(personalInfo) {
   const contactParts = [];
   if (info.phone) contactParts.push(`\\underline{${escapeLatex(info.phone)}}`);
   if (info.email) contactParts.push(`\\href{mailto:${escapeLatex(info.email)}}{\\underline{${escapeLatex(info.email)}}}`);
-  if (info.linkedin) contactParts.push(`\\href{${escapeLatex(info.linkedin)}}{\\underline{${escapeLatex(info.linkedin)}}}`);
-  if (info.github) contactParts.push(`\\href{${escapeLatex(info.github)}}{\\underline{${escapeLatex(info.github)}}}`);
+  if (info.linkedin) contactParts.push(`\\href{${escapeLatex(info.linkedin)}}{\\underline{LinkedIn}}`);
+  if (info.github) contactParts.push(`\\href{${escapeLatex(info.github)}}{\\underline{GitHub}}`);
 
   const contactLine = contactParts.join(' $|$ ');
 
