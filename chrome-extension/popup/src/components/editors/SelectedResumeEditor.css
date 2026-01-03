@@ -495,6 +495,37 @@
   box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
 }
 
+.bullet-relevance {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.5rem;
+  display: inline-block;
+  width: fit-content;
+  text-transform: none;
+  letter-spacing: 0.025em;
+}
+
+.bullet-relevance.relevance-high {
+  color: #065f46;
+  background: #d1fae5;
+}
+
+.bullet-relevance.relevance-good {
+  color: #1e40af;
+  background: #dbeafe;
+}
+
+.bullet-relevance.relevance-moderate {
+  color: #92400e;
+  background: #fef3c7;
+}
+
+.bullet-relevance.relevance-low {
+  color: #374151;
+  background: #f3f4f6;
+}
+
 .line-indicator {
   font-size: 0.75rem;
   font-weight: 600;

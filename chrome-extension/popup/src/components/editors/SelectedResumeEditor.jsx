@@ -8,6 +8,7 @@ import BulletSelectionModal from './BulletSelectionModal';
 import EntrySelectionModal from './EntrySelectionModal';
 import { useToast } from '../../hooks/useToast';
 import ToastContainer from '../ui/ToastContainer';
+import { getRelevanceLabel, getRelevanceClass } from '../../utils/relevanceUtils';
 import './SelectedResumeEditor.css';
 
 const DEFAULT_PERSONAL_INFO = {
@@ -191,7 +192,8 @@ function SelectedResumeEditor({
       selectedBullets: (entry.bullets || []).map((bullet) => ({
         id: generateId('bullet'),
         text: bullet.text || '',
-        relevanceScore: 0.5,
+        // Bullets from master resume don't have relevance scores (they're job-specific)
+        relevanceScore: typeof bullet.relevanceScore === 'number' ? bullet.relevanceScore : undefined,
         lineCount: null,
         original: null,
         rewritten: null,
@@ -258,7 +260,9 @@ function SelectedResumeEditor({
         const newBullet = {
           id: generateId('bullet'),
           text: bulletText,
-          relevanceScore: bullet.relevanceScore || 0.5, // Default relevance score if not provided
+          // Only preserve relevanceScore if it exists (don't default to 0.5)
+          // Bullets from master resume don't have relevance scores since they're job-specific
+          relevanceScore: typeof bullet.relevanceScore === 'number' ? bullet.relevanceScore : undefined,
           lineCount: bullet.lineCount || null,
           original: bullet.original || null,
           rewritten: bullet.rewritten || null,
@@ -285,7 +289,8 @@ function SelectedResumeEditor({
         const newBullet = {
           id: generateId('bullet'),
           text: '',
-          relevanceScore: 0.5, // Default relevance score for new bullets
+          // New bullets don't have relevance scores (they're job-specific)
+          relevanceScore: undefined,
           lineCount: null,
           original: null,
           rewritten: null,
@@ -1036,10 +1041,16 @@ function SectionEditor({
               ) : (
                 (entry.selectedBullets || []).map((bullet, index) => {
                   const lineInfo = getLineCountInfo(bullet.text || '');
+                  const relevanceScore = typeof bullet.relevanceScore === 'number' ? bullet.relevanceScore : null;
                   return (
                     <div key={bullet.id || index} className="selected-bullet-row">
                       <span className="bullet-index">{index + 1}.</span>
                       <div className="bullet-text-group">
+                        {relevanceScore !== null && (
+                          <span className={`bullet-relevance ${getRelevanceClass(relevanceScore)}`}>
+                            {getRelevanceLabel(relevanceScore)}
+                          </span>
+                        )}
                         <textarea
                           value={bullet.text || ''}
                           onChange={(e) => onBulletChange(config.key, entry.id, bullet.id, e.target.value)}

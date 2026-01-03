@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Icon } from './ui/Icons';
+import { getRelevanceLabel, getRelevanceClass } from '../utils/relevanceUtils';
 import './OptimizationPanel.css';
 
 /**
@@ -73,8 +74,8 @@ function OptimizationPanel({ result, onClose, onBulletsUpdate }) {
           <div key={bullet.id || index} className="bullet-comparison">
             <div className="bullet-header">
               <span className="bullet-index">{index + 1}</span>
-              <span className="relevance-score">
-                Relevance: {(bullet.relevanceScore || 0).toFixed(2)}
+              <span className={`relevance-score ${getRelevanceClass(bullet.relevanceScore || 0)}`}>
+                {getRelevanceLabel(bullet.relevanceScore || 0)}
               </span>
             </div>
             
