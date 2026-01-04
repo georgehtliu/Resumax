@@ -5,18 +5,25 @@
 /**
  * Converts a relevance score (0-1) to a user-friendly label
  * @param {number} score - Relevance score between 0 and 1
- * @returns {string} User-friendly label
+ * @returns {string} User-friendly label (e.g., "9/10 Excellent")
  */
 export function getRelevanceLabel(score) {
+  // Convert 0-1 score to 0-10 scale and round to nearest integer
+  const scoreOutOf10 = Math.round(score * 10);
+  
+  // Add brief descriptive text based on score
+  let description = '';
   if (score >= 0.9) {
-    return 'Highly Relevant';
+    description = 'Excellent';
   } else if (score >= 0.7) {
-    return 'Relevant';
+    description = 'Strong';
   } else if (score >= 0.5) {
-    return 'Somewhat Relevant';
+    description = 'Moderate';
   } else {
-    return 'Less Relevant';
+    description = 'Weak';
   }
+  
+  return `${scoreOutOf10}/10 ${description}`;
 }
 
 /**

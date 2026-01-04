@@ -927,21 +927,14 @@ function App() {
   }
 
   function handleSelectionComplete(data) {
-    // Open manager page and switch to saved resumes view with the specific resume editor
-    const resumeId = data?.savedResumeId;
-    
+    // Open manager page and switch to generate view (editor/preview) after resume generation
+    // The resume is already auto-saved, but user should see it in the editor first
     if (!isManagerView) {
-      // If in popup, open manager page with saved view and resume ID
-      openManagerPage('saved', resumeId);
+      // If in popup, open manager page with generate view where the editor/preview is
+      openManagerPage('generate');
     } else {
-      // If already in manager, switch to saved view
-      setActiveView('saved');
-      // Store resume ID for SavedResumes to pick up
-      if (resumeId && typeof window !== 'undefined') {
-        const url = new URL(window.location);
-        url.searchParams.set('resumeId', resumeId);
-        window.history.replaceState({}, '', url);
-      }
+      // If already in manager, just switch to generate view
+      setActiveView('generate');
     }
   }
 

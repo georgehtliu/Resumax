@@ -147,7 +147,8 @@ function GenerateResume({ masterResume, onSave, onResumeUpdate, onSelectionCompl
           setCustomizedResume(selectedResume);
         });
 
-        // Auto-save the resume after generation
+        // Store generated resume temporarily in localStorage so it can be loaded in manager view
+        // Don't auto-save - let user see it in editor/preview first, then they can save manually
         try {
           const resumeData = {
             mode: 'select',
@@ -164,65 +165,49 @@ function GenerateResume({ masterResume, onSave, onResumeUpdate, onSelectionCompl
             selectedBullets: flattenedBullets
           };
 
-          // Generate a default name from job description or use timestamp
-          const defaultName = trimmedDescription.length > 50 
-            ? trimmedDescription.substring(0, 50).trim() + '...'
-            : trimmedDescription || `Resume ${new Date().toLocaleString()}`;
-
-          let savedResumeId = null;
-
-          // Save to Supabase
-          try {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session) {
-              const { data, error: supabaseError } = await supabase
-                .from('saved_resumes')
-                .insert({
-                  user_id: session.user.id,
-                  name: defaultName,
-                  resume_data: resumeData
-                })
-                .select()
-                .single();
-
-              if (supabaseError) throw supabaseError;
-              savedResumeId = data.id;
-            } else {
-              // Fallback to Chrome Storage if not signed in
-              const savedResume = await storageService.saveGeneratedResume(defaultName, resumeData);
-              savedResumeId = savedResume.id;
-            }
-          } catch (saveError) {
-            console.error('Error saving to Supabase, falling back to Chrome Storage:', saveError);
-            // Fallback to Chrome Storage
-            const savedResume = await storageService.saveGeneratedResume(defaultName, resumeData);
-            savedResumeId = savedResume.id;
+          // Store temporarily in localStorage for the manager view to pick up
+          // Note: keywordData will be added later when scan completes
+          if (typeof window !== 'undefined' && window.localStorage) {
+            const pendingData = {
+              resumeData,
+              selectedResume,
+              optimizationResult: {
+                mode: apiResponse?.mode || 'select',
+                selectedBullets: flattenedBullets,
+                selectedResume,
+                gaps: apiResponse?.gaps || [],
+                jobDescription: trimmedDescription,
+                fitsOnePage: apiResponse?.fitsOnePage,
+                totalLineCount: apiResponse?.totalLineCount,
+                maxLines: apiResponse?.maxLines,
+                processingTime: typeof apiResponse?.processing_time === 'number'
+                  ? apiResponse.processing_time
+                  : undefined,
+                rawResponse: apiResponse,
+                sectionCaps,
+              },
+              structuredResume: structuredResume, // Store for keyword scanning
+              timestamp: Date.now()
+            };
+            localStorage.setItem('resumax_pending_resume', JSON.stringify(pendingData));
           }
 
-          // Call onSelectionComplete with saved resume ID
+          // Call onSelectionComplete to open manager
           if (typeof onSelectionComplete === 'function') {
             onSelectionComplete({
               selectedResume,
               response: apiResponse,
-              jobDescription: trimmedDescription,
-              savedResumeId
+              jobDescription: trimmedDescription
             });
           }
-
-          // Notify parent to refresh saved resumes
-          if (onSave) {
-            onSave();
-          }
-        } catch (saveError) {
-          console.error('Error auto-saving resume:', saveError);
-          error('Failed to auto-save resume. You can save it manually.');
-          // Still call onSelectionComplete even if save fails
+        } catch (error) {
+          console.error('Error storing pending resume:', error);
+          // Still call onSelectionComplete even if storage fails
           if (typeof onSelectionComplete === 'function') {
             onSelectionComplete({
               selectedResume,
               response: apiResponse,
-              jobDescription: trimmedDescription,
-              savedResumeId: null
+              jobDescription: trimmedDescription
             });
           }
         }
@@ -253,8 +238,22 @@ function GenerateResume({ masterResume, onSave, onResumeUpdate, onSelectionCompl
       }));
 
       // Scan keywords after selection - defer to avoid blocking UI
-      setTimeout(() => {
-        scanKeywordsForResume(structuredResume, trimmedDescription);
+      // Also update pending resume with keyword data when it's ready
+      setTimeout(async () => {
+        const keywordResult = await scanKeywordsForResume(structuredResume, trimmedDescription);
+        // Update pending resume with keyword data if it exists
+        if (typeof window !== 'undefined' && window.localStorage && keywordResult) {
+          try {
+            const pendingResumeStr = localStorage.getItem('resumax_pending_resume');
+            if (pendingResumeStr) {
+              const pendingResume = JSON.parse(pendingResumeStr);
+              pendingResume.keywordData = keywordResult;
+              localStorage.setItem('resumax_pending_resume', JSON.stringify(pendingResume));
+            }
+          } catch (error) {
+            console.error('Error updating pending resume with keywords:', error);
+          }
+        }
       }, 100);
     } catch (error) {
       console.error('Error selecting bullets:', error);
@@ -269,7 +268,7 @@ function GenerateResume({ masterResume, onSave, onResumeUpdate, onSelectionCompl
    */
   async function scanKeywordsForResume(resume, jobDescription) {
     if (!resume || !jobDescription) {
-      return;
+      return null;
     }
 
     setScanningKeywords(true);
@@ -279,9 +278,11 @@ function GenerateResume({ masterResume, onSave, onResumeUpdate, onSelectionCompl
         jobDescription,
       });
       setKeywordData(keywordResult);
+      return keywordResult; // Return the result so it can be used immediately
     } catch (error) {
       console.error('Error scanning keywords:', error);
       // Don't show alert for keyword scan errors, just log
+      return null;
     } finally {
       setScanningKeywords(false);
     }
@@ -299,6 +300,45 @@ function GenerateResume({ masterResume, onSave, onResumeUpdate, onSelectionCompl
     setCustomizedResume(updatedResume);
     // Don't auto-trigger PDF re-render - user must manually regenerate or add skills
   }
+
+  // Load pending resume from localStorage if available (when opening manager from popup)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.localStorage && !optimizationResult) {
+      try {
+        const pendingResumeStr = localStorage.getItem('resumax_pending_resume');
+        if (pendingResumeStr) {
+          const pendingResume = JSON.parse(pendingResumeStr);
+          // Only load if it's recent (within last 5 minutes)
+          const age = Date.now() - pendingResume.timestamp;
+          if (age < 5 * 60 * 1000) {
+            setOptimizationResult(pendingResume.optimizationResult);
+            setCustomizedResume(pendingResume.selectedResume);
+            setCurrentJob({
+              description: pendingResume.optimizationResult.jobDescription,
+              source: 'manual'
+            });
+            
+            // Restore keyword data if available
+            if (pendingResume.keywordData) {
+              setKeywordData(pendingResume.keywordData);
+            } else if (pendingResume.structuredResume && pendingResume.optimizationResult.jobDescription) {
+              // If keyword data not available, trigger keyword scan
+              scanKeywordsForResume(pendingResume.structuredResume, pendingResume.optimizationResult.jobDescription);
+            }
+            
+            // Clear the pending resume after loading
+            localStorage.removeItem('resumax_pending_resume');
+          } else {
+            // Too old, remove it
+            localStorage.removeItem('resumax_pending_resume');
+          }
+        }
+      } catch (error) {
+        console.error('Error loading pending resume:', error);
+        localStorage.removeItem('resumax_pending_resume');
+      }
+    }
+  }, []); // Only run once on mount
 
   // Auto-generate LaTeX when resume is generated or updated
   useEffect(() => {
