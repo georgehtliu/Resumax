@@ -148,7 +148,8 @@ function GenerateResume({ masterResume, onSave, onResumeUpdate, onSelectionCompl
         });
 
         // Store generated resume temporarily in localStorage so it can be loaded in manager view
-        // Don't auto-save - let user see it in editor/preview first, then they can save manually
+        // IMPORTANT: This is NOT a save - it's only temporary storage for passing data to manager view
+        // The resume is NOT saved to database. User must manually save via the "Save Resume" button.
         try {
           const resumeData = {
             mode: 'select',
@@ -326,7 +327,7 @@ function GenerateResume({ masterResume, onSave, onResumeUpdate, onSelectionCompl
               scanKeywordsForResume(pendingResume.structuredResume, pendingResume.optimizationResult.jobDescription);
             }
             
-            // Clear the pending resume after loading
+            // Clear the pending resume after loading (this is temporary data, not a saved resume)
             localStorage.removeItem('resumax_pending_resume');
           } else {
             // Too old, remove it
@@ -335,9 +336,30 @@ function GenerateResume({ masterResume, onSave, onResumeUpdate, onSelectionCompl
         }
       } catch (error) {
         console.error('Error loading pending resume:', error);
+        // Ensure localStorage is cleared even on error
         localStorage.removeItem('resumax_pending_resume');
       }
     }
+    
+    // Cleanup: Remove any stale pending resume data on component unmount
+    return () => {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const pendingResumeStr = localStorage.getItem('resumax_pending_resume');
+        if (pendingResumeStr) {
+          try {
+            const pendingResume = JSON.parse(pendingResumeStr);
+            const age = Date.now() - pendingResume.timestamp;
+            // Remove if older than 5 minutes
+            if (age > 5 * 60 * 1000) {
+              localStorage.removeItem('resumax_pending_resume');
+            }
+          } catch (error) {
+            // If parsing fails, remove it
+            localStorage.removeItem('resumax_pending_resume');
+          }
+        }
+      }
+    };
   }, []); // Only run once on mount
 
   // Auto-generate LaTeX when resume is generated or updated
