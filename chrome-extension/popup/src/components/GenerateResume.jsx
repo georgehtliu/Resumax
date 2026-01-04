@@ -115,7 +115,7 @@ function GenerateResume({ masterResume, onSave, onResumeUpdate, onSelectionCompl
 
       // Use startTransition to mark state updates as non-urgent
       // This allows React to keep the UI responsive during heavy processing
-      const processResume = () => {
+      const processResume = async () => {
         const selectedResume = cloneStructuredResume(apiResponse?.selectedResume);
         
         // Always ensure skills are included from master resume (API may not return them)
@@ -145,24 +145,106 @@ function GenerateResume({ masterResume, onSave, onResumeUpdate, onSelectionCompl
           });
 
           setCustomizedResume(selectedResume);
-          
-          // Call onSelectionComplete after state is set
+        });
+
+        // Auto-save the resume after generation
+        try {
+          const resumeData = {
+            mode: 'select',
+            experiences: selectedResume.experiences || [],
+            education: selectedResume.education || [],
+            projects: selectedResume.projects || [],
+            customSections: selectedResume.customSections || [],
+            skills: selectedResume.skills || [],
+            gaps: apiResponse?.gaps || [],
+            jobDescription: trimmedDescription,
+            fitsOnePage: apiResponse?.fitsOnePage,
+            totalLineCount: apiResponse?.totalLineCount,
+            maxLines: apiResponse?.maxLines,
+            selectedBullets: flattenedBullets
+          };
+
+          // Generate a default name from job description or use timestamp
+          const defaultName = trimmedDescription.length > 50 
+            ? trimmedDescription.substring(0, 50).trim() + '...'
+            : trimmedDescription || `Resume ${new Date().toLocaleString()}`;
+
+          let savedResumeId = null;
+
+          // Save to Supabase
+          try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+              const { data, error: supabaseError } = await supabase
+                .from('saved_resumes')
+                .insert({
+                  user_id: session.user.id,
+                  name: defaultName,
+                  resume_data: resumeData
+                })
+                .select()
+                .single();
+
+              if (supabaseError) throw supabaseError;
+              savedResumeId = data.id;
+            } else {
+              // Fallback to Chrome Storage if not signed in
+              const savedResume = await storageService.saveGeneratedResume(defaultName, resumeData);
+              savedResumeId = savedResume.id;
+            }
+          } catch (saveError) {
+            console.error('Error saving to Supabase, falling back to Chrome Storage:', saveError);
+            // Fallback to Chrome Storage
+            const savedResume = await storageService.saveGeneratedResume(defaultName, resumeData);
+            savedResumeId = savedResume.id;
+          }
+
+          // Call onSelectionComplete with saved resume ID
           if (typeof onSelectionComplete === 'function') {
             onSelectionComplete({
               selectedResume,
               response: apiResponse,
-              jobDescription: trimmedDescription
+              jobDescription: trimmedDescription,
+              savedResumeId
             });
           }
-        });
+
+          // Notify parent to refresh saved resumes
+          if (onSave) {
+            onSave();
+          }
+        } catch (saveError) {
+          console.error('Error auto-saving resume:', saveError);
+          error('Failed to auto-save resume. You can save it manually.');
+          // Still call onSelectionComplete even if save fails
+          if (typeof onSelectionComplete === 'function') {
+            onSelectionComplete({
+              selectedResume,
+              response: apiResponse,
+              jobDescription: trimmedDescription,
+              savedResumeId: null
+            });
+          }
+        }
       };
 
       // Yield to browser to keep UI responsive, then process
+      // Note: processResume is async, so we need to handle it properly
       if (typeof requestIdleCallback !== 'undefined') {
-        requestIdleCallback(processResume, { timeout: 100 });
+        requestIdleCallback(() => {
+          processResume().catch(error => {
+            console.error('Error in processResume:', error);
+            error('Error processing resume');
+          });
+        }, { timeout: 100 });
       } else {
         // Fallback for browsers without requestIdleCallback
-        setTimeout(processResume, 0);
+        setTimeout(() => {
+          processResume().catch(error => {
+            console.error('Error in processResume:', error);
+            error('Error processing resume');
+          });
+        }, 0);
       }
 
       setCurrentJob((prev) => ({

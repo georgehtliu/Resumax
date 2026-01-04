@@ -297,6 +297,28 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
     loadSavedResumes();
   }, [refreshTrigger]);
 
+  // Auto-select resume from query parameter
+  useEffect(() => {
+    if (savedResumes.length === 0 || loading) return;
+    
+    const queryParams = new URLSearchParams(window.location.search);
+    const resumeIdFromUrl = queryParams.get('resumeId');
+    
+    if (resumeIdFromUrl) {
+      const resumeToSelect = savedResumes.find(r => r.id === resumeIdFromUrl);
+      if (resumeToSelect && (!selectedResume || selectedResume.id !== resumeIdFromUrl)) {
+        // Reset PDF state to ensure fresh compilation
+        setLatexPdfBase64(null);
+        setRenderingPdf(false);
+        setSelectedResume(resumeToSelect);
+        // Clean up URL after selecting
+        const url = new URL(window.location);
+        url.searchParams.delete('resumeId');
+        window.history.replaceState({}, '', url);
+      }
+    }
+  }, [savedResumes, loading, selectedResume]);
+
   async function loadSavedResumes() {
     setLoading(true);
     try {
@@ -451,6 +473,7 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
     setShowLatexPreview(false);
     setLatexSource('');
     setLatexPdfBase64(null);
+    setRenderingPdf(false); // Reset rendering state when switching resumes
     setJobDescriptionExpanded(false);
   }, [selectedResume?.id]);
 
@@ -470,10 +493,10 @@ function SavedResumes({ onLoadResume, refreshTrigger, masterResume }) {
   // Auto-render PDF when resume is first selected (but not on every update to avoid excessive API calls)
   useEffect(() => {
     if (editedResume && !latexPdfBase64 && !renderingPdf) {
-      // Small delay to let LaTeX generate first
+      // Delay of 1.2 seconds to let LaTeX generate first and ensure everything is ready
       const timer = setTimeout(() => {
         renderPdfPreview();
-      }, 500);
+      }, 1200);
       return () => clearTimeout(timer);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

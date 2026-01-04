@@ -48,6 +48,8 @@ function App() {
   const queryParams = new URLSearchParams(window.location.search);
   const isManagerView = queryParams.get('view') === 'manager';
   const shareToken = queryParams.get('share');
+  const initialActiveView = queryParams.get('activeView');
+  const initialResumeId = queryParams.get('resumeId');
 
   // If share token is present, show shared resume view (public, no auth required)
   if (shareToken) {
@@ -59,7 +61,12 @@ function App() {
   }
 
   const [activeTab, setActiveTab] = useState(() => (isManagerView ? 'generate' : 'generate'));
-  const [activeView, setActiveView] = useState(() => (isManagerView ? 'about' : 'generate'));
+  const [activeView, setActiveView] = useState(() => {
+    if (isManagerView && initialActiveView) {
+      return initialActiveView;
+    }
+    return isManagerView ? 'about' : 'generate';
+  });
   const [humanCritiqueView, setHumanCritiqueView] = useState('selection'); // 'selection', 'review', 'get-reviewed'
   const [coachingAIView, setCoachingAIView] = useState('selection'); // 'selection', 'interview-prep', 'roast'
   const [refreshSaved, setRefreshSaved] = useState(0);
@@ -138,11 +145,21 @@ function App() {
     },
   ]);
 
-  function openManagerPage() {
-    const managerUrl =
+  function openManagerPage(activeView = null, resumeId = null) {
+    let managerUrl =
       typeof chrome !== 'undefined' && chrome.runtime?.getURL
         ? chrome.runtime.getURL('popup-build/index.html?view=manager')
         : `${window.location.origin}${window.location.pathname}?view=manager`;
+    
+    // Add activeView query parameter if provided
+    if (activeView) {
+      managerUrl += `&activeView=${encodeURIComponent(activeView)}`;
+    }
+
+    // Add resumeId query parameter if provided
+    if (resumeId) {
+      managerUrl += `&resumeId=${encodeURIComponent(resumeId)}`;
+    }
 
     if (typeof chrome !== 'undefined' && chrome.tabs?.create) {
       chrome.tabs.create({ url: managerUrl });
@@ -909,8 +926,23 @@ function App() {
     loadResumeData();
   }
 
-  function handleSelectionComplete() {
-    // Tab opening removed - user no longer wants new tab to open after resume generation
+  function handleSelectionComplete(data) {
+    // Open manager page and switch to saved resumes view with the specific resume editor
+    const resumeId = data?.savedResumeId;
+    
+    if (!isManagerView) {
+      // If in popup, open manager page with saved view and resume ID
+      openManagerPage('saved', resumeId);
+    } else {
+      // If already in manager, switch to saved view
+      setActiveView('saved');
+      // Store resume ID for SavedResumes to pick up
+      if (resumeId && typeof window !== 'undefined') {
+        const url = new URL(window.location);
+        url.searchParams.set('resumeId', resumeId);
+        window.history.replaceState({}, '', url);
+      }
+    }
   }
 
   async function handleSignUp(userData) {
