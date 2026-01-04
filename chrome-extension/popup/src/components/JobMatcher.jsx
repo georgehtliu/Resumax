@@ -66,32 +66,24 @@ function JobMatcher({ jobDescription, onExtract, onSelect, loading }) {
       {onExtract && (
         <>
           <div className="job-matcher-section">
-            <h3>Option 1: Extract from Current Tab</h3>
-            <p className="section-description">
-              Navigate to a job posting (LinkedIn, Indeed, etc.) and click Extract.
-            </p>
             <button
               className="btn btn-primary btn-modern"
               onClick={handleExtract}
               disabled={loading}
             >
-              <Icon name="file" size={16} />
-              Extract Job Description
+              <Icon name="file" size={14} />
+              Extract from Tab
             </button>
             {extractionStatus && (
-              <p className="status-message">{extractionStatus}</p>
+              <p className="status-message" style={{ fontSize: 'var(--font-size-xs)', marginTop: 'var(--space-1)' }}>{extractionStatus}</p>
             )}
           </div>
 
-          <div className="divider">OR</div>
+          {onExtract && <div className="divider" style={{ fontSize: 'var(--font-size-xs)', margin: 'var(--space-2) 0' }}>OR</div>}
         </>
       )}
 
       <div className="job-matcher-section">
-        <h3>{onExtract ? 'Option 2: Paste Job Description' : 'Paste Job Description'}</h3>
-        <p className="section-description">
-          Copy and paste the job description manually.
-        </p>
         <textarea
           className="jd-textarea"
           value={manualJD}

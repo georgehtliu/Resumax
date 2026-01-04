@@ -531,10 +531,7 @@ function GenerateResume({ masterResume, onSave, onResumeUpdate, onSelectionCompl
       {!optimizationResult && (
         <div className="section section-modern">
           <div className="section-header-modern">
-            <h2>Job Description</h2>
-            <p className="section-description">
-              Choose how you want to generate your resume
-            </p>
+            <h2 style={{ fontSize: 'var(--font-size-sm)', marginBottom: 'var(--space-1)' }}>Job Description</h2>
           </div>
 
           {/* Mode Selector */}

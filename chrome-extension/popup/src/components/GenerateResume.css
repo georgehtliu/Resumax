@@ -2,19 +2,15 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: var(--space-6);
+  gap: var(--space-3);
   position: relative;
   height: auto;
   min-height: fit-content;
 }
 
-/* Modern Hero Section */
+/* Modern Hero Section - Condensed for popup */
 .generate-resume-hero {
-  text-align: center;
-  padding: var(--space-12) var(--space-6);
-  background: linear-gradient(135deg, var(--color-primary-50) 0%, var(--color-primary-100) 100%);
-  border-radius: var(--radius-xl);
-  margin-bottom: var(--space-8);
+  display: none; /* Hide hero section in popup */
 }
 
 .generate-resume-hero-content {
@@ -23,38 +19,24 @@
 }
 
 .generate-resume-hero-title {
-  font-size: clamp(1.5rem, 2.5vw, 2rem);
-  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
-  margin: 0 0 var(--space-4) 0;
-  letter-spacing: -0.02em;
+  margin: 0 0 var(--space-2) 0;
+  letter-spacing: -0.01em;
   line-height: 1.2;
-  background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-primary-800) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 .generate-resume-hero-subtitle {
-  font-size: var(--font-size-lg);
-  color: var(--text-secondary);
-  margin: 0;
-  line-height: var(--line-height-relaxed);
-}
-
-@media (max-width: 768px) {
-  .generate-resume-hero {
-    padding: var(--space-8) var(--space-4);
-    margin-bottom: var(--space-6);
-  }
+  display: none; /* Hide subtitle */
 }
 
 /* Input Mode Selector */
 .input-mode-selector {
   display: flex;
-  gap: var(--space-3);
-  margin-bottom: var(--space-6);
-  padding: var(--space-2);
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  padding: var(--space-1);
   background: var(--bg-secondary);
   border-radius: var(--radius-md);
   border: 1px solid var(--color-slate-200);
@@ -65,12 +47,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-4);
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
   background: transparent;
   border: 1px solid transparent;
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
   color: var(--text-secondary);
   cursor: pointer;
@@ -194,16 +176,31 @@
 }
 
 .section-header-modern {
-  margin-bottom: var(--space-4);
-  padding-bottom: var(--space-3);
+  margin-bottom: var(--space-2);
+  padding-bottom: var(--space-2);
   border-bottom: 1px solid var(--color-slate-200);
 }
 
 .section-header-modern h2 {
-  margin: 0 0 var(--space-2) 0;
-  font-size: var(--font-size-xl);
+  margin: 0;
+  font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
+}
+
+/* Condensed styles for popup */
+.popup-card .section-header-modern {
+  margin-bottom: var(--space-2);
+  padding-bottom: var(--space-1);
+}
+
+.popup-card .section-header-modern h2 {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+}
+
+.popup-card .section-description {
+  display: none; /* Hide descriptions in popup */
 }
 
 .section-header-modern-with-action {

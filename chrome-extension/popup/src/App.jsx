@@ -1145,11 +1145,10 @@ function App() {
         <header className="popup-header">
           <div className="popup-logo">
             <div className="popup-logo-icon">
-              <Icon name="sparkles" size={20} />
+              <Icon name="sparkles" size={14} />
             </div>
             <h1>Resume Master</h1>
           </div>
-          <p className="popup-subtitle">Extract or paste a job description and pick the best bullets fast.</p>
           <div className="popup-header-actions">
             <button className="btn popup-btn" onClick={openManagerPage}>
               Open Manager
