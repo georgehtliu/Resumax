@@ -168,6 +168,49 @@ function App() {
     }
   }
 
+  // Prevent popup from closing when clicking outside (only for popup view, not manager)
+  // Note: Chrome extension popups have built-in behavior to close on outside clicks
+  // This is a workaround that tries to keep the popup open
+  useEffect(() => {
+    if (!isManagerView && typeof window !== 'undefined') {
+      // Prevent window from losing focus
+      const handleBlur = () => {
+        // Try to refocus the window immediately
+        // This may not always work due to Chrome's security restrictions
+        setTimeout(() => {
+          try {
+            window.focus();
+          } catch (e) {
+            // Ignore focus errors
+          }
+        }, 0);
+      };
+
+      // Prevent mousedown events from propagating (may help prevent closing)
+      const handleMouseDown = (e) => {
+        // Only prevent if clicking outside the popup container
+        const popupContainer = document.querySelector('.popup-container');
+        if (popupContainer && !popupContainer.contains(e.target)) {
+          // Try to prevent the popup from closing
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+        }
+      };
+
+      // Add event listeners with capture phase to catch events early
+      window.addEventListener('blur', handleBlur, true);
+      document.addEventListener('mousedown', handleMouseDown, true);
+      document.addEventListener('click', handleMouseDown, true);
+
+      return () => {
+        window.removeEventListener('blur', handleBlur, true);
+        document.removeEventListener('mousedown', handleMouseDown, true);
+        document.removeEventListener('click', handleMouseDown, true);
+      };
+    }
+  }, [isManagerView]);
+
   // Check for OAuth callback and handle auth state changes
   useEffect(() => {
     // Check for OAuth callback in URL hash
