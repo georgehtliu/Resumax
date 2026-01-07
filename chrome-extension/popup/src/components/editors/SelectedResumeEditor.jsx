@@ -84,16 +84,35 @@ function SelectedResumeEditor({
 }) {
   const { toasts, removeToast, warning } = useToast();
   const [localResume, setLocalResume] = useState(() => normalizeResume(resume));
-  const [activeTab, setActiveTab] = useState('personalInfo');
-  // Initialize all sections as collapsed by default
-  const [collapsedSections, setCollapsedSections] = useState(() => ({
-    personalInfo: true,
-    skills: true,
-    education: true,
-    experiences: true,
-    projects: true,
-    customSections: true
-  }));
+  // Persist activeTab in localStorage so it's preserved when switching views
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const savedTab = localStorage.getItem('resumax_selected_resume_active_tab');
+      return savedTab || 'personalInfo';
+    }
+    return 'personalInfo';
+  });
+  // Initialize all sections as collapsed by default, but restore from localStorage if available
+  const [collapsedSections, setCollapsedSections] = useState(() => {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const savedCollapsed = localStorage.getItem('resumax_selected_resume_collapsed_sections');
+      if (savedCollapsed) {
+        try {
+          return JSON.parse(savedCollapsed);
+        } catch (e) {
+          console.warn('Failed to parse saved collapsed sections:', e);
+        }
+      }
+    }
+    return {
+      personalInfo: true,
+      skills: true,
+      education: true,
+      experiences: true,
+      projects: true,
+      customSections: true
+    };
+  });
   const [bulletModalOpen, setBulletModalOpen] = useState(false);
   const [bulletModalContext, setBulletModalContext] = useState(null); // { sectionKey, entryId }
   const [entryModalOpen, setEntryModalOpen] = useState(false);
@@ -320,10 +339,17 @@ function SelectedResumeEditor({
   }
 
   const toggleSection = (sectionId) => {
-    setCollapsedSections(prev => ({
-      ...prev,
-      [sectionId]: !prev[sectionId]
-    }));
+    setCollapsedSections(prev => {
+      const updated = {
+        ...prev,
+        [sectionId]: !prev[sectionId]
+      };
+      // Persist collapsed sections state
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.setItem('resumax_selected_resume_collapsed_sections', JSON.stringify(updated));
+      }
+      return updated;
+    });
   };
 
   const isSectionCollapsed = (sectionId) => {
@@ -531,10 +557,22 @@ function SelectedResumeEditor({
     return tabList;
   }, [showPersonalInfo, showSkills, visibleSections, localResume.skills]);
 
+  // Persist activeTab to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.setItem('resumax_selected_resume_active_tab', activeTab);
+    }
+  }, [activeTab]);
+
   // Set initial active tab when tabs change
   useEffect(() => {
     if (tabs.length > 0 && !tabs.find(t => t.id === activeTab)) {
-      setActiveTab(tabs[0].id);
+      const newTab = tabs[0].id;
+      setActiveTab(newTab);
+      // Also persist the new tab
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.setItem('resumax_selected_resume_active_tab', newTab);
+      }
     }
   }, [tabs, activeTab]);
 
@@ -712,7 +750,13 @@ function SelectedResumeEditor({
           {/* Tabs Navigation */}
           {tabs.length > 1 && (
             <div className="selected-resume-tabs-wrapper">
-              <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+              <Tabs tabs={tabs} activeTab={activeTab} onTabChange={(tab) => {
+                setActiveTab(tab);
+                // Persist immediately when user clicks a tab
+                if (typeof window !== 'undefined' && window.localStorage) {
+                  localStorage.setItem('resumax_selected_resume_active_tab', tab);
+                }
+              }} />
             </div>
           )}
 
