@@ -9,10 +9,13 @@ Analyzes resume bullets for:
 
 import json
 import requests
-from typing import List, Dict, Optional
+import asyncio
+from typing import List, Dict, Optional, Tuple
 import os
 from dotenv import load_dotenv
-from app.schemas.rag import StructuredResume
+from app.schemas.rag import (
+    StructuredResume, Experience, Project, Education, CustomSection
+)
 
 load_dotenv()
 
@@ -20,15 +23,16 @@ class RoastService:
     """
     Service for providing comprehensive, honest resume feedback.
     
-    Single LLM call that analyzes all bullets for content, format, and grammar issues.
+    Uses chunking to process large resumes in parallel for faster analysis.
     """
     
-    def __init__(self, model: str = "gpt-4o-mini"):
+    def __init__(self, model: str = "gpt-4o-mini", chunk_size: int = 20):
         """
         Initialize the roast service.
         
         Args:
             model: OpenAI model to use (gpt-4o-mini is cost-effective)
+            chunk_size: Number of bullets per chunk for parallel processing
         """
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
@@ -36,10 +40,13 @@ class RoastService:
         
         self.api_key = api_key
         self.model = model
+        self.chunk_size = chunk_size
     
     async def roast_resume(self, resume: StructuredResume) -> Dict:
         """
         Analyze resume and provide comprehensive feedback.
+        
+        Uses chunking for parallel processing to speed up large resumes.
         
         Args:
             resume: Structured resume with all sections and bullets
@@ -47,17 +54,30 @@ class RoastService:
         Returns:
             Complete roast feedback dictionary
         """
-        # Count total bullets for dynamic token calculation
+        # Count total bullets
         total_bullets = self._count_bullets(resume)
         
-        # Build comprehensive prompt
-        prompt = self._build_roast_prompt(resume)
+        # For small resumes, use single call (faster for small cases)
+        if total_bullets <= self.chunk_size:
+            prompt = self._build_roast_prompt(resume)
+            response = await self._call_llm(prompt, estimated_bullets=total_bullets)
+            return self._parse_response(response)
         
-        # Call LLM with dynamic token limits
-        response = await self._call_llm(prompt, estimated_bullets=total_bullets)
+        # For large resumes, use chunking for parallel processing
+        print(f"📦 Chunking resume with {total_bullets} bullets into parallel chunks...")
+        chunks = self._chunk_resume(resume)
+        print(f"   Created {len(chunks)} chunks for parallel processing")
         
-        # Parse and validate response
-        return self._parse_response(response)
+        # Process chunks in parallel
+        chunk_results = await asyncio.gather(*[
+            self._roast_chunk(chunk, chunk_idx, len(chunks))
+            for chunk_idx, chunk in enumerate(chunks)
+        ])
+        
+        # Merge results from all chunks
+        merged_result = self._merge_chunk_results(chunk_results, total_bullets)
+        
+        return merged_result
     
     def _count_bullets(self, resume: StructuredResume) -> int:
         """Count total number of bullets in resume."""
@@ -71,6 +91,320 @@ class RoastService:
         if resume.customSections:
             count += sum(len(section.bullets) for section in resume.customSections)
         return count
+    
+    def _chunk_resume(self, resume: StructuredResume) -> List[StructuredResume]:
+        """
+        Split resume into chunks for parallel processing.
+        
+        Tries to keep sections together when possible, but splits large sections
+        across multiple chunks.
+        
+        Returns:
+            List of StructuredResume chunks
+        """
+        chunks = []
+        current_chunk_bullets = 0
+        current_chunk = StructuredResume(
+            personalInfo=resume.personalInfo,
+            skills=resume.skills,
+            experiences=[],
+            education=[],
+            projects=[],
+            customSections=[]
+        )
+        
+        # Process experiences
+        for exp in resume.experiences:
+            if len(exp.bullets) == 0:
+                continue
+                
+            # If adding this experience would exceed chunk size, start new chunk
+            if current_chunk_bullets > 0 and current_chunk_bullets + len(exp.bullets) > self.chunk_size:
+                chunks.append(current_chunk)
+                current_chunk = StructuredResume(
+                    personalInfo=None,
+                    skills=[],
+                    experiences=[],
+                    education=[],
+                    projects=[],
+                    customSections=[]
+                )
+                current_chunk_bullets = 0
+            
+            # If single experience is larger than chunk size, split it
+            if len(exp.bullets) > self.chunk_size:
+                # Split this experience across chunks
+                for i in range(0, len(exp.bullets), self.chunk_size):
+                    exp_chunk = Experience(
+                        id=exp.id,
+                        company=exp.company,
+                        role=exp.role,
+                        location=exp.location,
+                        startDate=exp.startDate,
+                        endDate=exp.endDate,
+                        bullets=exp.bullets[i:i + self.chunk_size]
+                    )
+                    if current_chunk_bullets == 0:
+                        current_chunk.experiences.append(exp_chunk)
+                        current_chunk_bullets = len(exp_chunk.bullets)
+                    else:
+                        chunks.append(current_chunk)
+                        current_chunk = StructuredResume(
+                            personalInfo=None,
+                            skills=[],
+                            experiences=[exp_chunk],
+                            education=[],
+                            projects=[],
+                            customSections=[]
+                        )
+                        current_chunk_bullets = len(exp_chunk.bullets)
+            else:
+                current_chunk.experiences.append(exp)
+                current_chunk_bullets += len(exp.bullets)
+        
+        # Process projects
+        for proj in resume.projects:
+            if len(proj.bullets) == 0:
+                continue
+                
+            if current_chunk_bullets > 0 and current_chunk_bullets + len(proj.bullets) > self.chunk_size:
+                chunks.append(current_chunk)
+                current_chunk = StructuredResume(
+                    personalInfo=None,
+                    skills=[],
+                    experiences=[],
+                    education=[],
+                    projects=[],
+                    customSections=[]
+                )
+                current_chunk_bullets = 0
+            
+            if len(proj.bullets) > self.chunk_size:
+                for i in range(0, len(proj.bullets), self.chunk_size):
+                    proj_chunk = Project(
+                        id=proj.id,
+                        name=proj.name,
+                        description=proj.description,
+                        technologies=proj.technologies,
+                        url=proj.url,
+                        startDate=proj.startDate,
+                        endDate=proj.endDate,
+                        bullets=proj.bullets[i:i + self.chunk_size]
+                    )
+                    if current_chunk_bullets == 0:
+                        current_chunk.projects.append(proj_chunk)
+                        current_chunk_bullets = len(proj_chunk.bullets)
+                    else:
+                        chunks.append(current_chunk)
+                        current_chunk = StructuredResume(
+                            personalInfo=None,
+                            skills=[],
+                            experiences=[],
+                            education=[],
+                            projects=[proj_chunk],
+                            customSections=[]
+                        )
+                        current_chunk_bullets = len(proj_chunk.bullets)
+            else:
+                current_chunk.projects.append(proj)
+                current_chunk_bullets += len(proj.bullets)
+        
+        # Process education
+        for edu in resume.education:
+            if len(edu.bullets) == 0:
+                continue
+                
+            if current_chunk_bullets > 0 and current_chunk_bullets + len(edu.bullets) > self.chunk_size:
+                chunks.append(current_chunk)
+                current_chunk = StructuredResume(
+                    personalInfo=None,
+                    skills=[],
+                    experiences=[],
+                    education=[],
+                    projects=[],
+                    customSections=[]
+                )
+                current_chunk_bullets = 0
+            
+            if len(edu.bullets) > self.chunk_size:
+                for i in range(0, len(edu.bullets), self.chunk_size):
+                    edu_chunk = Education(
+                        id=edu.id,
+                        school=edu.school,
+                        degree=edu.degree,
+                        field=edu.field,
+                        startDate=edu.startDate,
+                        endDate=edu.endDate,
+                        bullets=edu.bullets[i:i + self.chunk_size]
+                    )
+                    if current_chunk_bullets == 0:
+                        current_chunk.education.append(edu_chunk)
+                        current_chunk_bullets = len(edu_chunk.bullets)
+                    else:
+                        chunks.append(current_chunk)
+                        current_chunk = StructuredResume(
+                            personalInfo=None,
+                            skills=[],
+                            experiences=[],
+                            education=[edu_chunk],
+                            projects=[],
+                            customSections=[]
+                        )
+                        current_chunk_bullets = len(edu_chunk.bullets)
+            else:
+                current_chunk.education.append(edu)
+                current_chunk_bullets += len(edu.bullets)
+        
+        # Process custom sections
+        for section in resume.customSections:
+            if len(section.bullets) == 0:
+                continue
+                
+            if current_chunk_bullets > 0 and current_chunk_bullets + len(section.bullets) > self.chunk_size:
+                chunks.append(current_chunk)
+                current_chunk = StructuredResume(
+                    personalInfo=None,
+                    skills=[],
+                    experiences=[],
+                    education=[],
+                    projects=[],
+                    customSections=[]
+                )
+                current_chunk_bullets = 0
+            
+            if len(section.bullets) > self.chunk_size:
+                for i in range(0, len(section.bullets), self.chunk_size):
+                    section_chunk = CustomSection(
+                        id=section.id,
+                        title=section.title,
+                        subtitle=section.subtitle,
+                        bullets=section.bullets[i:i + self.chunk_size]
+                    )
+                    if current_chunk_bullets == 0:
+                        current_chunk.customSections.append(section_chunk)
+                        current_chunk_bullets = len(section_chunk.bullets)
+                    else:
+                        chunks.append(current_chunk)
+                        current_chunk = StructuredResume(
+                            personalInfo=None,
+                            skills=[],
+                            experiences=[],
+                            education=[],
+                            projects=[],
+                            customSections=[section_chunk]
+                        )
+                        current_chunk_bullets = len(section_chunk.bullets)
+            else:
+                current_chunk.customSections.append(section)
+                current_chunk_bullets += len(section.bullets)
+        
+        # Add final chunk if it has content
+        if current_chunk_bullets > 0:
+            chunks.append(current_chunk)
+        
+        return chunks
+    
+    async def _roast_chunk(self, chunk: StructuredResume, chunk_idx: int, total_chunks: int) -> Dict:
+        """
+        Process a single chunk of the resume.
+        
+        Args:
+            chunk: Resume chunk to process
+            chunk_idx: Index of this chunk (0-based)
+            total_chunks: Total number of chunks
+            
+        Returns:
+            Roast feedback for this chunk
+        """
+        chunk_bullets = self._count_bullets(chunk)
+        print(f"   Processing chunk {chunk_idx + 1}/{total_chunks} ({chunk_bullets} bullets)...")
+        
+        prompt = self._build_roast_prompt(chunk)
+        response = await self._call_llm(prompt, estimated_bullets=chunk_bullets)
+        result = self._parse_response(response)
+        
+        # Add chunk metadata
+        result["chunk_idx"] = chunk_idx
+        result["chunk_bullets"] = chunk_bullets
+        
+        return result
+    
+    def _merge_chunk_results(self, chunk_results: List[Dict], total_bullets: int) -> Dict:
+        """
+        Merge results from multiple chunks into a single response.
+        
+        Args:
+            chunk_results: List of roast results from each chunk
+            total_bullets: Total number of bullets across all chunks
+            
+        Returns:
+            Merged roast feedback dictionary
+        """
+        # Aggregate metrics
+        total_issues = sum(r.get("issuesFound", 0) for r in chunk_results)
+        total_strengths = sum(r.get("strengths", 0) for r in chunk_results)
+        
+        # Calculate weighted average score
+        scores = []
+        bullet_counts = []
+        for r in chunk_results:
+            score = r.get("overallScore", 0)
+            bullets = r.get("totalBullets", 0)
+            if bullets > 0:
+                scores.append(score)
+                bullet_counts.append(bullets)
+        
+        if scores:
+            # Weighted average by bullet count
+            weighted_score = sum(s * b for s, b in zip(scores, bullet_counts)) / sum(bullet_counts)
+        else:
+            weighted_score = 0.0
+        
+        # Combine all feedback
+        all_feedback = []
+        for r in chunk_results:
+            all_feedback.extend(r.get("feedback", []))
+        
+        # Combine general issues (deduplicate similar ones)
+        all_general_issues = []
+        seen_general_issues = set()
+        for r in chunk_results:
+            for issue in r.get("generalIssues", []):
+                issue_key = f"{issue.get('category', '')}:{issue.get('message', '')}"
+                if issue_key not in seen_general_issues:
+                    all_general_issues.append(issue)
+                    seen_general_issues.add(issue_key)
+        
+        # Combine format issues (merge affected bullets)
+        format_issues_map = {}
+        for r in chunk_results:
+            for issue in r.get("formatIssues", []):
+                issue_type = issue.get("issue", "unknown")
+                if issue_type not in format_issues_map:
+                    format_issues_map[issue_type] = {
+                        "issue": issue_type,
+                        "details": issue.get("details", ""),
+                        "recommendation": issue.get("recommendation", ""),
+                        "affectedBullets": []
+                    }
+                format_issues_map[issue_type]["affectedBullets"].extend(
+                    issue.get("affectedBullets", [])
+                )
+        
+        # Combine TLDR summaries
+        tldr_parts = [r.get("tldr", "") for r in chunk_results if r.get("tldr")]
+        combined_tldr = " ".join(tldr_parts[:2])  # Use first 2 summaries to keep it concise
+        
+        return {
+            "tldr": combined_tldr or f"Analyzed {total_bullets} bullets across {len(chunk_results)} sections.",
+            "overallScore": round(weighted_score, 1),
+            "totalBullets": total_bullets,
+            "issuesFound": total_issues,
+            "strengths": total_strengths,
+            "feedback": all_feedback,
+            "generalIssues": all_general_issues,
+            "formatIssues": list(format_issues_map.values())
+        }
     
     def _format_bullets_with_context(self, resume: StructuredResume) -> str:
         """Format bullets with section context for better analysis."""
@@ -163,7 +497,11 @@ Return JSON in this format:
             "section": "experience|project|education|custom",
             "sectionTitle": "section name",
             "issues": [
-                {{"type": "bad|grammar|format", "category": "content|format|grammar", "message": "concise issue"}}
+                {{
+                    "type": "good|bad|improvement|suggestion|format|grammar",
+                    "category": "content|format|grammar",
+                    "message": "concise issue"
+                }}
             ]
         }}
     ],
@@ -174,6 +512,16 @@ Return JSON in this format:
         {{"issue": "type", "details": "what's wrong", "recommendation": "how to fix", "affectedBullets": ["id"]}}
     ]
 }}
+
+CRITICAL: For issue "type" field, you MUST use ONLY one of these exact values:
+- "good" - for well-written bullets with no issues
+- "bad" - for bullets with content problems (missing metrics, weak verbs, vague language)
+- "improvement" - for bullets that need improvement but aren't terrible
+- "suggestion" - for optional improvements
+- "format" - for formatting inconsistencies
+- "grammar" - for grammar/spelling errors
+
+DO NOT create custom types like "missing metrics" - use "bad" or "improvement" instead.
 
 Be concise and direct. Flag only critical/major issues. Return valid JSON only."""
         
@@ -242,6 +590,61 @@ Be concise and direct. Flag only critical/major issues. Return valid JSON only."
             print(f"❌ Unexpected error in LLM call: {e}")
             raise
     
+    def _normalize_issue_type(self, issue_type: str) -> str:
+        """
+        Normalize invalid issue types to valid schema types.
+        
+        Args:
+            issue_type: The issue type from LLM (may be invalid)
+            
+        Returns:
+            Valid issue type: "good", "bad", "improvement", "suggestion", "format", or "grammar"
+        """
+        issue_type_lower = issue_type.lower()
+        
+        # Map common invalid types to valid ones
+        type_mapping = {
+            # Missing metrics -> bad (content issue)
+            "missing metrics": "bad",
+            "no metrics": "bad",
+            "missing numbers": "bad",
+            "no quantifiable": "bad",
+            
+            # Weak verbs -> bad or improvement
+            "weak verb": "bad",
+            "weak action verb": "bad",
+            "passive verb": "improvement",
+            
+            # Grammar/spelling -> grammar
+            "spelling": "grammar",
+            "spelling error": "grammar",
+            "typo": "grammar",
+            "grammar error": "grammar",
+            
+            # Format issues -> format
+            "formatting": "format",
+            "format issue": "format",
+            "inconsistent": "format",
+            "inconsistency": "format",
+            
+            # Vague language -> bad
+            "vague": "bad",
+            "unclear": "bad",
+            "too generic": "bad",
+        }
+        
+        # Check exact match first
+        if issue_type_lower in type_mapping:
+            return type_mapping[issue_type_lower]
+        
+        # Check if any key phrase matches
+        for key, value in type_mapping.items():
+            if key in issue_type_lower:
+                return value
+        
+        # Default to "bad" for unknown types (safest fallback)
+        return "bad"
+    
     def _parse_response(self, response_text: str) -> Dict:
         """
         Parse and validate LLM response.
@@ -275,6 +678,19 @@ Be concise and direct. Flag only critical/major issues. Return valid JSON only."
             # Validate feedback structure
             if not isinstance(data["feedback"], list):
                 data["feedback"] = []
+            
+            # Normalize issue types in feedback (fix invalid types from LLM)
+            valid_issue_types = {"good", "bad", "improvement", "suggestion", "format", "grammar"}
+            for feedback_item in data["feedback"]:
+                if isinstance(feedback_item, dict) and "issues" in feedback_item:
+                    for issue in feedback_item.get("issues", []):
+                        if isinstance(issue, dict) and "type" in issue:
+                            issue_type = issue["type"]
+                            if issue_type not in valid_issue_types:
+                                # Map invalid types to valid ones
+                                normalized_type = self._normalize_issue_type(issue_type)
+                                print(f"⚠️ Normalized invalid issue type '{issue_type}' to '{normalized_type}'")
+                                issue["type"] = normalized_type
             
             # Validate generalIssues and formatIssues
             if not isinstance(data["generalIssues"], list):
