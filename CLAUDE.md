@@ -23,14 +23,26 @@ npm run build  # Outputs to popup-build/
 # Load the chrome-extension/ directory (not popup/) in Chrome via chrome://extensions/ → Load unpacked
 ```
 
-### Tests
+## Build / Validation Loop
+
+After making changes, run the relevant checks before considering the task done.
+
+### Backend changes
+Confirm the FastAPI app loads without errors after any backend change:
 ```bash
 cd backend
-pytest                                          # All tests
-pytest tests/test_api_endpoints.py             # API endpoint tests
-pytest tests/test_selection_service.py         # Selection service tests
-pytest -m "not slow"                           # Skip slow tests
+python -c "from app.main import app; print('OK')"
 ```
+
+### Frontend changes
+```bash
+cd chrome-extension/popup
+npm run build                     # Must produce zero errors in popup-build/
+```
+
+### Validation rules
+- A passing build (`npm run build`) is required after any frontend change.
+- Fix all errors before marking the task complete.
 
 ## Architecture
 
