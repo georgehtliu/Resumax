@@ -103,6 +103,7 @@ function LatexPreviewModal({ open, onClose, latexSource, onCopy, onDownloadTex, 
                   console.log('Text selected:', anchor);
                 }}
                 scale={1.0}
+                hideHighlighting={true}
               />
             )}
             {!loadingPdf && !pdfBase64 && (
