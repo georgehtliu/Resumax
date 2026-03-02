@@ -20,6 +20,17 @@
   overflow: hidden;
 }
 
+/* Disable text selection highlighting in preview modal */
+.latex-preview-modal ::selection {
+  background: transparent;
+  color: inherit;
+}
+
+.latex-preview-modal ::-moz-selection {
+  background: transparent;
+  color: inherit;
+}
+
 .latex-preview-header {
   display: flex;
   align-items: flex-start;
