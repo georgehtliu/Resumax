@@ -21,7 +21,7 @@ LATEX_HEADER = r"""
 \usepackage[usenames,dvipsnames]{color}
 \usepackage{enumitem}
 \usepackage[hidelinks]{hyperref}
-\usepackage[expert]{XCharter}
+\usepackage{XCharter}
 
 \pagestyle{empty}
 
