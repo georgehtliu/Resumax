@@ -1,22 +1,27 @@
 /* Resume Master Design System - Modern Premium UI */
 
 :root {
-  /* Color Palette - Modern B2B SaaS (Linear/Vercel/Stripe style) */
-  /* Primary Blue/Indigo - Subtle and professional */
-  --color-primary-50: #eff6ff;
-  --color-primary-100: #dbeafe;
-  --color-primary-200: #bfdbfe;
-  --color-primary-300: #93c5fd;
-  --color-primary-400: #60a5fa;
-  --color-primary-500: #3b82f6;
-  --color-primary-600: #2563eb;
-  --color-primary-700: #1d4ed8;
-  --color-primary-800: #1e40af;
-  --color-primary-900: #1e3a8a;
+  /* Color Palette - Mint & Charcoal */
+  /* Primary Emerald/Mint */
+  --color-primary-50: #E9F5F1;
+  --color-primary-100: #D1EBE3;
+  --color-primary-200: #A3D7C7;
+  --color-primary-300: #66BDAA;
+  --color-primary-400: #33A88E;
+  --color-primary-500: #00A37E;
+  --color-primary-600: #008F6E;
+  --color-primary-700: #007A5E;
+  --color-primary-800: #00654E;
+  --color-primary-900: #004D3B;
 
-  /* Indigo Accent */
-  --color-indigo-500: #6366f1;
-  --color-indigo-600: #4f46e5;
+  /* Charcoal Accent */
+  --color-charcoal: #1A1A1A;
+  --color-charcoal-light: #2D2D2D;
+  --color-charcoal-muted: #3D3D3D;
+
+  /* Accent (maps old indigo refs) */
+  --color-indigo-500: #00A37E;
+  --color-indigo-600: #008F6E;
 
   /* Slate Neutrals - Blue-tinted grays for modern look */
   --color-slate-50: #f8fafc;
@@ -54,11 +59,11 @@
 
   /* Backgrounds */
   --bg-primary: #ffffff;
-  --bg-secondary: var(--color-slate-50);
-  --bg-tertiary: var(--color-slate-100);
-  --bg-overlay: rgba(15, 23, 42, 0.5);
-  --bg-glass: rgba(255, 255, 255, 0.9);
-  --bg-glass-border: rgba(226, 232, 240, 0.8);
+  --bg-secondary: #F7FAF9;
+  --bg-tertiary: var(--color-primary-50);
+  --bg-overlay: rgba(26, 26, 26, 0.5);
+  --bg-glass: rgba(255, 255, 255, 0.85);
+  --bg-glass-border: rgba(0, 163, 126, 0.12);
 
   /* Text Colors */
   --text-primary: var(--color-slate-900);
@@ -104,6 +109,7 @@
   --radius-lg: 12px;
   --radius-xl: 16px;
   --radius-2xl: 20px;
+  --radius-3xl: 24px;
   --radius-full: 9999px;
 
   /* Shadows - Minimal, subtle (Linear/Vercel style) */
@@ -150,11 +156,11 @@ body {
 
 /* Utility Classes */
 .gradient-primary {
-  background: linear-gradient(135deg, var(--color-primary-500) 0%, var(--color-indigo-500) 100%);
+  background: linear-gradient(135deg, var(--color-primary-500) 0%, var(--color-primary-700) 100%);
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-indigo-600) 100%);
+  background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-primary-800) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -193,17 +199,15 @@ body {
 }
 
 .btn-primary {
-  background: var(--color-primary-600);
+  background: var(--color-charcoal);
   color: var(--text-inverse);
-  border: 1px solid var(--color-primary-600);
+  border: 1px solid var(--color-charcoal);
+  border-radius: var(--radius-full);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--color-primary-700);
-  border-color: var(--color-primary-700);
-}
-
-.btn-primary:hover:not(:disabled) {
+  background: var(--color-charcoal-light);
+  border-color: var(--color-charcoal-light);
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
 }
@@ -213,15 +217,30 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
+.btn-mint {
+  background: var(--color-primary-500);
+  color: var(--text-inverse);
+  border: 1px solid var(--color-primary-500);
+  border-radius: var(--radius-full);
+}
+
+.btn-mint:hover:not(:disabled) {
+  background: var(--color-primary-600);
+  border-color: var(--color-primary-600);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
 .btn-secondary {
   background: var(--bg-primary);
-  color: var(--color-primary-600);
+  color: var(--color-charcoal);
   border: 1px solid var(--color-slate-200);
+  border-radius: var(--radius-full);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: var(--color-slate-50);
-  border-color: var(--color-slate-300);
+  background: var(--color-primary-50);
+  border-color: var(--color-primary-300);
   color: var(--color-primary-700);
 }
 
@@ -250,20 +269,21 @@ body {
   gap: var(--space-1);
 }
 
-/* Modern Card - Minimal borders instead of shadows */
+/* Modern Card - Soft mint borders, generous radius */
 .card {
   background: var(--bg-primary);
-  border: 1px solid var(--color-slate-200);
-  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-primary-100);
+  border-radius: var(--radius-3xl);
   transition: all var(--transition-base);
 }
 
 .card:hover {
-  border-color: var(--color-slate-300);
+  border-color: var(--color-primary-200);
+  box-shadow: 0 4px 24px rgba(0, 163, 126, 0.08);
 }
 
 .card-elevated {
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 8px 30px rgba(0, 163, 126, 0.1);
 }
 
 /* Modern Input */
@@ -354,7 +374,7 @@ body {
 
 /* Focus Visible */
 *:focus-visible {
-  outline: 2px solid var(--color-primary-500);
+  outline: 2px solid var(--color-primary-400);
   outline-offset: 2px;
 }
 

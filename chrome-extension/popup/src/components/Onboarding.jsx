@@ -111,9 +111,7 @@ function Onboarding({ onUploadComplete, onSkip }) {
             {uploading ? 'Parsing your resume…' : "We'll extract your information automatically"}
           </p>
           {uploading && parseStep && (
-            <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-primary-600)', marginTop: 'var(--space-2)', textAlign: 'center' }}>
-              {parseStep}
-            </p>
+            <p className="parse-step-text">{parseStep}</p>
           )}
         </div>
         <ResumeUpload
@@ -129,18 +127,18 @@ function Onboarding({ onUploadComplete, onSkip }) {
   return (
     <div className="onboarding-container">
       <div className="onboarding-header">
-        <h1>Welcome to Resume Master! 👋</h1>
-        <p className="subtitle">Let's get your resume set up</p>
+        <h1>Welcome to Resume Master</h1>
+        <p className="subtitle">Get your resume set up in seconds</p>
       </div>
 
       <div className="onboarding-options">
         <div className="option-card" onClick={() => setMode('upload')}>
           <div className="option-icon">
-            <Icon name="file" size={32} />
+            <Icon name="file" size={26} />
           </div>
-          <h3>Upload Existing Resume</h3>
+          <h3>Upload Resume</h3>
           <p className="option-description">
-            Upload your PDF, DOCX, or TXT resume and we'll extract the information for you.
+            Upload a PDF, DOCX, or TXT and we'll extract everything automatically.
           </p>
           <div className="option-features">
             <span className="feature-tag">Fast</span>
@@ -150,11 +148,11 @@ function Onboarding({ onUploadComplete, onSkip }) {
 
         <div className="option-card" onClick={handleSkip}>
           <div className="option-icon">
-            <Icon name="edit" size={32} />
+            <Icon name="edit" size={26} />
           </div>
-          <h3>Enter Manually</h3>
+          <h3>Start from Scratch</h3>
           <p className="option-description">
-            Start from scratch and build your master resume step by step.
+            Build your master resume step by step with full control.
           </p>
           <div className="option-features">
             <span className="feature-tag">Custom</span>
@@ -166,7 +164,7 @@ function Onboarding({ onUploadComplete, onSkip }) {
       <div className="onboarding-footer">
         <p>You can always add more information later</p>
       </div>
-      
+
       <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   );
