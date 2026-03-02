@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import ResumeUpload from './ResumeUpload';
+import ResumeParseResult from './ResumeParseResult';
 import { Icon } from './ui/Icons';
 import { useToast } from '../hooks/useToast';
 import ToastContainer from './ui/ToastContainer';
+import { parseResumeStream } from '../services/api';
 import './Onboarding.css';
 
 /**
@@ -11,43 +13,55 @@ import './Onboarding.css';
  * Allows them to choose between uploading a resume or manually entering data
  */
 function Onboarding({ onUploadComplete, onSkip }) {
-  const { toasts, removeToast, warning, error: showError } = useToast();
+  const { toasts, removeToast, error: showError } = useToast();
   const [mode, setMode] = useState(null); // 'upload' or 'manual'
+  const [parseResult, setParseResult] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [currentFileData, setCurrentFileData] = useState(null);
+  const [parseStep, setParseStep] = useState(null);
 
   async function handleUpload(fileData) {
+    setUploading(true);
+    setParseStep(null);
+    setCurrentFileData(fileData);
+    let streamError = null;
     try {
-      // TODO: Call backend API to parse resume
-      // For now, simulate parsing with a delay and show a message
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Mock parsed resume data (in real implementation, this would come from backend API)
-      // The backend should parse the file and return structured resume data
-      const mockParsedResume = {
-        personalInfo: {
-          firstName: '',
-          lastName: '',
-          email: '',
-          phone: '',
-          linkedin: '',
-          github: ''
-        },
-        skills: [],
-        experiences: [],
-        education: [],
-        projects: [],
-        customSections: []
-      };
-
-      // Show warning that parsing is not yet implemented
-      warning('Resume parsing is not yet implemented. For now, please enter your resume information manually.');
-
-      if (onUploadComplete) {
-        await onUploadComplete(mockParsedResume, fileData);
+      await parseResumeStream(fileData, (event) => {
+        if (event.type === 'progress') {
+          setParseStep(event.message);
+        } else if (event.type === 'complete') {
+          setParseResult(event.result);
+        } else if (event.type === 'error') {
+          streamError = event.message;
+        }
+      });
+      if (streamError) {
+        showError(streamError || 'Failed to parse resume. Please try again.');
       }
     } catch (error) {
       console.error('Upload error:', error);
-      showError('Failed to upload resume. Please try again.');
-      throw error;
+      showError('Failed to parse resume. Please try again.');
+    } finally {
+      setUploading(false);
+      setParseStep(null);
+    }
+  }
+
+  async function handleAccept(resume) {
+    if (onUploadComplete) {
+      await onUploadComplete(resume, currentFileData);
+    }
+  }
+
+  function handleReject() {
+    setParseResult(null);
+    setCurrentFileData(null);
+  }
+
+  async function handleEdit(resume) {
+    // Treat edit same as accept — App.jsx will open the profile editor
+    if (onUploadComplete) {
+      await onUploadComplete(resume || {}, currentFileData);
     }
   }
 
@@ -58,22 +72,56 @@ function Onboarding({ onUploadComplete, onSkip }) {
   }
 
   if (mode === 'upload') {
+    if (parseResult) {
+      return (
+        <div className="onboarding-container">
+          <div className="onboarding-header">
+            <button
+              className="btn-back"
+              onClick={handleReject}
+            >
+              ← Back
+            </button>
+            <h1>Resume Parsed</h1>
+            <p className="subtitle">Review the extracted information below</p>
+          </div>
+          <ResumeParseResult
+            parseResult={parseResult}
+            onAccept={handleAccept}
+            onReject={handleReject}
+            onEdit={handleEdit}
+          />
+          <ToastContainer toasts={toasts} removeToast={removeToast} />
+        </div>
+      );
+    }
+
     return (
       <div className="onboarding-container">
         <div className="onboarding-header">
           <button
             className="btn-back"
             onClick={() => setMode(null)}
+            disabled={uploading}
           >
             ← Back
           </button>
           <h1>Upload Your Resume</h1>
-          <p className="subtitle">We'll extract your information automatically</p>
+          <p className="subtitle">
+            {uploading ? 'Parsing your resume…' : "We'll extract your information automatically"}
+          </p>
+          {uploading && parseStep && (
+            <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-primary-600)', marginTop: 'var(--space-2)', textAlign: 'center' }}>
+              {parseStep}
+            </p>
+          )}
         </div>
         <ResumeUpload
           onUpload={handleUpload}
           onCancel={() => setMode(null)}
+          disabled={uploading}
         />
+        <ToastContainer toasts={toasts} removeToast={removeToast} />
       </div>
     );
   }
