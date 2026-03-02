@@ -22,6 +22,7 @@ from app.services.roast_service import RoastService
 from app.services.interview_question_service import InterviewQuestionService
 from app.services.resume_parser_service import ResumeParserService
 from app.utils.latex import build_resume_latex, render_pdf_from_latex, pdf_bytes_to_base64, render_html_from_pdf
+from starlette.responses import StreamingResponse
 import json
 import os
 import time
@@ -459,6 +460,51 @@ async def parse_resume(file: UploadFile = File(...)):
             status_code=500,
             detail=f"Failed to parse resume: {str(e)}"
         )
+
+@router.post("/parse-resume-stream")
+async def parse_resume_stream(file: UploadFile = File(...)):
+    """
+    Parse a resume file and stream SSE progress events during processing.
+
+    Returns a text/event-stream with progress steps, then a final complete event.
+    """
+    # Validate and read file before opening the stream (HTTPException can't be raised mid-stream)
+    allowed_types = [
+        "application/pdf",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/msword",
+        "text/plain"
+    ]
+
+    if file.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported file type: {file.content_type}. Supported types: PDF, DOCX, DOC, TXT"
+        )
+
+    file_data = await file.read()
+
+    if len(file_data) == 0:
+        raise HTTPException(status_code=400, detail="File is empty")
+
+    max_size = 10 * 1024 * 1024  # 10MB
+    if len(file_data) > max_size:
+        raise HTTPException(status_code=400, detail="File size exceeds 10MB limit")
+
+    parser_service = ResumeParserService()
+
+    return StreamingResponse(
+        parser_service.parse_resume_stream(
+            file_data=file_data,
+            file_type=file.content_type or "application/pdf",
+            filename=file.filename or "resume"
+        ),
+        media_type="text/event-stream",
+        headers={
+            "X-Accel-Buffering": "no",
+            "Cache-Control": "no-cache",
+        }
+    )
 
 @router.post("/keywords/scan", response_model=KeywordScanResponse)
 async def scan_keywords(request: KeywordScanRequest):

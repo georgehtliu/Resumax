@@ -410,11 +410,62 @@ export async function parseResume(fileData) {
   }
 }
 
+export async function parseResumeStream(fileData, onEvent) {
+  const API_BASE = import.meta.env.VITE_RESUME_MASTER_API_URL || 'http://localhost:8000/api/v1';
+  const formData = new FormData();
+  formData.append('file', fileData.file, fileData.name);
+
+  const response = await fetch(`${API_BASE}/parse-resume-stream`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!response.ok) {
+    let errorMessage = `Server error: ${response.status}`;
+    try {
+      const errorPayload = await response.json();
+      if (errorPayload?.detail) {
+        errorMessage = errorPayload.detail.message || errorPayload.detail;
+      }
+    } catch (_) {
+      // ignore parse error
+    }
+    throw new Error(errorMessage);
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+
+    // Split on double-newline (SSE event separator)
+    const parts = buffer.split('\n\n');
+    buffer = parts.pop(); // keep incomplete tail
+
+    for (const part of parts) {
+      const line = part.trim();
+      if (line.startsWith('data: ')) {
+        try {
+          const parsed = JSON.parse(line.slice(6));
+          onEvent(parsed);
+        } catch (_) {
+          // skip malformed events
+        }
+      }
+    }
+  }
+}
+
 export const apiService = {
   buildStructuredResume,
   selectResume,
   renderLatex,
   parseResume,
+  parseResumeStream,
   scanKeywords,
   roastResume,
   generateInterviewQuestions,

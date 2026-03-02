@@ -158,6 +158,120 @@ class ResumeParserService:
                 "created_at": time.time()
             }
     
+    async def parse_resume_stream(self, file_data: bytes, file_type: str, filename: str = ""):
+        """
+        Async generator that parses a resume and yields SSE-formatted progress events.
+
+        Yields SSE strings for each step, then a final complete or error event.
+        """
+        import asyncio
+        start_time = time.time()
+        errors = []
+        warnings = []
+        raw_text = None
+
+        def sse(obj: dict) -> str:
+            return f"data: {json.dumps(obj)}\n\n"
+
+        try:
+            # Step 1: Extract text
+            yield sse({"type": "progress", "step": 1, "message": "Extracting text from your resume..."})
+            await asyncio.sleep(0)  # flush buffer
+            raw_text = await self._extract_text(file_data, file_type)
+
+            if not raw_text or len(raw_text.strip()) < 50:
+                yield sse({
+                    "type": "complete",
+                    "result": {
+                        "success": False,
+                        "resume": None,
+                        "raw_text": raw_text,
+                        "warnings": warnings,
+                        "errors": ["Could not extract sufficient text from resume. File may be corrupted, image-based, or encrypted."],
+                        "extraction_quality": "failed",
+                        "extracted_sections": {},
+                        "processing_time": time.time() - start_time,
+                        "created_at": datetime.now().isoformat()
+                    }
+                })
+                return
+
+            # Step 2: LLM extraction
+            yield sse({"type": "progress", "step": 2, "message": "Analyzing resume structure with AI..."})
+            await asyncio.sleep(0)
+
+            try:
+                structured_resume = await self._extract_with_llm(raw_text)
+                extracted_sections = self._check_extracted_sections(structured_resume)
+
+                # Step 3: Finalizing
+                yield sse({"type": "progress", "step": 3, "message": "Finalizing..."})
+                await asyncio.sleep(0)
+
+                if self._is_minimal_extraction(structured_resume):
+                    warnings.append("Resume parsed but very little information was extracted. Please review and add details manually.")
+                    yield sse({
+                        "type": "complete",
+                        "result": {
+                            "success": True,
+                            "resume": structured_resume,
+                            "raw_text": raw_text,
+                            "warnings": warnings,
+                            "errors": [],
+                            "extraction_quality": "minimal",
+                            "extracted_sections": extracted_sections,
+                            "processing_time": time.time() - start_time,
+                            "created_at": datetime.now().isoformat()
+                        }
+                    })
+                    return
+
+                all_sections = all(extracted_sections.values())
+                quality = "complete" if all_sections else "partial"
+
+                if not all_sections:
+                    missing = [k for k, v in extracted_sections.items() if not v]
+                    warnings.append(f"Some sections were not found: {', '.join(missing)}. You can add them manually.")
+
+                yield sse({
+                    "type": "complete",
+                    "result": {
+                        "success": True,
+                        "resume": structured_resume,
+                        "raw_text": raw_text,
+                        "warnings": warnings,
+                        "errors": [],
+                        "extraction_quality": quality,
+                        "extracted_sections": extracted_sections,
+                        "processing_time": time.time() - start_time,
+                        "created_at": datetime.now().isoformat()
+                    }
+                })
+
+            except Exception as llm_error:
+                error_msg = str(llm_error)
+                warnings.append(f"Could not automatically structure resume: {error_msg}")
+                errors.append("Automatic structuring failed. Please review the extracted text and enter manually.")
+                yield sse({
+                    "type": "complete",
+                    "result": {
+                        "success": False,
+                        "resume": None,
+                        "raw_text": raw_text,
+                        "warnings": warnings,
+                        "errors": errors,
+                        "extraction_quality": "failed",
+                        "extracted_sections": {},
+                        "processing_time": time.time() - start_time,
+                        "created_at": datetime.now().isoformat()
+                    }
+                })
+
+        except Exception as e:
+            error_msg = str(e)
+            print(f"❌ Resume parsing (stream) failed: {error_msg}")
+            yield sse({"type": "error", "message": f"Failed to parse resume: {error_msg}"})
+
     async def _extract_text(self, file_data: bytes, file_type: str) -> str:
         """
         Extract text from file based on type.
@@ -340,7 +454,7 @@ Instructions:
                 "response_format": {"type": "json_object"}
             }
             
-            response = requests.post(url, headers=headers, json=payload, timeout=30)
+            response = requests.post(url, headers=headers, json=payload, timeout=90)
             response.raise_for_status()
             response_data = response.json()
             
