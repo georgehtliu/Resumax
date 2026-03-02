@@ -1,40 +1,11 @@
-<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background gradient -->
-  <defs>
-    <linearGradient id="bgGradient" x1="0" y1="0" x2="128" y2="128" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#6366f1"/>
-      <stop offset="100%" stop-color="#8b5cf6"/>
-    </linearGradient>
-    <linearGradient id="sparkleGradient" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#fbbf24"/>
-      <stop offset="100%" stop-color="#f59e0b"/>
-    </linearGradient>
-  </defs>
-  
-  <!-- Rounded background -->
-  <rect width="128" height="128" rx="28" fill="url(#bgGradient)"/>
-  
-  <!-- Document/Resume icon -->
-  <rect x="32" y="28" width="64" height="76" rx="4" fill="white" opacity="0.95"/>
-  <rect x="40" y="40" width="48" height="4" rx="2" fill="#6366f1"/>
-  <rect x="40" y="52" width="40" height="3" rx="1.5" fill="#a3a3a3"/>
-  <rect x="40" y="60" width="44" height="3" rx="1.5" fill="#a3a3a3"/>
-  <rect x="40" y="68" width="36" height="3" rx="1.5" fill="#a3a3a3"/>
-  
-  <!-- Bullet points -->
-  <circle cx="38" cy="75" r="2" fill="#6366f1"/>
-  <circle cx="38" cy="82" r="2" fill="#6366f1"/>
-  <circle cx="38" cy="89" r="2" fill="#6366f1"/>
-  
-  <!-- Sparkles/AI elements -->
-  <g opacity="0.9">
-    <!-- Top sparkle -->
-    <path d="M 88 20 L 92 28 L 100 24 L 96 32 L 104 36 L 96 40 L 100 48 L 92 44 L 88 52 L 84 44 L 76 48 L 80 40 L 72 36 L 80 32 L 76 24 L 84 28 Z" fill="url(#sparkleGradient)"/>
-    <!-- Right sparkle -->
-    <path d="M 108 64 L 112 72 L 120 68 L 116 76 L 124 80 L 116 84 L 120 92 L 112 88 L 108 96 L 104 88 L 96 92 L 100 84 L 92 80 L 100 76 L 96 68 L 104 72 Z" fill="url(#sparkleGradient)" opacity="0.8"/>
-    <!-- Small sparkle -->
-    <path d="M 28 76 L 30 80 L 34 78 L 32 82 L 36 84 L 32 86 L 34 90 L 30 88 L 28 92 L 26 88 L 22 90 L 24 86 L 20 84 L 24 82 L 22 78 L 26 80 Z" fill="#fbbf24"/>
-  </g>
+<svg width="128" height="128" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- White background -->
+  <rect width="200" height="200" fill="#ffffff"/>
+
+  <!-- MR Logo in black serif font -->
+  <text x="100" y="150" font-family="Georgia, serif" font-size="120" font-weight="bold" text-anchor="middle" fill="#000000">
+    MR
+  </text>
 </svg>
 
 
